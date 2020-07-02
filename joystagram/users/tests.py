@@ -53,25 +53,25 @@ class UserLoginTestCase(APITestCase):
     #     # self.assertTrue(Token.objects.get(user=self.user))
     #     self.assertTrue(Token.objects.filter(user_id=self.user.id).exists())
 
-#     def test_without_password(self):
-#         response = self.client.post(self.url, {"email": email})
-#         self.assertEqual(400, response.status_code)
-#
-#     def test_with_wrong_password(self):
-#         response = self.client.post(self.url, {"email": email, "password": "1111"})
-#         self.assertEqual(404, response.status_code)
-#
-#     def test_without_email(self):
-#         response = self.client.post(self.url, {"password": password})
-#         self.assertEqual(400, response.status_code)
-#
-#     def test_with_wrong_email(self):
-#         response = self.client.post(self.url, {"email": "wrong@email.com", "password": password})
-#         self.assertEqual(404, response.status_code)
-#
-#     def test_with_correct_info(self):
-#         response = self.client.post(self.url, {"email": email, "password": password})
-#         self.assertEqual(200, response.status_code)
+    def test_without_password(self):
+        response = self.client.post(self.url, {"email": email})
+        self.assertEqual(400, response.status_code)
+
+    def test_with_wrong_password(self):
+        response = self.client.post(self.url, {"email": email, "password": "1111"})
+        self.assertEqual(404, response.status_code)
+
+    def test_without_email(self):
+        response = self.client.post(self.url, {"password": password})
+        self.assertEqual(400, response.status_code)
+
+    def test_with_wrong_email(self):
+        response = self.client.post(self.url, {"email": "wrong@email.com", "password": password})
+        self.assertEqual(404, response.status_code)
+
+    def test_with_correct_info(self):
+        response = self.client.post(self.url, {"email": email, "password": password})
+        self.assertEqual(200, response.status_code)
 #
 #
 #
