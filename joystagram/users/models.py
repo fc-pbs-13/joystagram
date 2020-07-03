@@ -1,8 +1,7 @@
-"""Declare models for YOUR_APP app."""
-
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+# from annoying.fields import AutoOneToOneField
 
 
 class UserManager(BaseUserManager):
@@ -49,3 +48,12 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+    def save(self, *args, **kwargs):
+        self.set_password(self.password)
+        super().save(*args, **kwargs)
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    introduce = models.CharField(max_length=300, null=True)
