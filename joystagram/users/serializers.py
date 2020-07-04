@@ -23,27 +23,12 @@ class UserSerializer(ModelActionSerializer):
         }
 
 
-class UserLoginSerializer(ModelActionSerializer):
-    """로그인 시리얼라이저"""
-    email = serializers.EmailField()  # 모델의 email은 unique True이기 때문에 새로 선언
-
-    # password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = User
-        fields = ('email', 'password')
-        # extra_kwargs = {'password': {'write_only': True}}
-
-
-class UserProfileSerializer(ModelActionSerializer):
-    class Meta:
-        model = UserProfile
-        fields = ('introduce', 'user')
-        read_only_fields = ('user',)
-
-
-class CustomAuthTokenSerializer(serializers.Serializer):
+class UserAuthTokenSerializer(serializers.Serializer):
     """이메일, 비번으로 토큰 생성 시리얼라이저"""
+
+    def update(self, instance, validated_data):
+        pass
+
     email = serializers.EmailField()  # 모델의 email은 unique True이기 때문에 새로 선언
     password = serializers.CharField(
         label=_("Password"),
@@ -52,6 +37,8 @@ class CustomAuthTokenSerializer(serializers.Serializer):
     )
 
     def create(self, validated_data):
+        """토큰 생성 with validated_data"""
+        print(validated_data['user'], 'valid')
         email = validated_data.get('email')
         password = validated_data.get('password')
 
@@ -61,6 +48,7 @@ class CustomAuthTokenSerializer(serializers.Serializer):
         return Response({'token': token.key})
 
     def validate(self, attrs):
+        """"""
         email = attrs.get('email')
         password = attrs.get('password')
 
@@ -76,3 +64,9 @@ class CustomAuthTokenSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class UserProfileSerializer(ModelActionSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'introduce', 'img_url')

@@ -63,3 +63,4 @@ class User(AbstractUser):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     introduce = models.CharField(max_length=300, null=True)
+    img_url = models.ImageField(null=True)

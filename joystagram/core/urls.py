@@ -6,7 +6,7 @@ from users.views import UserViewSet, UserProfileViewSet
 
 router = routers.SimpleRouter(trailing_slash=False)
 router.register(r'users', UserViewSet)
-router.register(r'profile', UserProfileViewSet)
+# router.register(r'profile', UserProfileViewSet)  # nested?
 
 urlpatterns = router.urls + [
     path(r'login', views.obtain_auth_token),
