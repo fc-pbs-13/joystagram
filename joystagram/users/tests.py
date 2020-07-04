@@ -5,17 +5,17 @@ from rest_framework.authtoken.models import Token
 from .models import User
 from munch import Munch
 
-email = "email@test.com"
-password = "1234"
-
 
 class UserRegisterTestCase(APITestCase):
     url = '/api/users'
+    email = "email@test.com"
+    password = "1234"
 
     def test_should_create(self):
-        response = self.client.post(self.url, {"email": email, "password": password})
+        self.email += '1'
+        response = self.client.post(self.url, {"email": self.email, "password": self.password})
         self.assertEqual(201, response.status_code)
-        self.assertEqual(response.data['email'], email)
+        self.assertEqual(response.data['email'], self.email)
 
     # def test_without_email(self):
     #     response = self.client.post(self.url, {"email": '', "password": password})
@@ -34,50 +34,57 @@ class UserRegisterTestCase(APITestCase):
 
 class UserLoginTestCase(APITestCase):
     url = '/api/users/login'
+    email = "email@test.com"
+    password = "1234"
 
     def setUp(self) -> None:
-        response = self.client.post(self.url, {"email": email, "password": password})
-        self.user = User.objects.first()
-        # self.user = User.objects.create(email=email)
-        # self.user.set_password(password)
+        # self.email += '1'
+        response = self.client.post('/api/users', {"email": self.email, "password": self.password})
+        # self.user = User.objects.create(email=self.email)
+        self.user = User.objects.get(email=self.email)
         # self.user.save()
 
     def test_with_correct_info(self):
-        response = self.client.post(self.url, {"email": email, "password": password})
-        print(response.data)
-        self.assertEqual(200, response.status_code)
+        response = self.client.post(self.url, {"email": self.email, "password": self.password})
 
-    def test_is_token_created(self):
-        response = self.client.post(self.url, {"email": email, "password": password})
+        user = User.objects.get(email=self.email)
         print(response.data)
+        print(self.email, self.password)
+        print(user.email, user.password)
+        from django.contrib.auth import authenticate
+        user = authenticate(email=self.email, password=self.password)  # request=self.request,
+        print(user)
+
         self.assertEqual(200, response.status_code)
         self.assertTrue(response.data['token'])
-        # self.assertTrue(Token.objects.get(user=self.user))
+        self.assertTrue(Token.objects.get(user=self.user))
         self.assertTrue(Token.objects.filter(user_id=self.user.id).exists())
 
     def test_without_password(self):
-        response = self.client.post(self.url, {"email": email})
+        response = self.client.post(self.url, {"email": self.email})
         self.assertEqual(400, response.status_code)
 
     def test_with_wrong_password(self):
-        response = self.client.post(self.url, {"email": email, "password": "1111"})
-        self.assertEqual(404, response.status_code)
+        response = self.client.post(self.url, {"email": self.email, "password": "1111"})
+        self.assertEqual(400, response.status_code)
 
     def test_without_email(self):
-        response = self.client.post(self.url, {"password": password})
+        response = self.client.post(self.url, {"password": self.password})
         self.assertEqual(400, response.status_code)
 
     def test_with_wrong_email(self):
-        response = self.client.post(self.url, {"email": "wrong@email.com", "password": password})
-        self.assertEqual(404, response.status_code)
+        response = self.client.post(self.url, {"email": "wrong@email.com", "password": self.password})
+        self.assertEqual(400, response.status_code)
 
 
 class UserLogoutTestCase(APITestCase):
     url = '/api/users/logout'
+    email = "email@test.com"
+    password = "1234"
 
     def setUp(self) -> None:
-        self.user = User.objects.create(email=email)
-        self.user.set_password(password)
+        self.user = User.objects.create(email=self.email)
+        self.user.set_password(self.password)
         self.user.save()
         # Get token by login
         baker.make(Token, user=self.user)
@@ -107,10 +114,13 @@ class UserLogoutTestCase(APITestCase):
 
 
 class UserRetrieveUpdateTestCase(APITestCase):
+    email = "email@test.com"
+    password = "1234"
 
     def setUp(self) -> None:
-        self.user = User.objects.create(email=email)
-        self.user.set_password(password)
+        self.email += '1'
+        self.user = User.objects.create(email=self.email)
+        self.user.set_password(self.password)
         self.user.save()
 
         self.client.force_authenticate(user=self.user)
@@ -123,7 +133,7 @@ class UserRetrieveUpdateTestCase(APITestCase):
         res = Munch(response.data)
         self.assertTrue(res.id)
         self.assertEqual(res.id, self.user.id)
-        self.assertEqual(res.email, email)
+        self.assertEqual(res.email, self.email)
 
     def test_user_update(self):
         data = {

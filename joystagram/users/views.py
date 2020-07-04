@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from users.models import User, UserProfile
-from users.serializers import UserSerializer, UserProfileSerializer, UserLoginSerializer
+from users.serializers import UserSerializer, UserProfileSerializer, UserLoginSerializer, CustomAuthTokenSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -17,21 +17,25 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'login':
-            return UserLoginSerializer
+            return CustomAuthTokenSerializer
+            # return UserLoginSerializer
         return super().get_serializer_class()
+
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
     @action(detail=False, methods=['post'])
     def login(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         email = serializer.validated_data['email']
         password = serializer.validated_data['password']
-        user = authenticate(request=self.request, email=email, password=password)
+
+        user = authenticate(email=email, password=password)  # request=self.request,
         if user is not None:
             token, created = Token.objects.get_or_create(user=user)
-            # 필요한지 확인
-            login(request, user)
-            return Response({'token': token.key, 'email': user.email}, status=status.HTTP_200_OK)
+            return Response({'token': token.key}, status=status.HTTP_200_OK)
         else:
             return Response({'detail': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 

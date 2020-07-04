@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+
+
 # from annoying.fields import AutoOneToOneField
 
 
@@ -8,6 +10,14 @@ class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
 
     use_in_migrations = True
+
+    def create(self, **kwargs):
+        """유저 객체에 set_password 후 생성"""
+        user = self.model(**kwargs)
+        self._for_write = True
+        user.set_password(kwargs['password'])  # override 변경점
+        user.save(force_insert=True, using=self.db)
+        return user
 
     def _create_user(self, email, password, **extra_fields):
         """Create and save a User with the given email and password."""
@@ -48,10 +58,6 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
-
-    def save(self, *args, **kwargs):
-        self.set_password(self.password)
-        super().save(*args, **kwargs)
 
 
 class UserProfile(models.Model):
