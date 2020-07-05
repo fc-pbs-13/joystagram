@@ -3,6 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -26,16 +27,9 @@ class UserViewSet(viewsets.ModelViewSet):
     def login(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        email = serializer.validated_data['email']
-        password = serializer.validated_data['password']
-
-        user = authenticate(email=email, password=password)  # request=self.request,
-        if user is not None:
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key}, status=status.HTTP_200_OK)
-        else:
-            return Response({'detail': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key})
 
     @action(detail=False, methods=['delete'])
     def logout(self, request):
@@ -44,10 +38,26 @@ class UserViewSet(viewsets.ModelViewSet):
         except (AttributeError, ObjectDoesNotExist):
             return Response({"detail": "Not authorized User."},
                             status=status.HTTP_400_BAD_REQUEST)
-
         django_logout(request)
         return Response({"detail": "Successfully logged out."},
                         status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['delete'])
+    def deactivate(self, request, *args, **kwargs):
+        # get_object_or_404() 활용
+        # https://www.django-rest-framework.org/api-guide/generic-views/#get_objectself
+        # user = get_object_or_404(User.objects.all(), id=request.user.id)
+
+        try:
+            # request.user.delete()
+            # 필요한지 확인
+            user = self.get_object()
+            user.delete()
+        except (AttributeError, ObjectDoesNotExist):
+            return Response({"detail": "Not authorized User."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "Account successfully deleted."},
+                        status=status.HTTP_204_NO_CONTENT)
 
 
 class UserProfileViewSet(viewsets.ModelViewSet):
