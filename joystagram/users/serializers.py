@@ -1,28 +1,18 @@
 from action_serializer import ModelActionSerializer
 from django.contrib.auth import authenticate
-from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.serializers import AuthTokenSerializer
-from rest_framework.response import Response
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.utils import model_meta
 
-from .models import User
+from .models import User, Profile
 
 
 class UserSerializer(ModelActionSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'password')
+        fields = ('id', 'email', 'password')
         read_only_fields = ('id',)
         extra_kwargs = {'password': {'write_only': True}}
-
-        # action_fields = {
-        #     'partial_update': {
-        #         'fields': ('username', 'password', 'email')
-        #     },
-        # }
 
     def update(self, instance, validated_data):
         raise_errors_on_nested_writes('update', self, validated_data)
@@ -43,12 +33,12 @@ class UserSerializer(ModelActionSerializer):
         return instance
 
 
-class UserAuthTokenSerializer(serializers.Serializer):
-    """이메일, 비번으로 토큰 생성 시리얼라이저"""
+class LoginSerializer(serializers.Serializer):
+    """유저 인증 시리얼라이저"""
 
     email = serializers.EmailField()  # 모델의 EmailField = unique True 때문에 새로 선언
     password = serializers.CharField(
-        label=_("Password"),
+        label="Password",
         style={'input_type': 'password'},
         trim_whitespace=False
     )
@@ -61,17 +51,18 @@ class UserAuthTokenSerializer(serializers.Serializer):
             user = authenticate(request=self.context.get('request'),
                                 email=email, password=password)
             if not user:
-                msg = _('Unable to log in with provided credentials.')
+                msg = 'Unable to log in with provided credentials.'
                 raise serializers.ValidationError(msg, code='authorization')
         else:
-            msg = _('Must include "username" and "password".')
+            msg = 'Must include "username" and "password".'
             raise serializers.ValidationError(msg, code='authorization')
 
         attrs['user'] = user
         return attrs
 
 
-class UserProfileSerializer(ModelActionSerializer):
+class ProfileSerializer(ModelActionSerializer):
     class Meta:
-        model = User
+        model = Profile
         fields = ('id', 'introduce', 'img_url')
+        read_only_fields = ('id',)
