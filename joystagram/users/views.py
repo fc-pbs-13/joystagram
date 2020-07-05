@@ -5,6 +5,7 @@ from rest_framework import viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from users.models import User, UserProfile
@@ -46,16 +47,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def deactivate(self, request, *args, **kwargs):
         # get_object_or_404() 활용
         # https://www.django-rest-framework.org/api-guide/generic-views/#get_objectself
-        # user = get_object_or_404(User.objects.all(), id=request.user.id)
-
-        try:
-            # request.user.delete()
-            # 필요한지 확인
-            user = self.get_object()
-            user.delete()
-        except (AttributeError, ObjectDoesNotExist):
-            return Response({"detail": "Not authorized User."},
-                            status=status.HTTP_400_BAD_REQUEST)
+        user = get_object_or_404(User.objects.all(), id=request.user.id)
+        user.delete()
         return Response({"detail": "Account successfully deleted."},
                         status=status.HTTP_204_NO_CONTENT)
 
