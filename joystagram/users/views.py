@@ -11,13 +11,14 @@ from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsUserSelf
 from users.models import User, Profile
-from users.serializers import UserSerializer, UserAuthTokenSerializer, ProfileSerializer
+from users.serializers import UserSerializer, LoginSerializer, ProfileSerializer
 
 
 class UserViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
                   mixins.DestroyModelMixin,
+                  # TODO 유저 리스트를 하는게 맞을까, 팔로우/팔로잉 리스트로만 하는게 맞을까
                   # mixins.ListModelMixin,
                   GenericViewSet):
     queryset = User.objects.all()
@@ -31,12 +32,12 @@ class UserViewSet(mixins.CreateModelMixin,
 
     def get_serializer_class(self):
         if self.action == 'login':
-            return UserAuthTokenSerializer
+            return LoginSerializer
         return super().get_serializer_class()
 
     @action(detail=False, methods=['post'])
     def login(self, request):
-        """로그인용 시리얼라이저로 valid 후 토큰 생성"""
+        """로그인 시리얼라이저로 valid 후 토큰 생성"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
