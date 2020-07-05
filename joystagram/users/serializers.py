@@ -2,13 +2,10 @@ from action_serializer import ModelActionSerializer
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.serializers import AuthTokenSerializer
-from rest_framework.response import Response
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.utils import model_meta
 
-from .models import User
+from .models import User, Profile
 
 
 class UserSerializer(ModelActionSerializer):
@@ -17,12 +14,6 @@ class UserSerializer(ModelActionSerializer):
         fields = ('id', 'email', 'username', 'password')
         read_only_fields = ('id',)
         extra_kwargs = {'password': {'write_only': True}}
-
-        # action_fields = {
-        #     'partial_update': {
-        #         'fields': ('username', 'password', 'email')
-        #     },
-        # }
 
     def update(self, instance, validated_data):
         raise_errors_on_nested_writes('update', self, validated_data)
@@ -71,7 +62,8 @@ class UserAuthTokenSerializer(serializers.Serializer):
         return attrs
 
 
-class UserProfileSerializer(ModelActionSerializer):
+class ProfileSerializer(ModelActionSerializer):
     class Meta:
-        model = User
+        model = Profile
         fields = ('id', 'introduce', 'img_url')
+        read_only_fields = ('id',)

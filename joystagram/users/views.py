@@ -5,15 +5,21 @@ from rest_framework import viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from users.models import User, UserProfile
-from users.serializers import UserSerializer, UserAuthTokenSerializer, UserProfileSerializer
+from users.models import User, Profile
+from users.serializers import UserSerializer, UserAuthTokenSerializer, ProfileSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_permissions(self):
+        if self.action == 'login':
+            return [AllowAny()]
+        return super().get_permissions()
 
     def get_serializer_class(self):
         if self.action == 'login':
@@ -44,8 +50,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['delete'])
     def deactivate(self, request, *args, **kwargs):
-        # get_object_or_404() 활용
-        # https://www.django-rest-framework.org/api-guide/generic-views/#get_objectself
         user = get_object_or_404(User.objects.all(), id=request.user.id)
         user.delete()
         return Response({"detail": "Account successfully deleted."},
@@ -53,5 +57,5 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class UserProfileViewSet(viewsets.ModelViewSet):
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
