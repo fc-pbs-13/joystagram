@@ -17,19 +17,19 @@ class UserRegisterTestCase(APITestCase):
         self.assertEqual(201, response.status_code)
         self.assertEqual(response.data['email'], self.email)
 
-    # def test_without_email(self):
-    #     response = self.client.post(self.url, {"email": '', "password": password})
-    #     self.assertEqual(400, response.status_code)
-    #
-    # def test_email_format(self):
-    #     # wrong format
-    #     wrong_email = 'wrong@format'
-    #     response = self.client.post(self.url, {"email": wrong_email, "password": password})
-    #     self.assertEqual(400, response.status_code)
-    #
-    # def test_without_password(self):
-    #     response = self.client.post(self.url, {"email": email, "password": ''})
-    #     self.assertEqual(400, response.status_code)
+    def test_without_email(self):
+        response = self.client.post(self.url, {"email": '', "password": self.password})
+        self.assertEqual(400, response.status_code)
+
+    def test_email_format(self):
+        # wrong format
+        wrong_email = 'wrong@format'
+        response = self.client.post(self.url, {"email": wrong_email, "password": self.password})
+        self.assertEqual(400, response.status_code)
+
+    def test_without_password(self):
+        response = self.client.post(self.url, {"email": self.email, "password": ''})
+        self.assertEqual(400, response.status_code)
 
 
 class UserLoginTestCase(APITestCase):
