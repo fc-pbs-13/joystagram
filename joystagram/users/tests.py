@@ -5,74 +5,77 @@ from rest_framework.authtoken.models import Token
 from .models import User
 from munch import Munch
 
+email = 'email@test.com'
+password = '1234'
+duplicated_email = 'duplicated_email@test.com'
+
 
 class UserRegisterTestCase(APITestCase):
     url = '/api/users'
-    email = "email@test.com"
-    password = "1234"
+
+    def setUp(self) -> None:
+        pass
 
     def test_should_create(self):
-        self.email += '1'
-        response = self.client.post(self.url, {"email": self.email, "password": self.password})
+        response = self.client.post(self.url, {'email': email, 'password': password})
         self.assertEqual(201, response.status_code)
-        self.assertEqual(response.data['email'], self.email)
+        self.assertEqual(response.data['email'], email)
 
     def test_without_email(self):
-        response = self.client.post(self.url, {"email": '', "password": self.password})
+        response = self.client.post(self.url, {'email': '', 'password': password})
         self.assertEqual(400, response.status_code)
 
     def test_email_format(self):
         # wrong format
         wrong_email = 'wrong@format'
-        response = self.client.post(self.url, {"email": wrong_email, "password": self.password})
+        response = self.client.post(self.url, {'email': wrong_email, 'password': password})
         self.assertEqual(400, response.status_code)
 
     def test_without_password(self):
-        response = self.client.post(self.url, {"email": self.email, "password": ''})
+        response = self.client.post(self.url, {'email': email, 'password': ''})
+        self.assertEqual(400, response.status_code)
+
+    def test_with_duplicated_email(self):
+        self.user = baker.make(User, email=duplicated_email, password=password)
+        response = self.client.post(self.url, {'email': duplicated_email, 'password': password})
         self.assertEqual(400, response.status_code)
 
 
 class UserLoginTestCase(APITestCase):
     url = '/api/users/login'
-    email = "email@test.com"
-    password = "1234"
 
     def setUp(self) -> None:
-        self.email += '2'
-        self.user = User.objects.create(email=self.email, password=self.password)
+        # self.user = baker.make(User, email=email, password=password)  # baker로 만들면 로그인 안됨..why
+        self.user = User.objects.create(email=email, password=password)
 
     def test_with_correct_info(self):
-        response = self.client.post(self.url, {"email": self.email, "password": self.password})
-
+        response = self.client.post(self.url, {'email': email, 'password': password})
         self.assertEqual(200, response.status_code)
         self.assertIsNotNone(response.data.get('token'))
         self.assertIsNotNone(Token.objects.filter(user=self.user).exists())
 
     def test_without_password(self):
-        response = self.client.post(self.url, {"email": self.email})
+        response = self.client.post(self.url, {'email': email})
         self.assertEqual(400, response.status_code)
 
     def test_with_wrong_password(self):
-        response = self.client.post(self.url, {"email": self.email, "password": "1111"})
+        response = self.client.post(self.url, {'email': email, 'password': '1111'})
         self.assertEqual(400, response.status_code)
 
     def test_without_email(self):
-        response = self.client.post(self.url, {"password": self.password})
+        response = self.client.post(self.url, {'password': password})
         self.assertEqual(400, response.status_code)
 
     def test_with_wrong_email(self):
-        response = self.client.post(self.url, {"email": "wrong@email.com", "password": self.password})
+        response = self.client.post(self.url, {'email': 'wrong@email.com', 'password': password})
         self.assertEqual(400, response.status_code)
 
 
 class UserLogoutTestCase(APITestCase):
     url = '/api/users/logout'
-    email = "email@test.com"
-    password = "1234"
 
     def setUp(self) -> None:
-        self.email += '3'
-        self.user = baker.make(User, email=self.email, password=self.password)
+        self.user = baker.make(User, email=email, password=password)
         token = baker.make(Token, user=self.user)
         self.client.force_authenticate(user=self.user, token=token)
 
@@ -83,12 +86,9 @@ class UserLogoutTestCase(APITestCase):
 
 
 class UserDeactivateTestCase(APITestCase):
-    email = "email@test.com"
-    password = "1234"
 
     def setUp(self) -> None:
-        self.email += '4'
-        self.user = User.objects.create(email=self.email, password=self.password)
+        self.user = baker.make(User, email=email, password=password)
         self.client.force_authenticate(user=self.user)
         self.url = f'/api/users/{self.user.id}/deactivate'
 
@@ -100,12 +100,10 @@ class UserDeactivateTestCase(APITestCase):
 
 
 class UserRetrieveUpdateTestCase(APITestCase):
-    email = "email@test.com"
-    password = "1234"
 
     def setUp(self) -> None:
-        self.email += '5'
-        self.user = baker.make(User, email=self.email, password=self.password)
+        self.data = {'password': '1111'}
+        self.user = baker.make(User, email=email, password=password)
         self.token = baker.make(Token, user=self.user)
         self.url = f'/api/users/{self.user.id}'
 
@@ -117,22 +115,20 @@ class UserRetrieveUpdateTestCase(APITestCase):
         res = Munch(response.data)
         self.assertTrue(res.id)
         self.assertEqual(res.id, self.user.id)
-        self.assertEqual(res.email, self.email)
+        self.assertEqual(res.email, email)
 
     def test_should_update_password(self):
-        data = {"password": '1111'}
         self.client.force_authenticate(user=self.user, token=self.token.key)
-        response = self.client.patch(self.url, data=data)
+        response = self.client.patch(self.url, data=self.data)
         self.assertEqual(200, response.status_code)
 
         # 비번변경 잘 되었는지 로그인해서 확인
-        response = self.client.post('/api/users/login', {"email": self.email, "password": '1111'})
+        response = self.client.post('/api/users/login', {'email': email, 'password': '1111'})
         self.assertEqual(200, response.status_code)
         self.assertIsNotNone(response.data.get('token'))
 
     def test_should_denied_update(self):
-        data = {"password": '1111'}
-        response = self.client.patch(self.url, data=data)
+        response = self.client.patch(self.url, data=self.data)
         self.assertEqual(401, response.status_code)
 
     def test_should_denied_retrieve(self):

@@ -11,7 +11,7 @@ from .models import User, Profile
 class UserSerializer(ModelActionSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'password')
+        fields = ('id', 'email', 'password')
         read_only_fields = ('id',)
         extra_kwargs = {'password': {'write_only': True}}
 
