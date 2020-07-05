@@ -8,6 +8,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from core.permissions import IsUserSelf
 from users.models import User, Profile
 from users.serializers import UserSerializer, UserAuthTokenSerializer, ProfileSerializer
 
@@ -15,6 +16,7 @@ from users.serializers import UserSerializer, UserAuthTokenSerializer, ProfileSe
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = (IsUserSelf,)
 
     def get_permissions(self):
         if self.action in ('login', 'create'):
