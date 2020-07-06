@@ -1,24 +1,26 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
-from rest_framework.serializers import raise_errors_on_nested_writes, ModelSerializer
-from rest_framework.utils import model_meta
+from rest_framework.serializers import ModelSerializer
 
 from .models import User, Profile
 
 
-class ProfileSerializer(ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ('nickname', 'introduce', 'img_url')
+# class ProfileSerializer(ModelSerializer):
+#     class Meta:
+#         model = Profile
+#         fields = ('nickname', 'introduce', 'img_url')
 
 
 class UserSerializer(ModelSerializer):
-    # nickname = serializers.CharField(max_length=20, source='profile.nickname')
-    profile = ProfileSerializer()
+    nickname = serializers.CharField(max_length=20, source='profile.nickname')
+    introduce = serializers.CharField(max_length=300, default='',
+                                      source='profile.introduce')  # allow_null=True, allow_blank=True,
+
+    # img_url = serializers.ImageField(allow_null=True, source='profile.img_url')
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'profile')
+        fields = ('id', 'email', 'password', 'nickname', 'introduce')
         read_only_fields = ('id',)
         extra_kwargs = {'password': {'write_only': True}}
 
@@ -40,30 +42,12 @@ class UserPasswordSerializer(ModelSerializer):
         instance.set_password(validated_data['password'])
         instance.save()
         return instance
-        # return super().update(instance, validated_data)
-
-    # def update(self, instance, validated_data):
-    #     """set_password 위해 오버라이드"""
-    #     raise_errors_on_nested_writes('update', self, validated_data)
-    #     info = model_meta.get_field_info(instance)
-    #     m2m_fields = []
-    #     for attr, value in validated_data.items():
-    #         if attr in info.relations and info.relations[attr].to_many:
-    #             m2m_fields.append((attr, value))
-    #         else:
-    #             setattr(instance, attr, value)
-    #     instance.set_password(instance.password)  # 오버라이드 변경점
-    #     instance.save()
-    #     for attr, value in m2m_fields:
-    #         field = getattr(instance, attr)
-    #         field.set(value)
-    #     return instance
 
 
 class LoginSerializer(serializers.Serializer):
     """유저 인증 시리얼라이저"""
 
-    email = serializers.EmailField()  # 모델의 EmailField = unique True 때문에 새로 선언
+    email = serializers.EmailField()
     password = serializers.CharField(
         label='Password',
         style={'input_type': 'password'},

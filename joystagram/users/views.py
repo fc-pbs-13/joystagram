@@ -11,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsUserSelf
 from users.models import User, Profile
-from users.serializers import UserSerializer, LoginSerializer, ProfileSerializer, UserPasswordSerializer
+from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
 
 
 class UserViewSet(mixins.CreateModelMixin,
@@ -54,7 +54,7 @@ class UserViewSet(mixins.CreateModelMixin,
         except (AttributeError, ObjectDoesNotExist):
             return Response({"detail": "Not authorized User."},
                             status=status.HTTP_400_BAD_REQUEST)
-        django_logout(request)  # request 에서 user 지우고 세션을 flush
+        # django_logout(request)  # request 에서 user 지우고 세션을 flush
         return Response({"detail": "Successfully logged out."},
                         status=status.HTTP_200_OK)
 
@@ -72,6 +72,6 @@ class UserViewSet(mixins.CreateModelMixin,
         return super().partial_update(request, *args, **kwargs)
 
 
-class ProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
+# class ProfileViewSet(viewsets.ModelViewSet):
+#     queryset = Profile.objects.all()
+#     serializer_class = ProfileSerializer

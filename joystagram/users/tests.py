@@ -20,16 +20,19 @@ class UserRegisterTestCase(APITestCase):
         data = {
             'email': email,
             'password': password,
-            'profile': {
-                'nickname': 'user_nick',
-            }
+            'nickname': 'user_nick',
+            # 'introduce': '',
+            # 'img_url': ''
         }
         response = self.client.post(self.url, data, format='json')
         res = response.data
+        print(res)
         self.assertEqual(201, response.status_code)
         self.assertEqual(res['email'], email)
-        self.assertIsNotNone(res.get('profile'))
-        self.assertEqual(res['profile']['nickname'], data['profile']['nickname'])
+        self.assertEqual(res['nickname'], data['nickname'])
+        # self.assertEqual(res['introduce'], data['introduce'])
+        # self.assertIsNotNone(res.get('profile'))
+        # self.assertEqual(res['profile']['nickname'], data['profile']['nickname'])
 
     def test_without_email(self):
         response = self.client.post(self.url, {'email': '', 'password': password})
