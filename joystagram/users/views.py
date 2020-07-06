@@ -23,7 +23,7 @@ class UserViewSet(mixins.CreateModelMixin,
                   GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsUserSelf,)
+    permission_classes = [IsUserSelf]
 
     def get_permissions(self):
         if self.action in ('login', 'create'):
@@ -70,7 +70,6 @@ class UserViewSet(mixins.CreateModelMixin,
     def update_password(self, request, *args, **kwargs):
         """비밀번호 변경"""
         return super().partial_update(request, *args, **kwargs)
-
 
 # class ProfileViewSet(viewsets.ModelViewSet):
 #     queryset = Profile.objects.all()

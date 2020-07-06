@@ -54,6 +54,9 @@ class User(AbstractUser):
 
     objects = UserManager()
 
+    def __str__(self):
+        return self.email
+
 
 class Profile(models.Model):
     """1to1 사용자 확장 모델"""
