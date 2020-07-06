@@ -13,9 +13,6 @@ duplicated_email = 'duplicated_email@test.com'
 class UserRegisterTestCase(APITestCase):
     url = '/api/users'
 
-    def setUp(self) -> None:
-        pass
-
     def test_should_create(self):
         data = {
             'email': email,
@@ -24,9 +21,8 @@ class UserRegisterTestCase(APITestCase):
             # 'introduce': '',
             # 'img_url': ''
         }
-        response = self.client.post(self.url, data, format='json')
+        response = self.client.post(self.url, data)
         res = response.data
-        print(res)
         self.assertEqual(201, response.status_code)
         self.assertEqual(res['email'], email)
         self.assertEqual(res['nickname'], data['nickname'])
