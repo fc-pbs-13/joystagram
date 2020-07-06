@@ -11,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsUserSelf
 from users.models import User, Profile
-from users.serializers import UserSerializer, LoginSerializer, ProfileSerializer
+from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
 
 
 class UserViewSet(mixins.CreateModelMixin,
@@ -33,6 +33,8 @@ class UserViewSet(mixins.CreateModelMixin,
     def get_serializer_class(self):
         if self.action == 'login':
             return LoginSerializer
+        elif self.action == 'update_password':
+            return UserPasswordSerializer
         return super().get_serializer_class()
 
     @action(detail=False, methods=['post'])
@@ -52,7 +54,7 @@ class UserViewSet(mixins.CreateModelMixin,
         except (AttributeError, ObjectDoesNotExist):
             return Response({"detail": "Not authorized User."},
                             status=status.HTTP_400_BAD_REQUEST)
-        django_logout(request)  # request 에서 user 지우고 세션을 flush
+        # django_logout(request)  # request 에서 user 지우고 세션을 flush
         return Response({"detail": "Successfully logged out."},
                         status=status.HTTP_200_OK)
 
@@ -64,7 +66,12 @@ class UserViewSet(mixins.CreateModelMixin,
         return Response({"detail": "Account successfully deleted."},
                         status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=True, methods=['patch'])
+    def update_password(self, request, *args, **kwargs):
+        """비밀번호 변경"""
+        return super().partial_update(request, *args, **kwargs)
 
-class UserProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
+
+# class ProfileViewSet(viewsets.ModelViewSet):
+#     queryset = Profile.objects.all()
+#     serializer_class = ProfileSerializer

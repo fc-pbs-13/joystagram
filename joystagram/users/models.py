@@ -23,7 +23,6 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.save(using=self._db)
         return user
 
     def create_user(self, email, password=None, **extra_fields):
@@ -46,8 +45,7 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    """User model."""
-
+    """사용자 모델"""
     username = None
     email = models.EmailField(_('email address'), unique=True)
 
@@ -58,6 +56,9 @@ class User(AbstractUser):
 
 
 class Profile(models.Model):
+    """1to1 사용자 확장 모델"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    introduce = models.CharField(max_length=300, null=True)
-    img_url = models.ImageField(upload_to='blog_image', null=True)
+    nickname = models.CharField(max_length=20)
+    introduce = models.CharField(max_length=300, default='')
+    img_url = models.ImageField(upload_to='profile_image', null=True)
+    created = models.DateTimeField(auto_now_add=True)

@@ -2,7 +2,7 @@ from model_bakery import baker
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
 
-from .models import User
+from .models import User, Profile
 from munch import Munch
 
 email = 'email@test.com'
@@ -17,9 +17,22 @@ class UserRegisterTestCase(APITestCase):
         pass
 
     def test_should_create(self):
-        response = self.client.post(self.url, {'email': email, 'password': password})
+        data = {
+            'email': email,
+            'password': password,
+            'nickname': 'user_nick',
+            # 'introduce': '',
+            # 'img_url': ''
+        }
+        response = self.client.post(self.url, data, format='json')
+        res = response.data
+        print(res)
         self.assertEqual(201, response.status_code)
-        self.assertEqual(response.data['email'], email)
+        self.assertEqual(res['email'], email)
+        self.assertEqual(res['nickname'], data['nickname'])
+        # self.assertEqual(res['introduce'], data['introduce'])
+        # self.assertIsNotNone(res.get('profile'))
+        # self.assertEqual(res['profile']['nickname'], data['profile']['nickname'])
 
     def test_without_email(self):
         response = self.client.post(self.url, {'email': '', 'password': password})
@@ -99,7 +112,7 @@ class UserDeactivateTestCase(APITestCase):
         self.assertFalse(Token.objects.filter(user_id=self.user.id).exists())
 
 
-class UserRetrieveUpdateTestCase(APITestCase):
+class UserRetrieveTestCase(APITestCase):
 
     def setUp(self) -> None:
         self.data = {'password': '1111'}
@@ -117,6 +130,19 @@ class UserRetrieveUpdateTestCase(APITestCase):
         self.assertEqual(res.id, self.user.id)
         self.assertEqual(res.email, email)
 
+    def test_should_denied_retrieve(self):
+        response = self.client.get(self.url)
+        self.assertEqual(401, response.status_code)
+
+
+class UserUpdateTestCase(APITestCase):
+
+    def setUp(self) -> None:
+        self.data = {'password': '1111'}
+        self.user = baker.make(User, email=email, password=password)
+        self.token = baker.make(Token, user=self.user)
+        self.url = f'/api/users/{self.user.id}/update_password'
+
     def test_should_update_password(self):
         self.client.force_authenticate(user=self.user, token=self.token.key)
         response = self.client.patch(self.url, data=self.data)
@@ -129,8 +155,4 @@ class UserRetrieveUpdateTestCase(APITestCase):
 
     def test_should_denied_update(self):
         response = self.client.patch(self.url, data=self.data)
-        self.assertEqual(401, response.status_code)
-
-    def test_should_denied_retrieve(self):
-        response = self.client.get(self.url)
         self.assertEqual(401, response.status_code)
