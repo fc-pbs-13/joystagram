@@ -13,18 +13,17 @@ from .models import User, Profile
 
 class UserSerializer(ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
-    introduce = serializers.CharField(max_length=300, default='',
-                                      source='profile.introduce')  # allow_null=True, allow_blank=True,
+    # introduce = serializers.CharField(max_length=300, default='',
+    #                                   source='profile.introduce')  # allow_null=True, allow_blank=True,
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'nickname', 'introduce')
+        fields = ('id', 'email', 'password', 'nickname')
         read_only_fields = ('id',)
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         """유저 생성 시 프로필도 같이 생성"""
-        print(validated_data, 'create validated_data')
         profile = validated_data.pop('profile')
         user = User.objects.create(**validated_data)
         profile = Profile.objects.create(user=user, **profile)
@@ -32,6 +31,7 @@ class UserSerializer(ModelSerializer):
 
 
 class UserPasswordSerializer(ModelSerializer):
+    """TODO email update 막기! 무조건 password 변경만 가능"""
     class Meta:
         model = User
         fields = ('id', 'email', 'password', 'profile')

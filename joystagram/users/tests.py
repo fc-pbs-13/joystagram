@@ -143,7 +143,7 @@ class UserUpdateTestCase(APITestCase):
 
         # 비번변경 잘 되었는지 로그인해서 확인
         response = self.client.post('/api/users/login', {'email': email, 'password': '1111'})
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response.status_code, response.data)
         self.assertIsNotNone(response.data.get('token'))
 
     def test_should_denied_update(self):
