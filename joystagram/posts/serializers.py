@@ -11,3 +11,11 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('id', 'contents', 'owner')
         read_only_fields = ('id', 'owner')
+
+
+class PhotoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Post
+        fields = ('id', 'img', 'post')
+        read_only_fields = ('id',)

@@ -54,7 +54,6 @@ class UserViewSet(mixins.CreateModelMixin,
         except (AttributeError, ObjectDoesNotExist):
             return Response({"detail": "Not authorized User."},
                             status=status.HTTP_400_BAD_REQUEST)
-        # django_logout(request)  # request 에서 user 지우고 세션을 flush
         return Response({"detail": "Successfully logged out."},
                         status=status.HTTP_200_OK)
 
