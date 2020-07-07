@@ -54,8 +54,7 @@ class UserLoginTestCase(APITestCase):
     url = '/api/users/login'
 
     def setUp(self) -> None:
-        # self.user = baker.make(User, email=email, password=password)  # baker로 만들면 로그인 안됨..why
-        self.user = User.objects.create(email=email, password=password)
+        self.user = baker.make(User, email=email, password=password)  # baker로 만들면 로그인 안됨..why
 
     def test_with_correct_info(self):
         response = self.client.post(self.url, {'email': email, 'password': password})

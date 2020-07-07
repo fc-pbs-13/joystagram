@@ -30,7 +30,7 @@ class PostCreateTestCase(APITestCase):
 class PostRetrieveTestCase(APITestCase):
 
     def setUp(self) -> None:
-        self.user = User.objects.create(email=email, password=password)
+        self.user = baker.make('users.User', email=email, password=password)
         self.profile = Profile.objects.create(user=self.user, nickname='test_user')
         self.post = Post.objects.create(owner=self.profile)
         self.url = f'/api/posts/{self.post.id}'
@@ -51,7 +51,6 @@ class PostRetrieveTestCase(APITestCase):
     # def test_should_denied_retrieve(self):
     #     response = self.client.get(self.url)
     #     self.assertEqual(401, response.status_code)
-
 
 # class UserUpdateTestCase(APITestCase):
 #
