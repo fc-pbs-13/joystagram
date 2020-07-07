@@ -1,6 +1,10 @@
 from model_bakery import baker
+from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
+import io
+from PIL import Image
+from rest_framework import status
 from rest_framework.test import APITestCase
-
+from rest_framework.authtoken.models import Token
 from posts.models import Post
 from users.models import User, Profile
 
@@ -16,14 +20,30 @@ class PostCreateTestCase(APITestCase):
         self.user = User.objects.create(email=email, password=password)
         self.profile = Profile.objects.create(user=self.user, nickname='test_user')
 
+    def generate_photo_file(self):
+        """업로드 테스트용 사진 파일 생성"""
+        file = io.BytesIO()
+        image = Image.new('RGBA', size=(100, 100), color=(155, 0, 0))
+        image.save(file, 'png')
+        file.name = 'test.png'
+        file.seek(0)
+        return file
+
     def test_should_create(self):
-        data = {
-            'contents': 'yeeeeeeeeeee!!'
-        }
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(self.url, data)
+        data = {
+            'img': self.generate_photo_file(),
+            'contents': 'hello joystagram!'
+        }
+
+        response = self.client.post(
+            self.url,
+            encode_multipart(BOUNDARY, data),
+            content_type=MULTIPART_CONTENT
+        )
         res = response.data
-        self.assertEqual(201, response.status_code)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res['contents'], data['contents'])
 
 
@@ -39,7 +59,7 @@ class PostRetrieveTestCase(APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
 
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         res = response.data
         print(res)
         self.assertIsNotNone(res.get('id'))

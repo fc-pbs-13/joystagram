@@ -18,8 +18,6 @@ class UserRegisterTestCase(APITestCase):
             'email': email,
             'password': password,
             'nickname': 'user_nick',
-            # 'introduce': '',
-            # 'img_url': ''
         }
         response = self.client.post(self.url, data)
         res = response.data

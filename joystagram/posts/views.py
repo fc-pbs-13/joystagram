@@ -24,3 +24,7 @@ class PostViewSet(mixins.CreateModelMixin,
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.profile)
+
+    def create(self, request, *args, **kwargs):
+        print(request.data, 'request.data')
+        return super().create(request, *args, **kwargs)

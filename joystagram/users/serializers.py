@@ -16,8 +16,6 @@ class UserSerializer(ModelSerializer):
     introduce = serializers.CharField(max_length=300, default='',
                                       source='profile.introduce')  # allow_null=True, allow_blank=True,
 
-    # img_url = serializers.ImageField(allow_null=True, source='profile.img_url')
-
     class Meta:
         model = User
         fields = ('id', 'email', 'password', 'nickname', 'introduce')
@@ -25,6 +23,8 @@ class UserSerializer(ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
+        """유저 생성 시 프로필도 같이 생성"""
+        print(validated_data, 'create validated_data')
         profile = validated_data.pop('profile')
         user = User.objects.create(**validated_data)
         profile = Profile.objects.create(user=user, **profile)

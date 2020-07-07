@@ -69,7 +69,3 @@ class UserViewSet(mixins.CreateModelMixin,
     def update_password(self, request, *args, **kwargs):
         """비밀번호 변경"""
         return super().partial_update(request, *args, **kwargs)
-
-# class ProfileViewSet(viewsets.ModelViewSet):
-#     queryset = Profile.objects.all()
-#     serializer_class = ProfileSerializer
