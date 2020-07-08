@@ -58,7 +58,7 @@ class PostListTestCase(APITestCase):
             self.posts = baker.make('posts.Post', contents='우리 인생 화이팅...!', owner=self.profile, _quantity=3)
             for post in self.posts:
                 # TODO Photo이미지 생성..?
-                baker.make('posts.Photo', post=post, _quantity=3)
+                baker.make('posts.Photo', post=post, img='post_image/test.png', _quantity=3)
 
     def test_should_list_posts(self):
         self.client.force_authenticate(user=self.user)
@@ -66,9 +66,13 @@ class PostListTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         res = response.data
-        for contents in res:
-            print(contents)
-        # self.assertIsNotNone(res.get('id'))
+        for post in res:
+            self.assertIsNotNone(post.get('id'))
+            self.assertIsNotNone(post.get('contents'))
+            self.assertIsNotNone(post.get('photos'))
+            for photos in post.get('photos'):
+                self.assertIsNotNone(photos.get('img'))
+
         # self.assertIsNotNone(res.get('contents'))
         self.fail()
 

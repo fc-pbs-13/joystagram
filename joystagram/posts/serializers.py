@@ -4,12 +4,12 @@ from posts.models import Post, Photo
 
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Post
+        model = Photo
         fields = ('img',)
 
 
 class PostSerializer(serializers.ModelSerializer):
-    photos = PhotoSerializer(many=True, read_only=True, source='photos.img')
+    photos = PhotoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
