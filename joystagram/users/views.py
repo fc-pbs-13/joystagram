@@ -23,7 +23,7 @@ class UserViewSet(mixins.CreateModelMixin,
                   GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsUserSelf,)
+    permission_classes = [IsUserSelf]
 
     def get_permissions(self):
         if self.action in ('login', 'create'):
@@ -54,7 +54,6 @@ class UserViewSet(mixins.CreateModelMixin,
         except (AttributeError, ObjectDoesNotExist):
             return Response({"detail": "Not authorized User."},
                             status=status.HTTP_400_BAD_REQUEST)
-        # django_logout(request)  # request 에서 user 지우고 세션을 flush
         return Response({"detail": "Successfully logged out."},
                         status=status.HTTP_200_OK)
 
@@ -70,8 +69,3 @@ class UserViewSet(mixins.CreateModelMixin,
     def update_password(self, request, *args, **kwargs):
         """비밀번호 변경"""
         return super().partial_update(request, *args, **kwargs)
-
-
-# class ProfileViewSet(viewsets.ModelViewSet):
-#     queryset = Profile.objects.all()
-#     serializer_class = ProfileSerializer

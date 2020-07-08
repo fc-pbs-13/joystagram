@@ -13,20 +13,14 @@ duplicated_email = 'duplicated_email@test.com'
 class UserRegisterTestCase(APITestCase):
     url = '/api/users'
 
-    def setUp(self) -> None:
-        pass
-
     def test_should_create(self):
         data = {
             'email': email,
             'password': password,
             'nickname': 'user_nick',
-            # 'introduce': '',
-            # 'img_url': ''
         }
-        response = self.client.post(self.url, data, format='json')
+        response = self.client.post(self.url, data)
         res = response.data
-        print(res)
         self.assertEqual(201, response.status_code)
         self.assertEqual(res['email'], email)
         self.assertEqual(res['nickname'], data['nickname'])
@@ -58,8 +52,7 @@ class UserLoginTestCase(APITestCase):
     url = '/api/users/login'
 
     def setUp(self) -> None:
-        # self.user = baker.make(User, email=email, password=password)  # baker로 만들면 로그인 안됨..why
-        self.user = User.objects.create(email=email, password=password)
+        self.user = baker.make(User, email=email, password=password)  # baker로 만들면 로그인 안됨..why
 
     def test_with_correct_info(self):
         response = self.client.post(self.url, {'email': email, 'password': password})
@@ -150,7 +143,7 @@ class UserUpdateTestCase(APITestCase):
 
         # 비번변경 잘 되었는지 로그인해서 확인
         response = self.client.post('/api/users/login', {'email': email, 'password': '1111'})
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response.status_code, response.data)
         self.assertIsNotNone(response.data.get('token'))
 
     def test_should_denied_update(self):

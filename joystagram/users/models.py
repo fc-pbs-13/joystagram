@@ -8,21 +8,13 @@ class UserManager(BaseUserManager):
 
     use_in_migrations = True
 
-    def create(self, **kwargs):
-        """유저 객체에 set_password 후 생성"""
-        user = self.model(**kwargs)
-        self._for_write = True
-        user.set_password(user.password)  # override 변경점
-        user.save(force_insert=True, using=self.db)
-        return user
-
     def _create_user(self, email, password, **extra_fields):
         """Create and save a User with the given email and password."""
         if not email:
             raise ValueError('The given email must be set')
         email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
+        user = self.model(email=email, password=password, **extra_fields)
+        user.save()
         return user
 
     def create_user(self, email, password=None, **extra_fields):
@@ -54,11 +46,19 @@ class User(AbstractUser):
 
     objects = UserManager()
 
+    def __str__(self):
+        return self.email
+
+    def save(self, *args, **kwargs):
+        if self.id is None:
+            self.set_password(self.password)
+        super().save(*args, **kwargs)
+
 
 class Profile(models.Model):
     """1to1 사용자 확장 모델"""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    user = models.OneToOneField('users.User', on_delete=models.CASCADE)
     nickname = models.CharField(max_length=20)
     introduce = models.CharField(max_length=300, default='')
-    img_url = models.ImageField(upload_to='profile_image', null=True)
+    img = models.ImageField(upload_to='profile_image', null=True)
     created = models.DateTimeField(auto_now_add=True)
