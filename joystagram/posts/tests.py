@@ -30,8 +30,8 @@ class PostCreateTestCase(APITestCase):
             'photos': self.generate_photo_file(),
             'contents': 'hello joystagram!'
         }
-        self.user = User.objects.create(email=email, password=password)
-        self.profile = Profile.objects.create(user=self.user, nickname='test_user')
+        self.user = baker.make('users.User', email=email, password=password)
+        self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
 
     def test_should_create(self):
         self.client.force_authenticate(user=self.user)
@@ -51,8 +51,8 @@ class PostRetrieveTestCase(APITestCase):
 
     def setUp(self) -> None:
         self.user = baker.make('users.User', email=email, password=password)
-        self.profile = Profile.objects.create(user=self.user, nickname='test_user')
-        self.post = Post.objects.create(owner=self.profile)
+        self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
+        self.post = baker.make('posts.Post', owner=self.profile)
         self.url = f'/api/posts/{self.post.id}'
 
     def test_should_retrieve_post(self):

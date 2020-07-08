@@ -132,8 +132,8 @@ class UserUpdateTestCase(APITestCase):
 
     def setUp(self) -> None:
         self.data = {'password': '1111'}
-        self.user = baker.make(User, email=email, password=password)
-        self.token = baker.make(Token, user=self.user)
+        self.user = baker.make('users.User', email=email, password=password)
+        self.token = baker.make('authtoken.Token', user=self.user)
         self.url = f'/api/users/{self.user.id}/update_password'
 
     def test_should_update_password(self):
