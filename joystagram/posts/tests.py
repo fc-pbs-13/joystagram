@@ -16,10 +16,6 @@ duplicated_email = 'duplicated_email@test.com'
 class PostCreateTestCase(APITestCase):
     url = '/api/posts'
 
-    def setUp(self) -> None:
-        self.user = User.objects.create(email=email, password=password)
-        self.profile = Profile.objects.create(user=self.user, nickname='test_user')
-
     def generate_photo_file(self):
         """업로드 테스트용 사진 파일 생성"""
         file = io.BytesIO()
@@ -29,22 +25,26 @@ class PostCreateTestCase(APITestCase):
         file.seek(0)
         return file
 
-    def test_should_create(self):
-        self.client.force_authenticate(user=self.user)
-        data = {
-            'img': self.generate_photo_file(),
+    def setUp(self) -> None:
+        self.data = {
+            'photos': self.generate_photo_file(),
             'contents': 'hello joystagram!'
         }
+        self.user = User.objects.create(email=email, password=password)
+        self.profile = Profile.objects.create(user=self.user, nickname='test_user')
+
+    def test_should_create(self):
+        self.client.force_authenticate(user=self.user)
 
         response = self.client.post(
             self.url,
-            encode_multipart(BOUNDARY, data),
+            encode_multipart(BOUNDARY, self.data),
             content_type=MULTIPART_CONTENT
         )
         res = response.data
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(res['contents'], data['contents'])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
+        self.assertEqual(res['contents'], self.data['contents'])
+        # TODO 이미지 업로드 되었는지도 테스트 추가
 
 
 class PostRetrieveTestCase(APITestCase):
@@ -64,8 +64,6 @@ class PostRetrieveTestCase(APITestCase):
         print(res)
         self.assertIsNotNone(res.get('id'))
         self.assertIsNotNone(res.get('contents'))
-        # self.assertEqual(res['id'], self.user.id)
-        # self.assertEqual(res['email'], email)
 
     # 권한
     # def test_should_denied_retrieve(self):
