@@ -1,5 +1,6 @@
 import io
 
+import factory
 from PIL import Image
 from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from model_bakery import baker
@@ -36,7 +37,6 @@ class PostCreateTestCase(APITestCase):
 
         response = self.client.post(
             self.url,
-            # self.data,
             encode_multipart(BOUNDARY, self.data),
             content_type=MULTIPART_CONTENT
         )
