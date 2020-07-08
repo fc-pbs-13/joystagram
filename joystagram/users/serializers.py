@@ -5,16 +5,8 @@ from rest_framework.serializers import ModelSerializer
 from .models import User, Profile
 
 
-# class ProfileSerializer(ModelSerializer):
-#     class Meta:
-#         model = Profile
-#         fields = ('nickname', 'introduce', 'img_url')
-
-
 class UserSerializer(ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
-    # introduce = serializers.CharField(max_length=300, default='',
-    #                                   source='profile.introduce')  # allow_null=True, allow_blank=True,
 
     class Meta:
         model = User
@@ -32,10 +24,10 @@ class UserSerializer(ModelSerializer):
 
 class UserPasswordSerializer(ModelSerializer):
     """TODO email update 막기! 무조건 password 변경만 가능"""
+
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'profile')
-        read_only_fields = ('id',)
+        fields = ('password',)
         extra_kwargs = {'password': {'write_only': True}}
 
     def update(self, instance, validated_data):
