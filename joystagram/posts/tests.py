@@ -1,12 +1,10 @@
-from model_bakery import baker
-from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 import io
+
 from PIL import Image
+from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
+from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
-from rest_framework.authtoken.models import Token
-from posts.models import Post
-from users.models import User, Profile
 
 email = 'email@test.com'
 password = '1234'
@@ -47,6 +45,62 @@ class PostCreateTestCase(APITestCase):
         # TODO 이미지 업로드 되었는지도 테스트 추가
 
 
+class PostListTestCase(APITestCase):
+    """게시물 리스트"""
+    url = f'/api/posts'
+
+    def setUp(self) -> None:
+        self.users = []
+        for i in range(1, 4):
+            self.user = baker.make('users.User', email=f'{email}{i}', password=password)
+            self.users.append(self.user)
+            self.profile = baker.make('users.Profile', user=self.user, nickname=f'test_user{i}')
+            self.posts = baker.make('posts.Post', contents='우리 인생 화이팅...!', owner=self.profile, _quantity=3)
+            for post in self.posts:
+                # TODO Photo이미지 생성..?
+                baker.make('posts.Photo', post=post, _quantity=3)
+
+    def test_should_list_posts(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        res = response.data
+        for contents in res:
+            print(contents)
+        # self.assertIsNotNone(res.get('id'))
+        # self.assertIsNotNone(res.get('contents'))
+        self.fail()
+
+
+# class PostThumbnailListTestCase(APITestCase):
+#     """프로필/썸네일 url 리스트"""
+#     url = f'/api/posts'
+#
+#     def setUp(self) -> None:
+#         self.users = []
+#         for i in range(1, 4):
+#             self.user = baker.make('users.User', email=f'{email}{i}', password=password)
+#             self.users.append(self.user)
+#             self.profile = baker.make('users.Profile', user=self.user, nickname=f'test_user{i}')
+#             self.posts = baker.make('posts.Post', contents='우리 인생 화이팅...!', owner=self.profile, _quantity=3)
+#             for post in self.posts:
+#                 # TODO Photo이미지 생성..?
+#                 baker.make('posts.Photo', post=post, _quantity=3)
+#
+#     def test_should_list_posts(self):
+#         self.client.force_authenticate(user=self.user)
+#         response = self.client.get(self.url)
+#
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+#         res = response.data
+#         for contents in res:
+#             print(contents)
+#         # self.assertIsNotNone(res.get('id'))
+#         # self.assertIsNotNone(res.get('contents'))
+#         self.fail()
+
+
 class PostRetrieveTestCase(APITestCase):
 
     def setUp(self) -> None:
@@ -61,7 +115,6 @@ class PostRetrieveTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         res = response.data
-        print(res)
         self.assertIsNotNone(res.get('id'))
         self.assertIsNotNone(res.get('contents'))
 

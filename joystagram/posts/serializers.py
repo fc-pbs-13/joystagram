@@ -18,8 +18,8 @@ class PostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Post를 만든 후 이미지들로 Photo들 생성"""
-        images_data = self.context['request'].FILES
         post = Post.objects.create(**validated_data)
+        images_data = self.context['request'].FILES
         for image_data in images_data.getlist('photos'):
             # TODO 벌크로 한번에 쿼리하기
             Photo.objects.create(post=post, img=image_data)
