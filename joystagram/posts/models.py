@@ -14,3 +14,21 @@ def post_img_path(instance, filename):
 class Photo(models.Model):
     post = models.ForeignKey('posts.Post', on_delete=models.CASCADE, related_name='photos')
     img = models.ImageField(upload_to=post_img_path)
+
+
+# class BaseComment(models.Model):
+#     """댓글, 대댓글 베이스 모델"""
+#     content = models.CharField(max_length=255)
+#     created = models.DateTimeField(auto_now_add=True)
+
+
+class Comment(models.Model):
+    post = models.ForeignKey('posts.Post', on_delete=models.CASCADE)
+    content = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True)
+
+
+class ReComment(models.Model):
+    comment = models.ForeignKey('posts.Comment', on_delete=models.CASCADE)
+    content = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True)
