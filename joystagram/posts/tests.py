@@ -73,18 +73,18 @@ class PostListTestCase(APITestCase):
             for photos in post.get('photos'):
                 self.assertIsNotNone(photos.get('img'))
 
-    def test_should_list_Thumbnails(self):
-        # self.client.force_authenticate(user=self.user)
-        response = self.client.get(f'{self.url}/thumbnails')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        res = response.data
-        for post in res:
-            self.assertIsNotNone(post.get('id'))
-            self.assertIsNotNone(post.get('contents'))
-            self.assertIsNotNone(post.get('photos'))
-            for photos in post.get('photos'):
-                self.assertIsNotNone(photos.get('img'))
+    # def test_should_list_Thumbnails(self):
+    #     """썸네일 리스트 테스트"""
+    #     response = self.client.get(f'{self.url}/thumbnails')
+    #
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    #     res = response.data
+    #     for post in res:
+    #         self.assertIsNotNone(post.get('id'))
+    #         self.assertIsNotNone(post.get('contents'))
+    #         self.assertIsNotNone(post.get('photos'))
+    #         for photos in post.get('photos'):
+    #             self.assertIsNotNone(photos.get('img'))
 
 
 class PostRetrieveTestCase(APITestCase):
