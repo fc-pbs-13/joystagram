@@ -18,12 +18,12 @@ class UserSerializer(ModelSerializer):
         """유저 생성 시 프로필도 같이 생성"""
         profile = validated_data.pop('profile')
         user = User.objects.create(**validated_data)
-        profile = Profile.objects.create(user=user, **profile)
+        Profile.objects.create(user=user, **profile)
         return user
 
 
 class UserPasswordSerializer(ModelSerializer):
-    """TODO email update 막기! 무조건 password 변경만 가능"""
+    """password 변경 시리얼라이저"""
 
     class Meta:
         model = User
@@ -31,7 +31,7 @@ class UserPasswordSerializer(ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def update(self, instance, validated_data):
-        instance.set_password(validated_data['password'])
+        instance.password = validated_data['password']
         instance.save()
         return instance
 
@@ -50,9 +50,11 @@ class LoginSerializer(serializers.Serializer):
         email = attrs.get('email')
         password = attrs.get('password')
 
+        print(email, password)
         if email and password:
             user = authenticate(request=self.context.get('request'),
                                 email=email, password=password)
+            print(user)
             if user is None:
                 msg = 'Unable to log in with provided credentials.'
                 raise serializers.ValidationError(msg, code='authorization')

@@ -50,8 +50,7 @@ class User(AbstractUser):
         return self.email
 
     def save(self, *args, **kwargs):
-        if self.id is None:
-            self.set_password(self.password)
+        self.set_password(self.password)
         super().save(*args, **kwargs)
 
 
