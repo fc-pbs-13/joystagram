@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from posts.models import Post, Photo
+from posts.models import Post, Photo, Comment, ReComment
 
 
 class PhotoSerializer(serializers.ModelSerializer):
@@ -24,3 +24,17 @@ class PostSerializer(serializers.ModelSerializer):
             # TODO 벌크로 한번에 쿼리하기
             Photo.objects.create(post=post, img=image_data)
         return post
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """TODO 대댓글 개수도 보여주기"""
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'content', 'post')
+
+
+class ReCommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReComment
+        fields = ('id', 'content')

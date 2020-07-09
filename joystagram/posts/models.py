@@ -16,6 +16,8 @@ class Photo(models.Model):
     img = models.ImageField(upload_to=post_img_path)
 
 
+# 에러 발생
+# posts.ReComment.comment: (models.E006) The field 'comment' clashes with the field 'comment' from model 'posts.basecomment'.
 # class BaseComment(models.Model):
 #     """댓글, 대댓글 베이스 모델"""
 #     content = models.CharField(max_length=255)
