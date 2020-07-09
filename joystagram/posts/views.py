@@ -1,11 +1,11 @@
-from rest_framework import mixins
+from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsPostOwner
-from posts.models import Post
-from posts.serializers import PostSerializer
+from posts.models import Post, Comment, ReComment
+from posts.serializers import PostSerializer, CommentSerializer, ReCommentSerializer
 
 
 class PostViewSet(mixins.CreateModelMixin,
@@ -49,3 +49,13 @@ class PostViewSet(mixins.CreateModelMixin,
     def feed(self, request, *args, **kwargs):
         """메인 화면에서 자신이 팔로우한 유저의 게시만"""
         return super().list(request, *args, **kwargs)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment
+    serializer_class = CommentSerializer
+
+
+class ReCommentViewSet(viewsets.ModelViewSet):
+    queryset = ReComment
+    serializer_class = ReCommentSerializer

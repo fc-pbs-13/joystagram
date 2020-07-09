@@ -25,12 +25,14 @@ class Photo(models.Model):
 
 
 class Comment(models.Model):
-    post = models.ForeignKey('posts.Post', on_delete=models.CASCADE)
+    post = models.ForeignKey('posts.Post', on_delete=models.CASCADE, related_name='comments')
+    owner = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name='comments')
     content = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True)
 
 
 class ReComment(models.Model):
-    comment = models.ForeignKey('posts.Comment', on_delete=models.CASCADE)
+    comment = models.ForeignKey('posts.Comment', on_delete=models.CASCADE, related_name='recomments')
+    owner = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name='recomments')
     content = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True)
