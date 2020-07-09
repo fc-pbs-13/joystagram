@@ -4,8 +4,10 @@ __pycache__/
 *$py.class
 # C extensions
 *.so
-docker
+
 /docker
+docker/
+media/
 # Distribution / packaging
 .Python
 build/

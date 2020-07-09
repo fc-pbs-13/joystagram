@@ -9,4 +9,4 @@ router = routers.SimpleRouter(trailing_slash=False)
 router.register(r'users', UserViewSet)
 router.register(r'posts', PostViewSet)
 
-urlpatterns = router.urls + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns = router.urls
