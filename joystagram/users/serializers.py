@@ -50,11 +50,9 @@ class LoginSerializer(serializers.Serializer):
         email = attrs.get('email')
         password = attrs.get('password')
 
-        print(email, password)
         if email and password:
             user = authenticate(request=self.context.get('request'),
                                 email=email, password=password)
-            print(user)
             if user is None:
                 msg = 'Unable to log in with provided credentials.'
                 raise serializers.ValidationError(msg, code='authorization')
