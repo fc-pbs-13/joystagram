@@ -1,8 +1,6 @@
-from django.http import QueryDict
-from rest_framework import mixins, viewsets, status
+from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsPostOwner
@@ -58,8 +56,6 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def perform_create(self, serializer):
-        print(self.kwargs['post_pk'])
-
         post_id = self.kwargs['post_pk']
         post = Post.objects.get(id=post_id)
         serializer.save(owner=self.request.user.profile,
@@ -72,7 +68,6 @@ class ReCommentViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
-        # super().perform_create(serializer)
         comment_id = self.kwargs['comment_pk']
         comment = Comment.objects.get(id=comment_id)
         serializer.save(owner=self.request.user.profile,

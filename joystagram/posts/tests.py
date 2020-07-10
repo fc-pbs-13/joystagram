@@ -57,7 +57,8 @@ class PostListTestCase(APITestCase):
             self.user = baker.make('users.User', email=f'{email}{i}', password=password)
             self.users.append(self.user)
             self.profile = baker.make('users.Profile', user=self.user, nickname=f'test_user{i}')
-            self.posts = baker.make('posts.Post', content='우리 인생 화이팅...!', owner=self.profile, _quantity=3)
+            self.posts = baker.make('posts.Post', content='우리 인생 화이팅...!',
+                                    owner=self.profile, _quantity=3)
             for post in self.posts:
                 # TODO Photo이미지 생성..?
                 baker.make('posts.Photo', post=post, img='post_image/test.png', _quantity=3)
