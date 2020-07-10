@@ -48,4 +48,5 @@ class CommentSerializer(serializers.ModelSerializer):
 class ReCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReComment
-        fields = ('id', 'content')
+        fields = ('id', 'content', 'comment_id', 'owner')
+        read_only_fields = ('post_id', 'owner')

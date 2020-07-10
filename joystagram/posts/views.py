@@ -58,9 +58,22 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user.profile)
+        print(self.kwargs['post_pk'])
+
+        post_id = self.kwargs['post_pk']
+        post = Post.objects.get(id=post_id)
+        serializer.save(owner=self.request.user.profile,
+                        post=post)
 
 
 class ReCommentViewSet(viewsets.ModelViewSet):
     queryset = ReComment.objects.all()
     serializer_class = ReCommentSerializer
+    permission_classes = [AllowAny]
+
+    def perform_create(self, serializer):
+        # super().perform_create(serializer)
+        comment_id = self.kwargs['comment_pk']
+        comment = Comment.objects.get(id=comment_id)
+        serializer.save(owner=self.request.user.profile,
+                        comment=comment)

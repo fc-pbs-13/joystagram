@@ -1,6 +1,5 @@
 import io
 
-import factory
 from PIL import Image
 from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from model_bakery import baker
@@ -164,5 +163,25 @@ class CommentCreateTestCase(APITestCase):
             self.assertIsNotNone(recomment)
             self.assertIsNotNone(recomment.get())
         self.assertTrue(Comment.objects.filter(id=res.get('id')).exists())
+
+
+class ReCommentCreateTestCase(APITestCase):
+    def setUp(self):
+        self.user = baker.make('users.User', email=email, password=password)
+        baker.make('users.Profile', user=self.user, nickname='test_user')
+        self.comment = baker.make('posts.Comment')
+
+    def test_should_create(self):
+        data = {
+            "content": "blah"
+        }
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(f'/api/comments/{self.comment.id}/recomments', data=data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+        res = response.data
+        self.assertIsNotNone(res['id'])
+        self.assertIsNotNone(res['content'])
+        self.assertIsNotNone(res['owner'])
 
         self.fail()
