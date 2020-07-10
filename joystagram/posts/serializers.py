@@ -36,8 +36,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'content', 'post', 'owner', 'recomments')
-        read_only_fields = ('post', 'owner', 'recomments')
+        fields = ('id', 'content', 'post_id', 'owner', 'recomments')
+        read_only_fields = ('post_id', 'owner', 'recomments')
 
     def create(self, validated_data):
         post = Post.objects.get(pk=self.context["view"].kwargs["post_pk"])

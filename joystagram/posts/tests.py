@@ -7,6 +7,8 @@ from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from posts.models import Comment
+
 email = 'email@test.com'
 password = '1234'
 duplicated_email = 'duplicated_email@test.com'
@@ -151,6 +153,16 @@ class CommentCreateTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.data['content'])
-        print(res)
+        self.assertIsNotNone(res.get('post_id'))
+        owner = res.get('owner')
+        self.assertIsNotNone(owner)
+        self.assertIsNotNone(owner.get('id'))
+        self.assertIsNotNone(owner.get('nickname'))
+        recomments = res.get('recomments')
+        self.assertIsNotNone(recomments)
+        for recomment in recomments:
+            self.assertIsNotNone(recomment)
+            self.assertIsNotNone(recomment.get())
+        self.assertTrue(Comment.objects.filter(id=res.get('id')).exists())
 
         self.fail()
