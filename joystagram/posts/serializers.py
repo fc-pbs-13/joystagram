@@ -31,7 +31,6 @@ class CommentSerializer(serializers.ModelSerializer):
     """TODO 대댓글 개수도 보여주기"""
 
     owner = ProfileSerializer(read_only=True)
-    # recomments_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
