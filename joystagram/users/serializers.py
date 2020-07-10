@@ -62,3 +62,9 @@ class LoginSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class ProfileSerializer(ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ('id', 'nickname',)  # TODO 프로필 이미지

@@ -27,7 +27,7 @@ class PostCreateTestCase(APITestCase):
     def setUp(self) -> None:
         self.data = {
             'photos': self.generate_photo_file(),
-            'contents': 'hello joystagram!'
+            'content': 'hello joystagram!'
         }
         self.user = baker.make('users.User', email=email, password=password)
         self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
@@ -42,7 +42,7 @@ class PostCreateTestCase(APITestCase):
         )
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
-        self.assertEqual(res['contents'], self.data['contents'])
+        self.assertEqual(res['content'], self.data['content'])
         # TODO 이미지 업로드 되었는지도 테스트 추가
 
 
@@ -56,7 +56,7 @@ class PostListTestCase(APITestCase):
             self.user = baker.make('users.User', email=f'{email}{i}', password=password)
             self.users.append(self.user)
             self.profile = baker.make('users.Profile', user=self.user, nickname=f'test_user{i}')
-            self.posts = baker.make('posts.Post', contents='우리 인생 화이팅...!', owner=self.profile, _quantity=3)
+            self.posts = baker.make('posts.Post', content='우리 인생 화이팅...!', owner=self.profile, _quantity=3)
             for post in self.posts:
                 # TODO Photo이미지 생성..?
                 baker.make('posts.Photo', post=post, img='post_image/test.png', _quantity=3)
@@ -68,7 +68,7 @@ class PostListTestCase(APITestCase):
         res = response.data
         for post in res:
             self.assertIsNotNone(post.get('id'))
-            self.assertIsNotNone(post.get('contents'))
+            self.assertIsNotNone(post.get('content'))
             self.assertIsNotNone(post.get('photos'))
             for photos in post.get('photos'):
                 self.assertIsNotNone(photos.get('img'))
@@ -81,7 +81,7 @@ class PostListTestCase(APITestCase):
     #     res = response.data
     #     for post in res:
     #         self.assertIsNotNone(post.get('id'))
-    #         self.assertIsNotNone(post.get('contents'))
+    #         self.assertIsNotNone(post.get('content'))
     #         self.assertIsNotNone(post.get('photos'))
     #         for photos in post.get('photos'):
     #             self.assertIsNotNone(photos.get('img'))
@@ -102,12 +102,13 @@ class PostRetrieveTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         res = response.data
         self.assertIsNotNone(res.get('id'))
-        self.assertIsNotNone(res.get('contents'))
+        self.assertIsNotNone(res.get('content'))
 
     # def test_should_denied_retrieve(self):
     #     """차단"""
     #     response = self.client.get(self.url)
     #     self.assertEqual(401, response.status_code)
+
 
 # class PostUpdateTestCase(APITestCase):
 #
@@ -130,3 +131,26 @@ class PostRetrieveTestCase(APITestCase):
 #     def test_should_denied_update(self):
 #         response = self.client.patch(self.url, data=self.data)
 #         self.assertEqual(401, response.status_code)
+
+class CommentCreateTestCase(APITestCase):
+
+    def setUp(self) -> None:
+        self.data = {
+            'content': 'hello joy This is Comment!!'
+        }
+        self.user = baker.make('users.User', email=email, password=password)
+        profile = baker.make('users.Profile', user=self.user, nickname='test_user')
+        post = baker.make('posts.Post', content='우리 인생 화이팅...!', owner=profile)
+        baker.make('posts.Photo', post=post, img='post_image/test.png')
+        self.url = f'/api/posts/{post.id}/comments'
+
+    def test_should_create(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.url, data=self.data)
+        res = response.data
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
+        self.assertEqual(res['content'], self.data['content'])
+        print(res)
+
+        self.fail()
