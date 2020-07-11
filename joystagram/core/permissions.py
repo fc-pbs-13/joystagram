@@ -8,7 +8,7 @@ class IsUserSelf(permissions.BasePermission):
         return obj == request.user
 
 
-class IsPostOwner(permissions.BasePermission):
+class IsOwner(permissions.BasePermission):
     """포스트에 대한 권한"""
 
     def has_object_permission(self, request, view, obj):

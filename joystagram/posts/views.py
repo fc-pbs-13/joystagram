@@ -3,20 +3,16 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet
 
-from core.permissions import IsPostOwner
+from core.permissions import IsOwner
 from posts.models import Post, Comment, ReComment
 from posts.serializers import PostSerializer, CommentSerializer, ReCommentSerializer
 
 
-class PostViewSet(mixins.CreateModelMixin,
-                  mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  mixins.DestroyModelMixin,
-                  mixins.ListModelMixin,
-                  GenericViewSet):
+class PostViewSet(viewsets.ModelViewSet):
+    """게시글 CRUD"""
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [IsPostOwner]
+    permission_classes = [IsOwner]
 
     def get_permissions(self):
         if self.action in ('retrieve', 'list', 'thumbnails'):
@@ -56,6 +52,11 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
+    def get_permissions(self):
+        if self.action == 'list':
+            return [AllowAny()]
+        return super().get_permissions()
+
     def perform_create(self, serializer):
         post_id = self.kwargs['post_pk']
         serializer.save(owner=self.request.user.profile,
@@ -68,6 +69,7 @@ class CommentViewSet(mixins.UpdateModelMixin,
     """댓글 수정, 삭제 /api/comments/{comments_id}"""
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = [IsOwner]
 
 
 class ReCommentCreateListViewSet(mixins.CreateModelMixin,
@@ -76,6 +78,11 @@ class ReCommentCreateListViewSet(mixins.CreateModelMixin,
     """대댓글 생성, 리스트 /api/comments/{comments_id}/recomments"""
     queryset = ReComment.objects.all()
     serializer_class = ReCommentSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return [AllowAny()]
+        return super().get_permissions()
 
     def perform_create(self, serializer):
         comment_id = self.kwargs['comment_pk']
@@ -89,4 +96,4 @@ class ReCommentViewSet(mixins.UpdateModelMixin,
     """대댓글 수정, 삭제 /api/recomments/{recomments_id}"""
     queryset = ReComment.objects.all()
     serializer_class = ReCommentSerializer
-    permission_classes = [IsPostOwner]
+    permission_classes = [IsOwner]

@@ -207,15 +207,38 @@ class ReCommentCreateTestCase(APITestCase):
         self.user = baker.make('users.User', email=email, password=password)
         baker.make('users.Profile', user=self.user, nickname='test_user')
         self.comment = baker.make('posts.Comment')
+        self.url = f'/api/comments/{self.comment.id}/recomments'
 
     def test_should_create(self):
         """생성 성공"""
         data = {"content": "blah"}
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(f'/api/comments/{self.comment.id}/recomments', data=data)
+        response = self.client.post(self.url, data=data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
         res = response.data
         self.assertIsNotNone(res['id'])
         self.assertIsNotNone(res['content'])
         self.assertIsNotNone(res['owner'])
+
+
+class ReCommentListTestCase(APITestCase):
+    """대댓글 리스트 테스트"""
+
+    def setUp(self) -> None:
+        user = baker.make('users.User', email=email, password=password)
+        profile = baker.make('users.Profile', user=user, nickname='test_user')
+        comment = baker.make('posts.Comment', owner=profile)
+        self.recomments = baker.make('posts.ReComment', comment=comment, owner=profile, _quantity=3)
+        self.url = f'/api/comments/{comment.id}/recomments'
+
+    def test_should_list(self):
+        """리스트 성공"""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        res = response.data
+        for recomment in res:
+            self.assertIsNotNone(recomment['id'])
+            self.assertIsNotNone(recomment['content'])
+            self.assertIsNotNone(recomment['owner'])
