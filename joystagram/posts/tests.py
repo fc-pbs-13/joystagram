@@ -48,7 +48,7 @@ class PostCreateTestCase(APITestCase):
 
 
 class PostListTestCase(APITestCase):
-    """게시물 리스트"""
+    """게시물 리스트 테스트"""
     url = f'/api/posts'
 
     def setUp(self) -> None:
@@ -75,21 +75,9 @@ class PostListTestCase(APITestCase):
             for photos in post.get('photos'):
                 self.assertIsNotNone(photos.get('img'))
 
-    # def test_should_list_Thumbnails(self):
-    #     """썸네일 리스트 테스트"""
-    #     response = self.client.get(f'{self.url}/thumbnails')
-    #
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     res = response.data
-    #     for post in res:
-    #         self.assertIsNotNone(post.get('id'))
-    #         self.assertIsNotNone(post.get('content'))
-    #         self.assertIsNotNone(post.get('photos'))
-    #         for photos in post.get('photos'):
-    #             self.assertIsNotNone(photos.get('img'))
-
 
 class PostRetrieveTestCase(APITestCase):
+    """게시글 조회 테스트"""
 
     def setUp(self) -> None:
         self.user = baker.make('users.User', email=email, password=password)
@@ -112,29 +100,31 @@ class PostRetrieveTestCase(APITestCase):
     #     self.assertEqual(401, response.status_code)
 
 
-# class PostUpdateTestCase(APITestCase):
-#
-#     def setUp(self) -> None:
-#         self.data = {'password': '1111'}
-#         self.user = baker.make(User, email=email, password=password)
-#         self.token = baker.make(Token, user=self.user)
-#         self.url = f'/api/users/{self.user.id}/update_password'
-#
-#     def test_should_update_password(self):
-#         self.client.force_authenticate(user=self.user, token=self.token.key)
-#         response = self.client.patch(self.url, data=self.data)
-#         self.assertEqual(200, response.status_code)
-#
-#         # 비번변경 잘 되었는지 로그인해서 확인
-#         response = self.client.post('/api/users/login', {'email': email, 'password': '1111'})
-#         self.assertEqual(200, response.status_code)
-#         self.assertIsNotNone(response.data.get('token'))
-#
-#     def test_should_denied_update(self):
-#         response = self.client.patch(self.url, data=self.data)
-#         self.assertEqual(401, response.status_code)
+class PostUpdateTestCase(APITestCase):
+
+    def setUp(self) -> None:
+        self.data = {'content': '1111'}
+        self.user = baker.make('users.User', email=email, password=password)
+        profile = baker.make('users.Profile', user=self.user)
+        post = baker.make('posts.Post', owner=profile)
+        self.url = f'/api/posts/{post.id}'
+
+    def test_should_update(self):
+        """업데이트 성공"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(self.url, data=self.data)
+        res = response.data
+        self.assertEqual(200, response.status_code, res)
+        self.assertEqual(res['content'], self.data['content'])
+
+    def test_should_denied(self):
+        """권한 없음"""
+        response = self.client.patch(self.url, data=self.data)
+        self.assertEqual(401, response.status_code)
+
 
 class CommentCreateTestCase(APITestCase):
+    """댓글 생성 테스트"""
 
     def setUp(self) -> None:
         self.data = {
@@ -154,10 +144,12 @@ class CommentCreateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.data['content'])
         self.assertIsNotNone(res.get('post_id'))
+
         owner = res.get('owner')
         self.assertIsNotNone(owner)
         self.assertIsNotNone(owner.get('id'))
         self.assertIsNotNone(owner.get('nickname'))
+
         recomments = res.get('recomments')
         self.assertIsNotNone(recomments)
         for recomment in recomments:
@@ -166,16 +158,39 @@ class CommentCreateTestCase(APITestCase):
         self.assertTrue(Comment.objects.filter(id=res.get('id')).exists())
 
 
+class CommentListTestCase(APITestCase):
+    """댓글 리스트 테스트"""
+
+    def setUp(self) -> None:
+        self.user = baker.make('users.User', email=email, password=password)
+        profile = baker.make('users.Profile', user=self.user, nickname='test_user')
+        post = baker.make('posts.Post', owner=profile)
+        baker.make('posts.Comment', post=post, _quantity=3)
+        self.url = f'/api/posts/{post.id}/comments'
+
+    def test_should_list(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        res = response.data
+        for comment in res:
+            self.assertIsNotNone(comment['id'])
+            self.assertIsNotNone(comment['content'])
+            self.assertIsNotNone(comment['owner'])
+            self.assertIsNotNone(comment['post_id'])
+
+
 class ReCommentCreateTestCase(APITestCase):
+    """대댓글 생성 테스트"""
+
     def setUp(self):
         self.user = baker.make('users.User', email=email, password=password)
         baker.make('users.Profile', user=self.user, nickname='test_user')
         self.comment = baker.make('posts.Comment')
 
     def test_should_create(self):
-        data = {
-            "content": "blah"
-        }
+        data = {"content": "blah"}
         self.client.force_authenticate(user=self.user)
         response = self.client.post(f'/api/comments/{self.comment.id}/recomments', data=data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
@@ -184,5 +199,3 @@ class ReCommentCreateTestCase(APITestCase):
         self.assertIsNotNone(res['id'])
         self.assertIsNotNone(res['content'])
         self.assertIsNotNone(res['owner'])
-
-        self.fail()

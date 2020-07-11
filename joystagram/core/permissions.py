@@ -12,4 +12,4 @@ class IsPostOwner(permissions.BasePermission):
     """포스트에 대한 권한"""
 
     def has_object_permission(self, request, view, obj):
-        return obj.owner == request.user
+        return obj.owner.user == request.user
