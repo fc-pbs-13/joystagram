@@ -157,7 +157,6 @@ class CommentCreateTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.data['content'])
-        self.assertIsNotNone(res.get('post_id'))
 
         owner = res.get('owner')
         self.assertIsNotNone(owner)
@@ -198,7 +197,6 @@ class CommentListTestCase(APITestCase):
             self.assertIsNotNone(comment['id'])
             self.assertIsNotNone(comment['content'])
             self.assertIsNotNone(comment['owner'])
-            self.assertIsNotNone(comment['post_id'])
             self.assertIsNotNone(comment['recomments_count'])
 
 
