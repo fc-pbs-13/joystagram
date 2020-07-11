@@ -11,11 +11,12 @@ class PhotoSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     photos = PhotoSerializer(many=True, read_only=True)
+    comments_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
-        fields = ('id', 'content', 'owner', 'photos')
-        read_only_fields = ('owner',)
+        fields = ('id', 'content', 'owner', 'photos', 'comments_count')
+        read_only_fields = ('owner', 'comments_count')
 
     def create(self, validated_data):
         """Post를 만든 후 이미지들로 Photo들 생성"""
@@ -30,21 +31,26 @@ class PostSerializer(serializers.ModelSerializer):
 
         return post
 
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
 
 class CommentSerializer(serializers.ModelSerializer):
-    """TODO 대댓글 개수도 보여주기"""
-
     owner = ProfileSerializer(read_only=True)
+    recomments_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ('id', 'content', 'post_id', 'owner', 'recomments')
-        read_only_fields = ('post_id', 'owner', 'recomments')
+        fields = ('id', 'content', 'post_id', 'owner', 'recomments', 'recomments_count')
+        read_only_fields = ('post_id', 'owner', 'recomments', 'recomments_count')
 
     def create(self, validated_data):
         post = Post.objects.get(pk=self.context["view"].kwargs["post_pk"])
         validated_data["post"] = post
         return super().create(validated_data)
+
+    def get_recomments_count(self, obj):
+        return obj.recomments.count()
 
 
 class ReCommentSerializer(serializers.ModelSerializer):

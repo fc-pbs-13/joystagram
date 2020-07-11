@@ -14,6 +14,7 @@ duplicated_email = 'duplicated_email@test.com'
 
 
 class PostCreateTestCase(APITestCase):
+    """게시글 생성 테스트"""
     url = '/api/posts'
 
     def generate_photo_file(self):
@@ -30,10 +31,11 @@ class PostCreateTestCase(APITestCase):
             'photos': self.generate_photo_file(),
             'content': 'hello joystagram!'
         }
-        self.user = baker.make('users.User', email=email, password=password)
+        self.user = baker.make('users.User')
         self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
 
     def test_should_create(self):
+        """생성 성공"""
         self.client.force_authenticate(user=self.user)
 
         response = self.client.post(
@@ -52,18 +54,15 @@ class PostListTestCase(APITestCase):
     url = f'/api/posts'
 
     def setUp(self) -> None:
-        self.users = []
-        for i in range(1, 4):
-            self.user = baker.make('users.User', email=f'{email}{i}', password=password)
-            self.users.append(self.user)
-            self.profile = baker.make('users.Profile', user=self.user, nickname=f'test_user{i}')
-            self.posts = baker.make('posts.Post', content='우리 인생 화이팅...!',
-                                    owner=self.profile, _quantity=3)
-            for post in self.posts:
-                # TODO Photo이미지 생성..?
-                baker.make('posts.Photo', post=post, img='post_image/test.png', _quantity=3)
+        self.user = baker.make('users.User')
+        self.profile = baker.make('users.Profile', user=self.user)
+        self.posts = baker.make('posts.Post', owner=self.profile, _quantity=3)
+        self.img_url = 'post_image/test.png'
+        for post in self.posts:
+            baker.make('posts.Photo', post=post, img=self.img_url, _quantity=3)
 
     def test_should_list_posts(self):
+        """리스트 성공"""
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -73,7 +72,7 @@ class PostListTestCase(APITestCase):
             self.assertIsNotNone(post.get('content'))
             self.assertIsNotNone(post.get('photos'))
             for photos in post.get('photos'):
-                self.assertIsNotNone(photos.get('img'))
+                self.assertIsNotNone(photos.get('img'), self.img_url)
 
 
 class PostRetrieveTestCase(APITestCase):
@@ -86,6 +85,7 @@ class PostRetrieveTestCase(APITestCase):
         self.url = f'/api/posts/{self.post.id}'
 
     def test_should_retrieve_post(self):
+        """조회 성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
 
@@ -94,13 +94,9 @@ class PostRetrieveTestCase(APITestCase):
         self.assertIsNotNone(res.get('id'))
         self.assertIsNotNone(res.get('content'))
 
-    # def test_should_denied_retrieve(self):
-    #     """차단"""
-    #     response = self.client.get(self.url)
-    #     self.assertEqual(401, response.status_code)
-
 
 class PostUpdateTestCase(APITestCase):
+    """게시글 수정 테스트"""
 
     def setUp(self) -> None:
         self.data = {'content': '1111'}
@@ -137,6 +133,7 @@ class CommentCreateTestCase(APITestCase):
         self.url = f'/api/posts/{post.id}/comments'
 
     def test_should_create(self):
+        """생성 성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.url, data=self.data)
         res = response.data
@@ -157,6 +154,8 @@ class CommentCreateTestCase(APITestCase):
             self.assertIsNotNone(recomment.get())
         self.assertTrue(Comment.objects.filter(id=res.get('id')).exists())
 
+        self.assertIsNotNone(res.get('recomments_count'))
+
 
 class CommentListTestCase(APITestCase):
     """댓글 리스트 테스트"""
@@ -169,6 +168,7 @@ class CommentListTestCase(APITestCase):
         self.url = f'/api/posts/{post.id}/comments'
 
     def test_should_list(self):
+        """리스트 성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
@@ -190,6 +190,7 @@ class ReCommentCreateTestCase(APITestCase):
         self.comment = baker.make('posts.Comment')
 
     def test_should_create(self):
+        """생성 성공"""
         data = {"content": "blah"}
         self.client.force_authenticate(user=self.user)
         response = self.client.post(f'/api/comments/{self.comment.id}/recomments', data=data)
