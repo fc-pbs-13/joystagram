@@ -73,6 +73,7 @@ class PostListTestCase(APITestCase):
             self.assertIsNotNone(post.get('photos'))
             for photos in post.get('photos'):
                 self.assertIsNotNone(photos.get('img'), self.img_url)
+            self.assertIsNotNone(post['comments_count'])
 
 
 class PostRetrieveTestCase(APITestCase):
@@ -154,8 +155,6 @@ class CommentCreateTestCase(APITestCase):
             self.assertIsNotNone(recomment.get())
         self.assertTrue(Comment.objects.filter(id=res.get('id')).exists())
 
-        self.assertIsNotNone(res.get('recomments_count'))
-
 
 class CommentListTestCase(APITestCase):
     """댓글 리스트 테스트"""
@@ -179,6 +178,7 @@ class CommentListTestCase(APITestCase):
             self.assertIsNotNone(comment['content'])
             self.assertIsNotNone(comment['owner'])
             self.assertIsNotNone(comment['post_id'])
+            self.assertIsNotNone(comment['recomments_count'])
 
 
 class ReCommentCreateTestCase(APITestCase):
