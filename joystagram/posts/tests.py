@@ -1,11 +1,9 @@
 import io
-
 from PIL import Image
 from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
-
 from posts.models import Comment
 
 email = 'email@test.com'
@@ -47,6 +45,15 @@ class PostCreateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.data['content'])
         # TODO 이미지 업로드 되었는지도 테스트 추가
+
+    # def test_should_denied401(self):
+    #     """인증 필요"""
+    #     response = self.client.post(
+    #         self.url,
+    #         encode_multipart(BOUNDARY, self.data),
+    #         content_type=MULTIPART_CONTENT
+    #     )
+    #     self.assertEqual(401, response.status_code)
 
 
 class PostListTestCase(APITestCase):
@@ -111,13 +118,22 @@ class PostUpdateTestCase(APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.patch(self.url, data=self.data)
         res = response.data
+
         self.assertEqual(200, response.status_code, res)
         self.assertEqual(res['content'], self.data['content'])
 
-    def test_should_denied(self):
-        """권한 없음"""
+    def test_should_denied401(self):
+        """인증 필요"""
         response = self.client.patch(self.url, data=self.data)
         self.assertEqual(401, response.status_code)
+
+    def test_should_denied403(self):
+        """권한 없음"""
+        invalid_user = baker.make('users.User')
+        baker.make('users.Profile', user=invalid_user)
+        self.client.force_authenticate(user=invalid_user)
+        response = self.client.patch(self.url, data=self.data)
+        self.assertEqual(403, response.status_code)
 
 
 class CommentCreateTestCase(APITestCase):
@@ -154,6 +170,11 @@ class CommentCreateTestCase(APITestCase):
             self.assertIsNotNone(recomment)
             self.assertIsNotNone(recomment.get())
         self.assertTrue(Comment.objects.filter(id=res.get('id')).exists())
+
+    def test_should_denied(self):
+        """권한 없음"""
+        response = self.client.post(self.url, data=self.data)
+        self.assertEqual(401, response.status_code)
 
 
 class CommentListTestCase(APITestCase):
