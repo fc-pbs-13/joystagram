@@ -46,14 +46,14 @@ class PostCreateTestCase(APITestCase):
         self.assertEqual(res['content'], self.data['content'])
         # TODO 이미지 업로드 되었는지도 테스트 추가
 
-    # def test_should_denied401(self):
-    #     """인증 필요"""
-    #     response = self.client.post(
-    #         self.url,
-    #         encode_multipart(BOUNDARY, self.data),
-    #         content_type=MULTIPART_CONTENT
-    #     )
-    #     self.assertEqual(401, response.status_code)
+    def test_should_denied401(self):
+        """인증 필요"""
+        response = self.client.post(
+            self.url,
+            encode_multipart(BOUNDARY, self.data),
+            content_type=MULTIPART_CONTENT
+        )
+        self.assertEqual(401, response.status_code)
 
 
 class PostListTestCase(APITestCase):
