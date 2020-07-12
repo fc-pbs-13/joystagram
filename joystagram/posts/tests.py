@@ -102,8 +102,8 @@ class PostRetrieveTestCase(APITestCase):
         self.assertIsNotNone(res.get('content'))
 
 
-class PostUDTestCase(APITestCase):
-    """게시글 수정 테스트"""
+class PostUpdateDeleteTestCase(APITestCase):
+    """게시글 수정, 삭제 테스트"""
 
     def setUp(self) -> None:
         self.data = {'content': '1111'}
@@ -113,7 +113,7 @@ class PostUDTestCase(APITestCase):
         self.url = f'/api/posts/{post.id}'
 
     def test_should_update(self):
-        """업데이트 성공"""
+        """수정 성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.patch(self.url, data=self.data)
         res = response.data
@@ -121,12 +121,12 @@ class PostUDTestCase(APITestCase):
         self.assertEqual(200, response.status_code, res)
         self.assertEqual(res['content'], self.data['content'])
 
-    def test_should_denied401(self):
+    def test_should_denied_update401(self):
         """인증 필요"""
         response = self.client.patch(self.url, data=self.data)
         self.assertEqual(401, response.status_code)
 
-    def test_should_denied403(self):
+    def test_should_denied_update403(self):
         """권한 없음"""
         invalid_user = baker.make('users.User')
         baker.make('users.Profile', user=invalid_user)
@@ -220,7 +220,7 @@ class CommentListTestCase(APITestCase):
             self.assertIsNotNone(comment['recomments_count'])
 
 
-class CommentUpdateTestCase(APITestCase):
+class CommentUpdateDeleteTestCase(APITestCase):
     """댓글 수정 테스트"""
 
     def setUp(self) -> None:
@@ -231,7 +231,7 @@ class CommentUpdateTestCase(APITestCase):
         self.url = f'/api/comments/{comment.id}'
 
     def test_should_update(self):
-        """업데이트 성공"""
+        """수정 성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.patch(self.url, data=self.data)
         res = response.data
@@ -239,12 +239,12 @@ class CommentUpdateTestCase(APITestCase):
         self.assertEqual(200, response.status_code, res)
         self.assertEqual(res['content'], self.data['content'])
 
-    def test_should_denied401(self):
+    def test_should_denied_update401(self):
         """인증 필요"""
         response = self.client.patch(self.url, data=self.data)
         self.assertEqual(401, response.status_code)
 
-    def test_should_denied403(self):
+    def test_should_denied_update403(self):
         """권한 없음"""
         invalid_user = baker.make('users.User')
         baker.make('users.Profile', user=invalid_user)
@@ -252,17 +252,7 @@ class CommentUpdateTestCase(APITestCase):
         response = self.client.patch(self.url, data=self.data)
         self.assertEqual(403, response.status_code)
 
-
-class CommentDeleteTestCase(APITestCase):
-    """댓글 삭제 테스트"""
-
-    def setUp(self) -> None:
-        self.user = baker.make('users.User', email=email, password=password)
-        profile = baker.make('users.Profile', user=self.user)
-        comment = baker.make('posts.Comment', owner=profile)
-        self.url = f'/api/comments/{comment.id}'
-
-    def test_should_update(self):
+    def test_should_delete(self):
         """삭제 성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(self.url)
@@ -270,12 +260,12 @@ class CommentDeleteTestCase(APITestCase):
 
         self.assertEqual(204, response.status_code, res)
 
-    def test_should_denied401(self):
+    def test_should_denied_delete401(self):
         """인증 필요"""
         response = self.client.delete(self.url)
         self.assertEqual(401, response.status_code)
 
-    def test_should_denied403(self):
+    def test_should_denied_delete403(self):
         """권한 없음"""
         invalid_user = baker.make('users.User')
         baker.make('users.Profile', user=invalid_user)
@@ -328,7 +318,7 @@ class ReCommentListTestCase(APITestCase):
             self.assertIsNotNone(recomment['owner'])
 
 
-class ReCommentUpdateTestCase(APITestCase):
+class ReCommentUpdateDeleteTestCase(APITestCase):
     """대댓글 수정 테스트"""
 
     def setUp(self) -> None:
@@ -339,7 +329,7 @@ class ReCommentUpdateTestCase(APITestCase):
         self.url = f'/api/recomments/{recomment.id}'
 
     def test_should_update(self):
-        """업데이트 성공"""
+        """수정 성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.patch(self.url, data=self.data)
         res = response.data
@@ -347,12 +337,12 @@ class ReCommentUpdateTestCase(APITestCase):
         self.assertEqual(200, response.status_code, res)
         self.assertEqual(res['content'], self.data['content'])
 
-    def test_should_denied401(self):
+    def test_should_denied_update401(self):
         """인증 필요"""
         response = self.client.patch(self.url, data=self.data)
         self.assertEqual(401, response.status_code)
 
-    def test_should_denied403(self):
+    def test_should_denied_update403(self):
         """권한 없음"""
         invalid_user = baker.make('users.User')
         baker.make('users.Profile', user=invalid_user)
@@ -360,17 +350,7 @@ class ReCommentUpdateTestCase(APITestCase):
         response = self.client.patch(self.url, data=self.data)
         self.assertEqual(403, response.status_code)
 
-
-class ReCommentDeleteTestCase(APITestCase):
-    """댓글 삭제 테스트"""
-
-    def setUp(self) -> None:
-        self.user = baker.make('users.User', email=email, password=password)
-        profile = baker.make('users.Profile', user=self.user)
-        recomment = baker.make('posts.ReComment', owner=profile)
-        self.url = f'/api/recomments/{recomment.id}'
-
-    def test_should_update(self):
+    def test_should_delete(self):
         """삭제 성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(self.url)
@@ -378,12 +358,12 @@ class ReCommentDeleteTestCase(APITestCase):
 
         self.assertEqual(204, response.status_code, res)
 
-    def test_should_denied401(self):
+    def test_should_denied_delete401(self):
         """인증 필요"""
         response = self.client.delete(self.url)
         self.assertEqual(401, response.status_code)
 
-    def test_should_denied403(self):
+    def test_should_denied_delete403(self):
         """권한 없음"""
         invalid_user = baker.make('users.User')
         baker.make('users.Profile', user=invalid_user)
