@@ -8,7 +8,7 @@ from posts.models import Comment
 
 email = 'email@test.com'
 password = '1234'
-duplicated_email = 'duplicated_email@test.com'
+# duplicated_email = 'duplicated_email@test.com'
 
 
 class PostCreateTestCase(APITestCase):
@@ -27,6 +27,7 @@ class PostCreateTestCase(APITestCase):
     def setUp(self) -> None:
         self.data = {
             'photos': self.generate_photo_file(),
+            # TODO 이미지 여러장 업로드 테스트
             'content': 'hello joystagram!'
         }
         self.user = baker.make('users.User')
@@ -44,7 +45,6 @@ class PostCreateTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.data['content'])
-        # TODO 이미지 업로드 되었는지도 테스트 추가
 
     def test_should_denied401(self):
         """인증 필요"""
