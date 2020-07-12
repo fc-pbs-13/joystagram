@@ -7,7 +7,7 @@ router = routers.SimpleRouter(trailing_slash=False)
 router.register(r'users', UserViewSet)
 router.register(r'posts', PostViewSet)
 router.register(r'comments', CommentViewSet)
-# router.register(r'recomments', ReCommentViewSet)
+router.register(r'recomments', ReCommentViewSet)
 
 comments_router = routers.NestedSimpleRouter(router, r'posts', trailing_slash=False, lookup='post')
 comments_router.register(r'comments', CommentCreateListViewSet)
