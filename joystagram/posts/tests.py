@@ -26,14 +26,17 @@ class PostCreateTestCase(APITestCase):
     def setUp(self) -> None:
         self.data = {
             'photos': self.generate_photo_file(),
-            # TODO 이미지 여러장 업로드 테스트
+            'content': 'hello joystagram!'
+        }
+        self.multiple_data = {
+            'photos': [self.generate_photo_file(), self.generate_photo_file()],
             'content': 'hello joystagram!'
         }
         self.user = baker.make('users.User')
         self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
 
     def test_should_create(self):
-        """생성 성공"""
+        """단일 이미지 생성 성공"""
         self.client.force_authenticate(user=self.user)
 
         response = self.client.post(
@@ -44,6 +47,20 @@ class PostCreateTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.data['content'])
+
+    def test_should_create_multiple(self):
+        """다중 이미지 생성 성공"""
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            self.url,
+            encode_multipart(BOUNDARY, self.multiple_data),
+            content_type=MULTIPART_CONTENT
+        )
+        res = response.data
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
+        self.assertEqual(res['content'], self.multiple_data['content'])
+        self.assertEqual(len(res['photos']), len(self.multiple_data['photos']))
 
     def test_should_denied401(self):
         """인증 필요"""

@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 
 
 class PostLikeCreateTestCase(APITestCase):
-    """게시글 생성 테스트"""
+    """게시글 좋아요 생성 테스트"""
 
     def setUp(self) -> None:
         self.user = baker.make('users.User')
