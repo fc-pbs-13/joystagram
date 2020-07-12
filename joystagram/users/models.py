@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from model_utils.models import TimeStampedModel
 
 
 class UserManager(BaseUserManager):
@@ -54,10 +55,9 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
 
 
-class Profile(models.Model):
+class Profile(TimeStampedModel):
     """1to1 사용자 확장 모델"""
     user = models.OneToOneField('users.User', on_delete=models.CASCADE)
     nickname = models.CharField(max_length=20)
     introduce = models.CharField(max_length=255)
     img = models.ImageField(upload_to='profile_image')
-    created = models.DateTimeField(auto_now_add=True)
