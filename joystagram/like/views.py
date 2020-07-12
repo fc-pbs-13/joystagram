@@ -15,6 +15,7 @@ class PostLikeViewSet(mixins.CreateModelMixin,
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
+        """POST /api/posts/{post_id}/post_likes"""
         request.data['post_id'] = self.kwargs['post_pk']
         return super().create(request, *args, **kwargs)
 
