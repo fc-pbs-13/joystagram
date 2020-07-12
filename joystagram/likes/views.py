@@ -2,20 +2,24 @@ from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
-from like.models import PostLike
-from like.serializers import PostLikeSerializer
+from likes.models import PostLike
+from likes.serializers import PostLikeSerializer
 
 
 class PostLikeViewSet(mixins.CreateModelMixin,
                       mixins.DestroyModelMixin,
                       mixins.ListModelMixin,
                       GenericViewSet):
+    """
+    게시글 좋아요
+    생성
+    POST /api/posts/{post_id}/post_likes
+    """
     queryset = PostLike.objects.all()
     serializer_class = PostLikeSerializer
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        """POST /api/posts/{post_id}/post_likes"""
         request.data['post_id'] = self.kwargs['post_pk']
         return super().create(request, *args, **kwargs)
 

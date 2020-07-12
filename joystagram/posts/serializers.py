@@ -37,6 +37,7 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.comments.count()
 
     def get_best_comment(self, obj):
+        """좋아요가 가장 많은 댓글"""
         pass
 
 
@@ -60,6 +61,7 @@ class CommentSerializer(serializers.ModelSerializer):
         return obj.recomments.count()
 
     def get_best_recomment(self, obj):
+        """좋아요가 가장 많은 대댓글"""
         pass
 
 

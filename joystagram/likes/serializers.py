@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from like.models import PostLike
+from likes.models import PostLike
 
 
 class PostLikeUniqueTogetherValidator(UniqueTogetherValidator):

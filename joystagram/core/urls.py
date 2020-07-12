@@ -1,6 +1,6 @@
 from rest_framework_nested import routers
 
-from like.views import PostLikeViewSet
+from likes.views import PostLikeViewSet
 from posts.views import PostViewSet, CommentCreateListViewSet, ReCommentCreateListViewSet, CommentViewSet, ReCommentViewSet
 from users.views import UserViewSet
 

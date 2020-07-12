@@ -21,7 +21,7 @@ class PostLikeCreateTestCase(APITestCase):
 
     def test_should_duplicate(self):
         """중복 차단"""
-        baker.make('like.PostLike', owner=self.profile, post=self.post)
+        baker.make('likes.PostLike', owner=self.profile, post=self.post)
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.url)
         res = response.data

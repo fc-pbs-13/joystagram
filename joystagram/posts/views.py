@@ -7,7 +7,13 @@ from posts.serializers import PostSerializer, CommentSerializer, ReCommentSerial
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    """게시글 CRUD"""
+    """
+    게시글 생성, 리스트, 수정, 삭제
+    POST, GET
+    /api/posts
+    UPDATE, DELETE
+    /api/posts/{post_id}
+    """
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsOwnerOrReadOnly]
@@ -41,7 +47,11 @@ class PostViewSet(viewsets.ModelViewSet):
 class CommentCreateListViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
                                GenericViewSet):
-    """댓글 생성, 리스트 /api/posts/{post_id}/comments"""
+    """
+    댓글 생성, 리스트
+    POST, GET
+    /api/posts/{post_id}/comments
+    """
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrReadOnly]
@@ -55,7 +65,10 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
 class CommentViewSet(mixins.UpdateModelMixin,
                      mixins.DestroyModelMixin,
                      GenericViewSet):
-    """댓글 수정, 삭제 /api/comments/{comments_id}"""
+    """
+    댓글 수정, 삭제
+    PATCH, DELETE
+    /api/comments/{comments_id}"""
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrReadOnly]
@@ -64,7 +77,11 @@ class CommentViewSet(mixins.UpdateModelMixin,
 class ReCommentCreateListViewSet(mixins.CreateModelMixin,
                                  mixins.ListModelMixin,
                                  GenericViewSet):
-    """대댓글 생성, 리스트 /api/comments/{comments_id}/recomments"""
+    """
+    대댓글 생성, 리스트
+    POST, GET
+    /api/comments/{comments_id}/recomments
+    """
     queryset = ReComment.objects.all()
     serializer_class = ReCommentSerializer
     permission_classes = [IsOwnerOrReadOnly]
@@ -78,7 +95,11 @@ class ReCommentCreateListViewSet(mixins.CreateModelMixin,
 class ReCommentViewSet(mixins.UpdateModelMixin,
                        mixins.DestroyModelMixin,
                        GenericViewSet):
-    """대댓글 수정, 삭제 /api/recomments/{recomments_id}"""
+    """
+    대댓글 수정, 삭제
+    PATCH, DELETE
+    /api/recomments/{recomments_id}
+    """
     queryset = ReComment.objects.all()
     serializer_class = ReCommentSerializer
     permission_classes = [IsOwnerOrReadOnly]
