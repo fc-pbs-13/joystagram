@@ -8,7 +8,6 @@ from posts.models import Comment
 
 email = 'email@test.com'
 password = '1234'
-# duplicated_email = 'duplicated_email@test.com'
 
 
 class PostCreateTestCase(APITestCase):
@@ -103,7 +102,7 @@ class PostRetrieveTestCase(APITestCase):
         self.assertIsNotNone(res.get('content'))
 
 
-class PostUpdateTestCase(APITestCase):
+class PostUDTestCase(APITestCase):
     """게시글 수정 테스트"""
 
     def setUp(self) -> None:
@@ -135,17 +134,7 @@ class PostUpdateTestCase(APITestCase):
         response = self.client.patch(self.url, data=self.data)
         self.assertEqual(403, response.status_code)
 
-
-class PostDeleteTestCase(APITestCase):
-    """게시글 삭제 테스트"""
-
-    def setUp(self) -> None:
-        self.user = baker.make('users.User', email=email, password=password)
-        profile = baker.make('users.Profile', user=self.user)
-        post = baker.make('posts.Post', owner=profile)
-        self.url = f'/api/posts/{post.id}'
-
-    def test_should_update(self):
+    def test_should_delete(self):
         """삭제 성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(self.url)
@@ -153,12 +142,12 @@ class PostDeleteTestCase(APITestCase):
 
         self.assertEqual(204, response.status_code, res)
 
-    def test_should_denied401(self):
+    def test_should_denied_delete401(self):
         """인증 필요"""
         response = self.client.delete(self.url)
         self.assertEqual(401, response.status_code)
 
-    def test_should_denied403(self):
+    def test_should_denied_delete403(self):
         """권한 없음"""
         invalid_user = baker.make('users.User')
         baker.make('users.Profile', user=invalid_user)
