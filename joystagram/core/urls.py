@@ -1,5 +1,6 @@
 from rest_framework_nested import routers
 
+from likes.views import PostLikeViewSet
 from posts.views import PostViewSet, CommentCreateListViewSet, ReCommentCreateListViewSet, CommentViewSet, ReCommentViewSet
 from users.views import UserViewSet
 
@@ -11,6 +12,7 @@ router.register(r'recomments', ReCommentViewSet)
 
 comments_router = routers.NestedSimpleRouter(router, r'posts', trailing_slash=False, lookup='post')
 comments_router.register(r'comments', CommentCreateListViewSet)
+comments_router.register(r'post_likes', PostLikeViewSet)
 
 recomments_router = routers.NestedSimpleRouter(router, r'comments', trailing_slash=False, lookup='comment')
 recomments_router.register(r'recomments', ReCommentCreateListViewSet)
