@@ -13,14 +13,14 @@ class PostLikeTestCase(APITestCase):
         self.url = f'/api/posts/{self.post.id}/post_likes'
 
     def test_should_create(self):
-        """생성 성공"""
+        """생성-성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
 
     def test_should_denied_duplicate_likes(self):
-        """중복되는 좋아요 차단"""
+        """생성-중복 차단"""
         baker.make('likes.PostLike', owner=self.profile, post=self.post)
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.url)
@@ -28,14 +28,21 @@ class PostLikeTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, res)
 
     def test_should_denied_create_401(self):
-        """인증 필요"""
+        """생성-인증 필요"""
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
     def test_should_delete(self):
-        """삭제 성공"""
+        """삭제-성공"""
         post_like = baker.make('likes.PostLike', owner=self.profile, post=self.post)
         self.url = f'/api/posts/{self.post.id}/post_likes'
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(f'{self.url}/{post_like.id}')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+
+    def test_should_denied_delete401(self):
+        """삭제-인증 필요"""
+        post_like = baker.make('likes.PostLike', owner=self.profile, post=self.post)
+        self.url = f'/api/posts/{self.post.id}/post_likes'
+        response = self.client.delete(f'{self.url}/{post_like.id}')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)

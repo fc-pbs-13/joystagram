@@ -12,8 +12,8 @@ class PostLikeViewSet(mixins.CreateModelMixin,
                       GenericViewSet):
     """
     게시글 좋아요
-    생성
-    POST /api/posts/{post_id}/post_likes
+    생성, 삭제
+    POST, DELETE /api/posts/{post_id}/post_likes
 
     TODO url구성방안 2가지 중 고민
     생성,삭제,리스트 모두 nested? vs 생성이나 생성, 리스트만 nested
@@ -28,7 +28,6 @@ class PostLikeViewSet(mixins.CreateModelMixin,
 
     def perform_create(self, serializer):
         serializer.save(owner_id=self.request.user.profile.id, post_id=self.kwargs['post_pk'])
-
 
 # class CommentLikeViewSet(mixins.CreateModelMixin,
 #                          mixins.DestroyModelMixin,
