@@ -44,7 +44,6 @@ class PostSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     owner = ProfileSerializer(read_only=True)
     recomments_count = serializers.SerializerMethodField()
-
     # best_recomment = serializers.SerializerMethodField()  # TODO 좋아요가 가장 많은 대댓글
 
     class Meta:

@@ -14,7 +14,8 @@ class PostCreateTestCase(APITestCase):
     """게시글 생성 테스트"""
     url = '/api/posts'
 
-    def generate_photo_file(self):
+    @staticmethod
+    def generate_photo_file():
         """업로드 테스트용 사진 파일 생성"""
         file = io.BytesIO()
         image = Image.new('RGBA', size=(1, 1), color=(0, 0, 0))

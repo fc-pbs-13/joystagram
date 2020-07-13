@@ -58,6 +58,7 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
     permission_classes = [IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
+        """get_object_or_404???"""
         post_id = self.kwargs['post_pk']
         serializer.save(owner=self.request.user.profile,
                         post_id=post_id)

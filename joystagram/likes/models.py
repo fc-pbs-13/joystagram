@@ -1,7 +1,8 @@
 from django.db import models
+from model_utils.models import TimeStampedModel
 
 
-class PostLike(models.Model):
+class PostLike(TimeStampedModel):
     post = models.ForeignKey('posts.Post', on_delete=models.CASCADE, related_name='likes')
     owner = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name='post_likes')
 
@@ -9,7 +10,7 @@ class PostLike(models.Model):
         unique_together = ['owner', 'post']
 
 
-class CommentLike(models.Model):
+class CommentLike(TimeStampedModel):
     comment = models.ForeignKey('posts.Comment', on_delete=models.CASCADE, related_name='likes')
     owner = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name='comment_likes')
 
@@ -17,7 +18,7 @@ class CommentLike(models.Model):
         unique_together = ['owner', 'comment']
 
 
-class ReCommentLike(models.Model):
+class ReCommentLike(TimeStampedModel):
     recomment = models.ForeignKey('posts.ReComment', on_delete=models.CASCADE, related_name='likes')
     owner = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name='recomment_likes')
 

@@ -8,8 +8,8 @@ class PostLikeUniqueTogetherValidator(UniqueTogetherValidator):
 
     def enforce_required_fields(self, attrs, serializer):
         """게시글 좋아요 UniqueTogether 검사"""
-        attrs['owner_id'] = serializer.context['request'].user.profile.id
-        attrs['post_id'] = serializer.context['view'].kwargs['post_pk']
+        attrs['owner_id'] = serializer.initial_data['owner_id']
+        attrs['post_id'] = serializer.initial_data['post_id']
         super().enforce_required_fields(attrs, serializer)
 
 
