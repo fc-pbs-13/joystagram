@@ -5,9 +5,11 @@ from likes.models import PostLike
 
 
 class PostLikeUniqueTogetherValidator(UniqueTogetherValidator):
-    """게시글 좋아요 UniqueTogether 검사"""
 
     def enforce_required_fields(self, attrs, serializer):
+        """
+        게시글 좋아요 UniqueTogether 검사
+        """
         attrs['owner_id'] = serializer.context['request'].user.profile.id
         attrs['post_id'] = serializer.context['view'].kwargs['post_pk']
         super().enforce_required_fields(attrs, serializer)

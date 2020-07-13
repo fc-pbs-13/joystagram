@@ -20,7 +20,7 @@ class PostLikeCreateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
 
     def test_should_duplicate(self):
-        """중복 차단"""
+        """중복되는 좋아요 차단"""
         baker.make('likes.PostLike', owner=self.profile, post=self.post)
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.url)
