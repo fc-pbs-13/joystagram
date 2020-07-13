@@ -11,7 +11,7 @@ class PostLike(TimeStampedModel):
 
 
 class CommentLike(TimeStampedModel):
-    comment = models.ForeignKey('posts.Comment', on_delete=models.CASCADE, related_name='likes')
+    comment = models.ForeignKey('comments.Comment', on_delete=models.CASCADE, related_name='likes')
     owner = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name='comment_likes')
 
     class Meta:
@@ -19,7 +19,7 @@ class CommentLike(TimeStampedModel):
 
 
 class ReCommentLike(TimeStampedModel):
-    recomment = models.ForeignKey('posts.ReComment', on_delete=models.CASCADE, related_name='likes')
+    recomment = models.ForeignKey('comments.ReComment', on_delete=models.CASCADE, related_name='likes')
     owner = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name='recomment_likes')
 
     class Meta:

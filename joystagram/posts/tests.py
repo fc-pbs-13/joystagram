@@ -4,7 +4,8 @@ from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
-from posts.models import Comment
+
+from comments.models import Comment
 
 email = 'email@test.com'
 password = '1234'
@@ -74,7 +75,6 @@ class PostCreateTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.multiple_data['content'])
-        print(res)
         self.assertEqual(len(res['_photos']), len(self.multiple_data['photos']))
 
     def test_should_denied401(self):
@@ -233,9 +233,9 @@ class CommentListTestCase(APITestCase):
         # profile = baker.make('users.Profile', user=self.user, nickname='test_user')
         # post = baker.make('posts.Post', owner=profile)
         post = baker.make('posts.Post')
-        # baker.make('posts.Comment', post=post, _quantity=3)
+        # baker.make('comments.Comment', post=post, _quantity=3)
         self.comment_size = 3
-        baker.make('posts.Comment', post=post, _quantity=self.comment_size)
+        self.comments = baker.make('comments.Comment', post=post, _quantity=self.comment_size)
         self.url = f'/api/posts/{post.id}/comments'
 
     def test_should_list(self):
@@ -246,12 +246,11 @@ class CommentListTestCase(APITestCase):
 
         self.assertEqual(len(response.data), self.comment_size)
 
-        res = response.data
-        for comment in res['results']:
-            self.assertIsNotNone(comment['id'])
-            self.assertIsNotNone(comment['content'])
-            self.assertIsNotNone(comment['owner'])
-            self.assertIsNotNone(comment['recomments_count'])
+        for comment_res, comment in zip(response.data['results'], self.comments):
+            self.assertIsNotNone(comment_res['id'])
+            self.assertIsNotNone(comment_res['content'])
+            self.assertIsNotNone(comment_res['owner'])
+            self.assertIsNotNone(comment_res['recomments_count'])
 
 
 class CommentUpdateDeleteTestCase(APITestCase):
@@ -261,7 +260,7 @@ class CommentUpdateDeleteTestCase(APITestCase):
         self.data = {'content': 'update_comment'}
         self.user = baker.make('users.User', email=email, password=password)
         profile = baker.make('users.Profile', user=self.user)
-        comment = baker.make('posts.Comment', owner=profile)
+        comment = baker.make('comments.Comment', owner=profile)
         self.url = f'/api/comments/{comment.id}'
 
     def test_should_update(self):
@@ -313,7 +312,7 @@ class ReCommentCreateTestCase(APITestCase):
     def setUp(self):
         self.user = baker.make('users.User', email=email, password=password)
         baker.make('users.Profile', user=self.user, nickname='test_user')
-        self.comment = baker.make('posts.Comment')
+        self.comment = baker.make('comments.Comment')
         self.url = f'/api/comments/{self.comment.id}/recomments'
         self.data = {"content": "blah"}
 
@@ -340,8 +339,8 @@ class ReCommentListTestCase(APITestCase):
     def setUp(self) -> None:
         user = baker.make('users.User', email=email, password=password)
         profile = baker.make('users.Profile', user=user, nickname='test_user')
-        comment = baker.make('posts.Comment', owner=profile)
-        self.recomments = baker.make('posts.ReComment', comment=comment, owner=profile, _quantity=3)
+        comment = baker.make('comments.Comment', owner=profile)
+        self.recomments = baker.make('comments.ReComment', comment=comment, owner=profile, _quantity=3)
         self.url = f'/api/comments/{comment.id}/recomments'
 
     def test_should_list(self):
@@ -363,7 +362,7 @@ class ReCommentUpdateDeleteTestCase(APITestCase):
         self.data = {'content': 'update_recomment'}
         self.user = baker.make('users.User', email=email, password=password)
         profile = baker.make('users.Profile', user=self.user)
-        recomment = baker.make('posts.ReComment', owner=profile)
+        recomment = baker.make('comments.ReComment', owner=profile)
         self.url = f'/api/recomments/{recomment.id}'
 
     def test_should_update(self):

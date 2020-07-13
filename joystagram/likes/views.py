@@ -2,7 +2,7 @@ from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
-from likes.models import PostLike, CommentLike
+from likes.models import PostLike
 from likes.serializers import PostLikeSerializer
 
 
@@ -21,11 +21,6 @@ class PostLikeViewSet(mixins.CreateModelMixin,
     queryset = PostLike.objects.all()
     serializer_class = PostLikeSerializer
     permission_classes = [IsAuthenticated]
-
-    # def create(self, request, *args, **kwargs):
-    #     request.data['post'] = self.kwargs['post_pk']
-    #     request.data['owner'] = request.user.profile.id
-    #     return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(owner_id=self.request.user.profile.id,

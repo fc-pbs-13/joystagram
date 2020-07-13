@@ -18,11 +18,10 @@ class PostLikeSerializer(serializers.ModelSerializer):
     """게시글 좋아요 시리얼라이저"""
 
     def validate(self, attrs):
+        """post_id 검증"""
         post_pk = self.context['view'].kwargs.get('post_pk')
         if not post_pk or not Post.objects.filter(id=post_pk).exists():
             raise serializers.ValidationError('Post is not valid')
-
-        print(attrs, 'validate')
         return super().validate(attrs)
 
     class Meta:
