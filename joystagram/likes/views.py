@@ -22,13 +22,14 @@ class PostLikeViewSet(mixins.CreateModelMixin,
     serializer_class = PostLikeSerializer
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
-        request.data['post_id'] = self.kwargs['post_pk']
-        request.data['owner_id'] = request.user.profile.id
-        return super().create(request, *args, **kwargs)
+    # def create(self, request, *args, **kwargs):
+    #     request.data['post'] = self.kwargs['post_pk']
+    #     request.data['owner'] = request.user.profile.id
+    #     return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(owner_id=self.request.user.profile.id, post_id=self.kwargs['post_pk'])
+        serializer.save(owner_id=self.request.user.profile.id,
+                        post_id=self.kwargs['post_pk'])
 
     def destroy(self, request, *args, **kwargs):
         """TODO detail=False 가능?? nested하게 해서 post_id로만 삭제하고 싶은데"""

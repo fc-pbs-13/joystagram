@@ -49,6 +49,19 @@ class PostCreateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.data['content'])
 
+    def test_should_create_(self):
+        """생성-성공: 단일 이미지"""
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            self.url,
+            self.data,
+            format='multipart'
+        )
+        res = response.data
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
+        self.assertEqual(res['content'], self.data['content'])
+
     def test_should_create_multiple(self):
         """생성-성공: 다중 이미지"""
         self.client.force_authenticate(user=self.user)
@@ -61,7 +74,8 @@ class PostCreateTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.multiple_data['content'])
-        self.assertEqual(len(res['photos']), len(self.multiple_data['photos']))
+        print(res)
+        self.assertEqual(len(res['_photos']), len(self.multiple_data['photos']))
 
     def test_should_denied401(self):
         """생성-인증 필요"""
@@ -94,8 +108,8 @@ class PostListTestCase(APITestCase):
         for post in res['results']:
             self.assertIsNotNone(post.get('id'))
             self.assertIsNotNone(post.get('content'))
-            self.assertIsNotNone(post.get('photos'))
-            for photos in post.get('photos'):
+            self.assertIsNotNone(post.get('_photos'))
+            for photos in post.get('_photos'):
                 self.assertIsNotNone(photos.get('img'), self.img_url)
             self.assertIsNotNone(post['comments_count'])
 
@@ -215,17 +229,22 @@ class CommentListTestCase(APITestCase):
     """댓글 리스트 테스트"""
 
     def setUp(self) -> None:
-        self.user = baker.make('users.User', email=email, password=password)
-        profile = baker.make('users.Profile', user=self.user, nickname='test_user')
-        post = baker.make('posts.Post', owner=profile)
-        baker.make('posts.Comment', post=post, _quantity=3)
+        # self.user = baker.make('users.User', email=email, password=password)
+        # profile = baker.make('users.Profile', user=self.user, nickname='test_user')
+        # post = baker.make('posts.Post', owner=profile)
+        post = baker.make('posts.Post')
+        # baker.make('posts.Comment', post=post, _quantity=3)
+        self.comment_size = 3
+        baker.make('posts.Comment', post=post, _quantity=self.comment_size)
         self.url = f'/api/posts/{post.id}/comments'
 
     def test_should_list(self):
         """리스트-성공"""
-        self.client.force_authenticate(user=self.user)
+        # self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.assertEqual(len(response.data), self.comment_size)
 
         res = response.data
         for comment in res['results']:

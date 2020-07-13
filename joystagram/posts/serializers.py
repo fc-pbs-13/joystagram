@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.fields import ListField, ImageField
+
 from posts.models import Post, Photo, Comment, ReComment
 from users.serializers import ProfileSerializer
 
@@ -10,23 +12,23 @@ class PhotoSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-    photos = PhotoSerializer(many=True, read_only=True)
+    photos = ListField(child=ImageField(), write_only=True)
+    _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     comments_count = serializers.SerializerMethodField()
 
     # best_comment = serializers.SerializerMethodField()  # TODO 좋아요가 가장 많은 댓글
 
     class Meta:
         model = Post
-        fields = ('id', 'content', 'owner', 'photos', 'comments_count')
+        fields = ('id', 'content', 'owner', 'photos', '_photos', 'comments_count')
         read_only_fields = ('owner', 'comments_count')
 
     def create(self, validated_data):
         """Post를 만든 후 이미지들로 Photo들 생성"""
+        photos = validated_data.pop('photos')
         post = Post.objects.create(**validated_data)
-        images_data = self.context['request'].FILES
-
         photo_bulk_list = []
-        for image_data in images_data.getlist('photos'):
+        for image_data in photos:
             photo = Photo(post=post, img=image_data)
             photo_bulk_list.append(photo)
         Photo.objects.bulk_create(photo_bulk_list)
@@ -44,6 +46,7 @@ class PostSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     owner = ProfileSerializer(read_only=True)
     recomments_count = serializers.SerializerMethodField()
+
     # best_recomment = serializers.SerializerMethodField()  # TODO 좋아요가 가장 많은 대댓글
 
     class Meta:

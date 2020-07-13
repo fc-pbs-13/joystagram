@@ -32,6 +32,13 @@ class PostLikeTestCase(APITestCase):
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
+    def test_should_denied_invalid_post_id(self):
+        """생성-유효하지 않은 post_id"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(f'/api/posts/{self.post.id+1}/post_likes')
+        res = response.data
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, res)
+
     def test_should_delete(self):
         """삭제-성공"""
         post_like = baker.make('likes.PostLike', owner=self.profile, post=self.post)
