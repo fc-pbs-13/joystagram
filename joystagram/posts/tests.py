@@ -352,13 +352,13 @@ class ReCommentUpdateDeleteTestCase(APITestCase):
         response = self.client.patch(self.url, data=self.data)
         res = response.data
 
-        self.assertEqual(200, response.status_code, res)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(res['content'], self.data['content'])
 
     def test_should_denied_update401(self):
         """수정-인증 필요"""
         response = self.client.patch(self.url, data=self.data)
-        self.assertEqual(401, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_should_denied_update403(self):
         """수정-권한 없음"""
@@ -366,20 +366,18 @@ class ReCommentUpdateDeleteTestCase(APITestCase):
         baker.make('users.Profile', user=invalid_user)
         self.client.force_authenticate(user=invalid_user)
         response = self.client.patch(self.url, data=self.data)
-        self.assertEqual(403, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_should_delete(self):
         """삭제-성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(self.url)
-        res = response.data
-
-        self.assertEqual(204, response.status_code, res)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_should_denied_delete401(self):
         """삭제-인증 필요"""
         response = self.client.delete(self.url)
-        self.assertEqual(401, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_should_denied_delete403(self):
         """삭제-권한 없음"""
@@ -387,4 +385,4 @@ class ReCommentUpdateDeleteTestCase(APITestCase):
         baker.make('users.Profile', user=invalid_user)
         self.client.force_authenticate(user=invalid_user)
         response = self.client.delete(self.url)
-        self.assertEqual(403, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
