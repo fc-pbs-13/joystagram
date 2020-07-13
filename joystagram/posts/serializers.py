@@ -1,6 +1,8 @@
+from django.db.models import Max
 from rest_framework import serializers
 from rest_framework.fields import ListField, ImageField
 
+from comments.models import Comment
 from posts.models import Post, Photo
 
 
@@ -14,12 +16,14 @@ class PostSerializer(serializers.ModelSerializer):
     photos = ListField(child=ImageField(), write_only=True)
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     comments_count = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+
     # best_comment = serializers.SerializerMethodField()  # TODO 좋아요가 가장 많은 댓글
 
     class Meta:
         model = Post
-        fields = ('id', 'content', 'owner', 'photos', '_photos', 'comments_count')
-        read_only_fields = ('owner', 'comments_count')
+        fields = ('id', 'content', 'owner', 'photos', '_photos', 'comments_count', 'likes_count')
+        read_only_fields = ('owner', 'comments_count', 'likes_count')
 
     def create(self, validated_data):
         """Post를 만든 후 이미지들로 Photo들 생성"""
@@ -36,6 +40,11 @@ class PostSerializer(serializers.ModelSerializer):
     def get_comments_count(self, obj):
         return obj.comments.count()
 
-    def get_best_comment(self, obj):
-        """좋아요가 가장 많은 댓글"""
-        pass
+    def get_likes_count(self, obj):
+        return obj.likes.count()
+
+    # def get_best_comment(self, obj):
+    #     """좋아요가 가장 많은 댓글"""
+    #     # return obj.comments.aggregate(Max('score'))
+    #     best_comment = Comment.objects.filter(post=obj).order_by('likes__').last()
+    #     return best_comment

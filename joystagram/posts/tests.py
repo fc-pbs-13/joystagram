@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from comments.models import Comment
+from likes.models import PostLike
 
 email = 'email@test.com'
 password = '1234'
@@ -109,10 +110,10 @@ class PostListTestCase(APITestCase):
             self.assertIsNotNone(post.get('id'))
             self.assertIsNotNone(post.get('content'))
             self.assertIsNotNone(post.get('_photos'))
+            self.assertIsNotNone(post.get('comments_count'))
+            self.assertIsNotNone(post.get('likes_count'))
             for photos in post.get('_photos'):
                 self.assertIsNotNone(photos.get('img'), self.img_url)
-            self.assertIsNotNone(post['comments_count'])
-
 
 class PostRetrieveTestCase(APITestCase):
     """게시글 조회 테스트"""
@@ -121,14 +122,17 @@ class PostRetrieveTestCase(APITestCase):
         self.user = baker.make('users.User', email=email, password=password)
         self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
         self.post = baker.make('posts.Post', owner=self.profile)
+        comments = baker.make('comments.Comment', post=self.post, _quantity=3)
+        baker.make('likes.CommentLike', comment=comments[0], _quantity=1)
+        baker.make('likes.CommentLike', comment=comments[1], _quantity=3)
         self.url = f'/api/posts/{self.post.id}'
 
     def test_should_retrieve_post(self):
         """조회-성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
-
         res = response.data
+
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.assertIsNotNone(res.get('id'))
         self.assertIsNotNone(res.get('content'))
