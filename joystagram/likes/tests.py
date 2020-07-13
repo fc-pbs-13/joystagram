@@ -3,8 +3,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 
-class PostLikeCreateTestCase(APITestCase):
-    """게시글 좋아요 생성 테스트"""
+class PostLikeTestCase(APITestCase):
+    """게시글 좋아요 생성, 삭제 테스트"""
 
     def setUp(self) -> None:
         self.user = baker.make('users.User')
@@ -19,7 +19,7 @@ class PostLikeCreateTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
 
-    def test_should_duplicate(self):
+    def test_should_denied_duplicate_likes(self):
         """중복되는 좋아요 차단"""
         baker.make('likes.PostLike', owner=self.profile, post=self.post)
         self.client.force_authenticate(user=self.user)
@@ -27,7 +27,15 @@ class PostLikeCreateTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, res)
 
-    def test_should_denied401(self):
+    def test_should_denied_create_401(self):
         """인증 필요"""
         response = self.client.post(self.url)
-        self.assertEqual(401, response.status_code, response.data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+
+    def test_should_delete(self):
+        """삭제 성공"""
+        post_like = baker.make('likes.PostLike', owner=self.profile, post=self.post)
+        self.url = f'/api/posts/{self.post.id}/post_likes'
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(f'{self.url}/{post_like.id}')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
