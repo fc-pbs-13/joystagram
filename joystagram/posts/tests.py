@@ -90,7 +90,7 @@ class PostListTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         res = response.data
-        for post in res:
+        for post in res['results']:
             self.assertIsNotNone(post.get('id'))
             self.assertIsNotNone(post.get('content'))
             self.assertIsNotNone(post.get('photos'))
@@ -227,7 +227,7 @@ class CommentListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
         res = response.data
-        for comment in res:
+        for comment in res['results']:
             self.assertIsNotNone(comment['id'])
             self.assertIsNotNone(comment['content'])
             self.assertIsNotNone(comment['owner'])
@@ -330,7 +330,7 @@ class ReCommentListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
         res = response.data
-        for recomment in res:
+        for recomment in res['results']:
             self.assertIsNotNone(recomment['id'])
             self.assertIsNotNone(recomment['content'])
             self.assertIsNotNone(recomment['owner'])

@@ -1,6 +1,7 @@
 from rest_framework import mixins, viewsets
 from rest_framework.viewsets import GenericViewSet
 
+from core.paginations import IDPagination
 from core.permissions import IsOwnerOrReadOnly
 from posts.models import Post, Comment, ReComment
 from posts.serializers import PostSerializer, CommentSerializer, ReCommentSerializer
