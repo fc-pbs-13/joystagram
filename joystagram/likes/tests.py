@@ -68,7 +68,6 @@ class PostLikeListTestCase(APITestCase):
 
     def test_should_create(self):
         """리스트-성공"""
-        self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)

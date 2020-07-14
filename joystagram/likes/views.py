@@ -1,5 +1,5 @@
 from rest_framework import mixins
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.viewsets import GenericViewSet
 
 from likes.models import PostLike
@@ -12,15 +12,18 @@ class PostLikeViewSet(mixins.CreateModelMixin,
                       GenericViewSet):
     """
     게시글 좋아요
-    생성, 삭제
-    POST, DELETE /api/posts/{post_id}/post_likes
-
-    TODO url구성방안 2가지 중 고민
-    생성,삭제,리스트 모두 nested? vs 생성이나 생성, 리스트만 nested
+    생성, 리스트, 삭제
+    POST, GET /api/posts/{post_id}/post_likes
+    DELETE /api/posts/{post_id}/post_likes/{post_like_id}
     """
     queryset = PostLike.objects.all()
     serializer_class = PostLikeSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return [AllowAny()]
+        return super().get_permissions()
 
     def perform_create(self, serializer):
         serializer.save(owner_id=self.request.user.profile.id,
