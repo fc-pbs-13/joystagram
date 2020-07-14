@@ -67,8 +67,7 @@ class PostLikeListTestCase(APITestCase):
         self.url = f'/api/posts/{self.post.id}/post_likes'
 
     def test_should_create(self):
-        """리스트-성공
-        TODO 유저 프로필 닉네임 보여주기"""
+        """리스트-성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         res = response.data
@@ -77,6 +76,11 @@ class PostLikeListTestCase(APITestCase):
             self.assertIsNotNone(like.get('id'))
             self.assertIsNotNone(like.get('post_id'))
             self.assertIsNotNone(like.get('owner_id'))
+            owner = like['owner']
+            self.assertIsNotNone(owner.get('id'))
+            self.assertIsNotNone(owner.get('nickname'))
+            self.assertIsNotNone(owner.get('introduce'))
+            self.assertIsNone(owner['img'])
 
 
 class PostListTestCase(APITestCase):

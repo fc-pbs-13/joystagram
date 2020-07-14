@@ -25,27 +25,3 @@ class PostLikeViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         serializer.save(owner_id=self.request.user.profile.id,
                         post_id=self.kwargs['post_pk'])
-
-    def destroy(self, request, *args, **kwargs):
-        """TODO detail=False 가능?? nested하게 해서 post_id로만 삭제하고 싶은데"""
-        return super().destroy(request, *args, **kwargs)
-
-# class CommentLikeViewSet(mixins.CreateModelMixin,
-#                          mixins.DestroyModelMixin,
-#                          mixins.ListModelMixin,
-#                          GenericViewSet):
-#     """
-#     댓글 좋아요
-#     생성
-#     POST /api/comments/{comment_id}/comment_likes
-#     """
-#     queryset = CommentLike.objects.all()
-#     serializer_class = CommentLikeSerializer
-#     permission_classes = [IsAuthenticated]
-#
-#     def create(self, request, *args, **kwargs):
-#         request.data['comment_id'] = self.kwargs['comment_pk']
-#         return super().create(request, *args, **kwargs)
-#
-#     def perform_create(self, serializer):
-#         serializer.save(owner_id=self.request.user.profile.id, comment_id=self.kwargs['comment_pk'])
