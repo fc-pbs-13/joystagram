@@ -5,8 +5,9 @@ from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from comments.models import Comment
+from comments.models import Comment, ReComment
 from likes.models import PostLike
+from posts.models import Post
 
 email = 'email@test.com'
 password = '1234'
@@ -234,10 +235,10 @@ class CommentListTestCase(APITestCase):
     """댓글 리스트 테스트"""
 
     def setUp(self) -> None:
-        post = baker.make('posts.Post')
+        self.post = baker.make('posts.Post')
         self.comment_size = 3
-        self.comments = baker.make('comments.Comment', post=post, _quantity=self.comment_size)
-        self.url = f'/api/posts/{post.id}/comments'
+        self.comments = baker.make('comments.Comment', post=self.post, _quantity=self.comment_size)
+        self.url = f'/api/posts/{self.post.id}/comments'
 
     def test_should_list(self):
         """리스트-성공"""
@@ -251,6 +252,7 @@ class CommentListTestCase(APITestCase):
             self.assertIsNotNone(comment_res['content'])
             self.assertIsNotNone(comment_res['owner'])
             self.assertIsNotNone(comment_res['recomments_count'])
+            self.assertEqual(Comment.objects.get(id=comment_res['id']).post, self.post)
 
 
 class CommentUpdateDeleteTestCase(APITestCase):
@@ -339,9 +341,10 @@ class ReCommentListTestCase(APITestCase):
     def setUp(self) -> None:
         user = baker.make('users.User', email=email, password=password)
         profile = baker.make('users.Profile', user=user, nickname='test_user')
-        comment = baker.make('comments.Comment', owner=profile)
-        self.recomments = baker.make('comments.ReComment', comment=comment, owner=profile, _quantity=3)
-        self.url = f'/api/comments/{comment.id}/recomments'
+        self.comment = baker.make('comments.Comment', owner=profile)
+        baker.make('comments.ReComment', comment=self.comment, _quantity=3)
+        baker.make('comments.ReComment')
+        self.url = f'/api/comments/{self.comment.id}/recomments'
 
     def test_should_list(self):
         """리스트-성공"""
@@ -353,6 +356,7 @@ class ReCommentListTestCase(APITestCase):
             self.assertIsNotNone(recomment['id'])
             self.assertIsNotNone(recomment['content'])
             self.assertIsNotNone(recomment['owner'])
+            self.assertEqual(ReComment.objects.get(id=recomment['id']).comment, self.comment)
 
 
 class ReCommentUpdateDeleteTestCase(APITestCase):

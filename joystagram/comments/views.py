@@ -19,6 +19,10 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
+    def filter_queryset(self, queryset):
+        queryset = queryset.filter(post_id=self.kwargs['post_pk'])
+        return super().filter_queryset(queryset)
+
     def perform_create(self, serializer):
         """get_object_or_404???"""
         post_id = self.kwargs['post_pk']
@@ -49,6 +53,10 @@ class ReCommentCreateListViewSet(mixins.CreateModelMixin,
     queryset = ReComment.objects.all()
     serializer_class = ReCommentSerializer
     permission_classes = [IsOwnerOrReadOnly]
+
+    def filter_queryset(self, queryset):
+        queryset = queryset.filter(comment_id=self.kwargs['comment_pk'])
+        return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):
         comment_id = self.kwargs['comment_pk']
