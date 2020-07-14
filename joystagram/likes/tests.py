@@ -80,13 +80,3 @@ class PostLikeListTestCase(APITestCase):
             self.assertIsNotNone(owner.get('nickname'))
             self.assertIsNotNone(owner.get('introduce'))
             self.assertIsNone(owner['img'])
-
-
-class PostListTestCase(APITestCase):
-    def setUp(self) -> None:
-        self.user = baker.make('users.User')
-        self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
-        self.post = baker.make('posts.Post')
-        self.likes_count = 3
-        self.post_likes = baker.make('likes.PostLike', post=self.post, _quantity=self.likes_count)
-        self.url = f'/api/posts/{self.post.id}/post_likes'
