@@ -3,9 +3,8 @@ from model_utils.models import TimeStampedModel
 
 
 class Post(TimeStampedModel):
-    owner = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name='posts')
+    owner = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='posts')
     content = models.TextField(default='')
-    created = models.DateTimeField(auto_now_add=True)
 
 
 def post_img_path(instance, filename):

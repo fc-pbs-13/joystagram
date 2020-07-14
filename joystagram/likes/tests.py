@@ -2,6 +2,9 @@ from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from likes.models import PostLike
+from users.models import Profile
+
 
 class PostLikeTestCase(APITestCase):
     """게시글 좋아요 생성, 삭제 테스트"""
@@ -21,7 +24,7 @@ class PostLikeTestCase(APITestCase):
 
     def test_should_denied_duplicate_likes(self):
         """생성-중복 차단"""
-        baker.make('likes.PostLike', owner=self.profile, post=self.post)
+        baker.make('likes.PostLike', owner=self.user, post=self.post)
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.url)
         res = response.data
@@ -41,7 +44,7 @@ class PostLikeTestCase(APITestCase):
 
     def test_should_delete(self):
         """삭제-성공"""
-        post_like = baker.make('likes.PostLike', owner=self.profile, post=self.post)
+        post_like = baker.make('likes.PostLike', owner=self.user, post=self.post)
         self.url = f'/api/posts/{self.post.id}/post_likes'
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(f'{self.url}/{post_like.id}')
@@ -49,7 +52,7 @@ class PostLikeTestCase(APITestCase):
 
     def test_should_denied_delete401(self):
         """삭제-인증 필요"""
-        post_like = baker.make('likes.PostLike', owner=self.profile, post=self.post)
+        post_like = baker.make('likes.PostLike', owner=self.user, post=self.post)
         self.url = f'/api/posts/{self.post.id}/post_likes'
         response = self.client.delete(f'{self.url}/{post_like.id}')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
@@ -62,8 +65,11 @@ class PostLikeListTestCase(APITestCase):
         self.user = baker.make('users.User')
         baker.make('users.Profile', user=self.user)
         self.post = baker.make('posts.Post')
-        self.likes_count = 3
-        self.post_likes = baker.make('likes.PostLike', post=self.post, _quantity=self.likes_count)
+        self.likes_count = 2
+        users = baker.make('users.User', _quantity=self.likes_count)
+        for user in users:
+            baker.make('users.Profile', user=user)
+            self.post_likes = baker.make('likes.PostLike', post=self.post, owner=user)
         self.url = f'/api/posts/{self.post.id}/post_likes'
 
     def test_should_create(self):
@@ -78,5 +84,5 @@ class PostLikeListTestCase(APITestCase):
             owner = like['owner']
             self.assertIsNotNone(owner.get('id'))
             self.assertIsNotNone(owner.get('nickname'))
-            self.assertIsNotNone(owner.get('introduce'))
-            self.assertIsNone(owner['img'])
+            self.assertIsNone(owner.get('introduce'))  # introduce 빼고
+            self.assertTrue('img' in owner)

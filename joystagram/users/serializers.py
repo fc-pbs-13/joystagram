@@ -7,10 +7,12 @@ from .models import User, Profile
 
 class UserSerializer(ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
+    introduce = serializers.CharField(read_only=True, default='', source='profile.introduce')
+    img = serializers.ImageField(read_only=True, source='profile.img')
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'nickname')
+        fields = ('id', 'email', 'password', 'nickname', 'introduce', 'img')
         read_only_fields = ('id',)
         extra_kwargs = {'password': {'write_only': True}}
 
@@ -68,3 +70,9 @@ class ProfileSerializer(ModelSerializer):
     class Meta:
         model = Profile
         fields = ('id', 'nickname', 'introduce', 'img')
+
+
+class SimpleProfileSerializer(ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ('id', 'nickname', 'img')

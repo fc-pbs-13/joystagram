@@ -1,9 +1,11 @@
+from django.contrib.auth.models import AnonymousUser
 from django.db import models
 from rest_framework import serializers
 from rest_framework.fields import ListField, ImageField
 
 from likes.models import PostLike
 from posts.models import Post, Photo
+from users.serializers import ProfileSerializer, SimpleProfileSerializer
 
 
 class PhotoSerializer(serializers.ModelSerializer):
@@ -19,6 +21,7 @@ class PostSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
     liked = serializers.SerializerMethodField(read_only=True)
     like_id = serializers.SerializerMethodField(read_only=True)
+    owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
 
     class Meta:
         model = Post
@@ -34,7 +37,6 @@ class PostSerializer(serializers.ModelSerializer):
             photo = Photo(post=post, img=image_data)
             photo_bulk_list.append(photo)
         Photo.objects.bulk_create(photo_bulk_list)
-
         return post
 
     def get_comments_count(self, obj):
@@ -47,16 +49,15 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_liked(self, obj) -> bool:
         """이 사용자가 게시글에 좋아요를 했는지"""
-        if hasattr(self.context['request'].user, 'profile'):
-            return obj.likes.filter(owner=self.context['request'].user.profile).exists()
-        return False
+        try:
+            return obj.likes.filter(owner=self.context['request'].user).exists()
+        except (models.ObjectDoesNotExist, TypeError):
+            return False
 
     def get_like_id(self, obj):
         """좋아요 했다면 id 반환 아니면 None"""
-        if hasattr(self.context['request'].user, 'profile'):
-            try:
-                post_like = PostLike.objects.get(owner=self.context['request'].user.profile, post=obj)
-                return post_like.id
-            except models.ObjectDoesNotExist:
-                pass
-        return None
+        try:
+            post_like = PostLike.objects.get(owner=self.context['request'].user, post=obj)
+            return post_like.id
+        except (models.ObjectDoesNotExist, TypeError):
+            return None

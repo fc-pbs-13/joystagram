@@ -25,5 +25,5 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         if request.method in ('PATCH', 'PUT', 'DELETE'):
-            return obj.owner.user == request.user
+            return obj.owner == request.user
         return super().has_permission(request, view)
