@@ -67,4 +67,4 @@ class LoginSerializer(serializers.Serializer):
 class ProfileSerializer(ModelSerializer):
     class Meta:
         model = Profile
-        fields = ('id', 'nickname', 'introduce', 'img')  # TODO 프로필 이미지
+        fields = ('id', 'nickname', 'introduce', 'img')
