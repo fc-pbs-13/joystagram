@@ -60,15 +60,30 @@ class PostLikeListTestCase(APITestCase):
 
     def setUp(self) -> None:
         self.user = baker.make('users.User')
-        self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
+        baker.make('users.Profile', user=self.user)
         self.post = baker.make('posts.Post')
         self.likes_count = 3
         self.post_likes = baker.make('likes.PostLike', post=self.post, _quantity=self.likes_count)
         self.url = f'/api/posts/{self.post.id}/post_likes'
 
     def test_should_create(self):
-        """생성-성공"""
+        """리스트-성공
+        TODO 유저 프로필 닉네임 보여주기"""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+        for like in res['results']:
+            self.assertIsNotNone(like.get('id'))
+            self.assertIsNotNone(like.get('post_id'))
+            self.assertIsNotNone(like.get('owner_id'))
+
+
+class PostListTestCase(APITestCase):
+    def setUp(self) -> None:
+        self.user = baker.make('users.User')
+        self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
+        self.post = baker.make('posts.Post')
+        self.likes_count = 3
+        self.post_likes = baker.make('likes.PostLike', post=self.post, _quantity=self.likes_count)
+        self.url = f'/api/posts/{self.post.id}/post_likes'
