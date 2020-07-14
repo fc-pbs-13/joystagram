@@ -1,9 +1,6 @@
 from django.db import models
-from django.db.models import Max
 from rest_framework import serializers
 from rest_framework.fields import ListField, ImageField
-
-from comments.models import Comment
 from likes.models import PostLike
 from posts.models import Post, Photo
 
@@ -22,10 +19,6 @@ class PostSerializer(serializers.ModelSerializer):
     liked = serializers.SerializerMethodField(read_only=True)
     like_id = serializers.SerializerMethodField(read_only=True)
 
-    # TODO 내가 좋아요 했는지 안했는지, 좋아요 ID 반환 필요
-
-    # best_comment = serializers.SerializerMethodField()  # TODO 좋아요가 가장 많은 댓글
-
     class Meta:
         model = Post
         fields = ('id', 'content', 'owner', 'photos', '_photos', 'comments_count', 'likes_count', 'liked', 'like_id')
@@ -43,10 +36,12 @@ class PostSerializer(serializers.ModelSerializer):
 
         return post
 
-    def get_comments_count(self, obj) -> int:
+    def get_comments_count(self, obj):
+        """댓글 갯수"""
         return obj.comments.count()
 
-    def get_likes_count(self, obj) -> int:
+    def get_likes_count(self, obj):
+        """좋아요 갯수"""
         return obj.likes.count()
 
     def get_liked(self, obj) -> bool:
@@ -56,6 +51,7 @@ class PostSerializer(serializers.ModelSerializer):
         return False
 
     def get_like_id(self, obj):
+        """좋아요 했다면 id 반환 아니면 None"""
         if hasattr(self.context['request'].user, 'profile'):
             try:
                 post_like = PostLike.objects.get(owner=self.context['request'].user.profile, post=obj)
@@ -63,9 +59,3 @@ class PostSerializer(serializers.ModelSerializer):
             except models.ObjectDoesNotExist:
                 pass
         return None
-
-        # def get_best_comment(self, obj):
-    #     """좋아요가 가장 많은 댓글"""
-    #     # return obj.comments.aggregate(Max('score'))
-    #     best_comment = Comment.objects.filter(post=obj).order_by('likes__').last()
-    #     return best_comment

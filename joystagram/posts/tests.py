@@ -107,6 +107,8 @@ class PostListTestCase(APITestCase):
             self.assertIsNotNone(post.get('likes_count'))
             self.assertEqual(post.get('likes_count'), self.likes_count)
             self.assertEqual(post.get('comments_count'), self.comments_count)
+            self.assertEqual(post.get('liked'),
+                             PostLike.objects.filter(post_id=post['id'], owner=self.user.profile).exists())
             if post.get('like_id'):
                 self.assertIsNotNone(PostLike.objects.get(id=post.get('like_id')).post, post)
             for photos in post.get('_photos'):
