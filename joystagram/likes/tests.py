@@ -79,4 +79,4 @@ class PostLikeListTestCase(APITestCase):
             self.assertIsNotNone(owner.get('id'))
             self.assertIsNotNone(owner.get('nickname'))
             self.assertIsNotNone(owner.get('introduce'))
-            self.assertIsNone(owner['img'])
+            self.assertTrue('img' in owner)

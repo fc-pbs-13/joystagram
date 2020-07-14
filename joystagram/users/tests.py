@@ -1,9 +1,9 @@
 from model_bakery import baker
-from rest_framework.test import APITestCase
+from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
 
-from .models import User, Profile
-from munch import Munch
+from .models import User
 
 email = 'email@test.com'
 password = '1234'
@@ -21,31 +21,30 @@ class UserRegisterTestCase(APITestCase):
         }
         response = self.client.post(self.url, data)
         res = response.data
-        self.assertEqual(201, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res['email'], email)
         self.assertEqual(res['nickname'], data['nickname'])
-        # self.assertEqual(res['introduce'], data['introduce'])
-        # self.assertIsNotNone(res.get('profile'))
-        # self.assertEqual(res['profile']['nickname'], data['profile']['nickname'])
+        self.assertTrue('introduce' in res)
+        self.assertTrue('img' in res)
 
     def test_without_email(self):
         response = self.client.post(self.url, {'email': '', 'password': password})
-        self.assertEqual(400, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_email_format(self):
         # wrong format
         wrong_email = 'wrong@format'
         response = self.client.post(self.url, {'email': wrong_email, 'password': password})
-        self.assertEqual(400, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_without_password(self):
         response = self.client.post(self.url, {'email': email, 'password': ''})
-        self.assertEqual(400, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_with_duplicated_email(self):
         self.user = baker.make(User, email=duplicated_email, password=password)
         response = self.client.post(self.url, {'email': duplicated_email, 'password': password})
-        self.assertEqual(400, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class UserLoginTestCase(APITestCase):
@@ -56,25 +55,25 @@ class UserLoginTestCase(APITestCase):
 
     def test_with_correct_info(self):
         response = self.client.post(self.url, {'email': email, 'password': password})
-        self.assertEqual(200, response.status_code)
-        self.assertIsNotNone(response.data.get('token'))
-        self.assertIsNotNone(Token.objects.filter(user=self.user).exists())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('token' in response.data)
+        self.assertTrue(Token.objects.filter(user=self.user, key=response.data['token']).exists())
 
     def test_without_password(self):
         response = self.client.post(self.url, {'email': email})
-        self.assertEqual(400, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_with_wrong_password(self):
         response = self.client.post(self.url, {'email': email, 'password': '1111'})
-        self.assertEqual(400, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_without_email(self):
         response = self.client.post(self.url, {'password': password})
-        self.assertEqual(400, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_with_wrong_email(self):
         response = self.client.post(self.url, {'email': 'wrong@email.com', 'password': password})
-        self.assertEqual(400, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class UserLogoutTestCase(APITestCase):
@@ -82,13 +81,18 @@ class UserLogoutTestCase(APITestCase):
 
     def setUp(self) -> None:
         self.user = baker.make(User, email=email, password=password)
-        token = baker.make(Token, user=self.user)
-        self.client.force_authenticate(user=self.user, token=token)
+        self.token = baker.make(Token, user=self.user)
 
     def test_should_delete_token(self):
+        self.client.force_authenticate(user=self.user, token=self.token)
         response = self.client.delete(self.url)
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(Token.objects.filter(user_id=self.user.id).exists())
+
+    def test_should_denied_delete_token(self):
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(Token.objects.filter(user_id=self.user.id).exists())
 
 
 class UserDeactivateTestCase(APITestCase):
@@ -100,9 +104,8 @@ class UserDeactivateTestCase(APITestCase):
 
     def test_should_delete_user(self):
         response = self.client.delete(self.url)
-        self.assertEqual(204, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(User.objects.filter(id=self.user.id).exists())
-        self.assertFalse(Token.objects.filter(user_id=self.user.id).exists())
 
 
 class UserRetrieveTestCase(APITestCase):
@@ -117,15 +120,17 @@ class UserRetrieveTestCase(APITestCase):
         self.client.force_authenticate(user=self.user, token=self.token.key)
         response = self.client.get(self.url)
 
-        self.assertEqual(200, response.status_code)
-        res = Munch(response.data)
-        self.assertTrue(res.id)
-        self.assertEqual(res.id, self.user.id)
-        self.assertEqual(res.email, email)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        res = response.data
+        self.assertTrue(res['id'])
+        self.assertEqual(res['id'], self.user.id)
+        self.assertEqual(res['email'], email)
+        self.assertTrue('introduce' in res)
+        self.assertTrue('img' in res)
 
     def test_should_denied_retrieve(self):
         response = self.client.get(self.url)
-        self.assertEqual(401, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class UserUpdateTestCase(APITestCase):
@@ -139,13 +144,13 @@ class UserUpdateTestCase(APITestCase):
     def test_should_update_password(self):
         self.client.force_authenticate(user=self.user, token=self.token.key)
         response = self.client.patch(self.url, data=self.data)
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # 비번변경 잘 되었는지 로그인해서 확인
         response = self.client.post('/api/users/login', {'email': email, 'password': '1111'})
-        self.assertEqual(200, response.status_code, response.data)
-        self.assertIsNotNone(response.data.get('token'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('token' in response.data)
 
     def test_should_denied_update(self):
         response = self.client.patch(self.url, data=self.data)
-        self.assertEqual(401, response.status_code)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
