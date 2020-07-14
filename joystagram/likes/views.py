@@ -21,5 +21,5 @@ class PostLikeViewSet(mixins.CreateModelMixin,
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(owner_id=self.request.user.profile.id,
+        serializer.save(owner_id=self.request.user.id,
                         post_id=self.kwargs['post_pk'])

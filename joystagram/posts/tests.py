@@ -85,7 +85,7 @@ class PostListTestCase(APITestCase):
     def setUp(self) -> None:
         self.user = baker.make('users.User')
         self.profile = baker.make('users.Profile', user=self.user)
-        self.posts = baker.make('posts.Post', owner=self.profile, _quantity=2)
+        self.posts = baker.make('posts.Post', owner=self.user, _quantity=2)
         self.img_url = 'post_image/test.png'
         self.likes_count = 3
         self.comments_count = 2
@@ -109,7 +109,7 @@ class PostListTestCase(APITestCase):
             self.assertEqual(post.get('likes_count'), self.likes_count)
             self.assertEqual(post.get('comments_count'), self.comments_count)
             self.assertEqual(post.get('liked'),
-                             PostLike.objects.filter(post_id=post['id'], owner=self.user.profile).exists())
+                             PostLike.objects.filter(post_id=post['id'], owner=self.user).exists())
             if post.get('like_id'):
                 self.assertIsNotNone(PostLike.objects.get(id=post.get('like_id')).post, post)
             for photos in post.get('_photos'):
@@ -121,17 +121,15 @@ class PostRetrieveTestCase(APITestCase):
 
     def setUp(self) -> None:
         self.user = baker.make('users.User', email=email, password=password)
-        self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
-        self.post = baker.make('posts.Post', owner=self.profile)
-        comments = baker.make('comments.Comment', post=self.post, _quantity=3)
-        self.url = f'/api/posts/{self.post.id}'
+        baker.make('users.Profile', user=self.user, nickname='test_user')
+        post = baker.make('posts.Post', owner=self.user)
+        baker.make('comments.Comment', post=post, _quantity=2)
+        self.url = f'/api/posts/{post.id}'
 
     def test_should_retrieve_post(self):
         """조회-성공"""
-        self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         res = response.data
-
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.assertIsNotNone(res.get('id'))
         self.assertIsNotNone(res.get('content'))
@@ -143,8 +141,8 @@ class PostUpdateDeleteTestCase(APITestCase):
     def setUp(self) -> None:
         self.data = {'content': '1111'}
         self.user = baker.make('users.User', email=email, password=password)
-        profile = baker.make('users.Profile', user=self.user)
-        post = baker.make('posts.Post', owner=profile)
+        baker.make('users.Profile', user=self.user)
+        post = baker.make('posts.Post', owner=self.user)
         self.likes_count = 3
         baker.make('likes.PostLike', post=post, _quantity=self.likes_count)
         self.url = f'/api/posts/{post.id}'
@@ -199,10 +197,10 @@ class CommentCreateTestCase(APITestCase):
             'content': 'hello joy This is Comment!!'
         }
         self.user = baker.make('users.User', email=email, password=password)
-        profile = baker.make('users.Profile', user=self.user, nickname='test_user')
-        post = baker.make('posts.Post', content='우리 인생 화이팅...!', owner=profile)
-        baker.make('posts.Photo', post=post, img='post_image/test.png')
-        self.url = f'/api/posts/{post.id}/comments'
+        baker.make('users.Profile', user=self.user, nickname='test_user')
+        self.post = baker.make('posts.Post', content='우리 인생 화이팅...!', owner=self.user)
+        baker.make('posts.Photo', post=self.post, img='post_image/test.png')
+        self.url = f'/api/posts/{self.post.id}/comments'
 
     def test_should_create(self):
         """생성-성공"""
@@ -230,29 +228,36 @@ class CommentCreateTestCase(APITestCase):
         response = self.client.post(self.url, data=self.data)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_should_denied_invalid_id(self):
+        """생성-유효하지 않은 post_id"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(f'/api/posts/{self.post.id + 1}/comments', data=self.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 class CommentListTestCase(APITestCase):
     """댓글 리스트 테스트"""
 
     def setUp(self) -> None:
+        user = baker.make('users.User')
+        baker.make('users.Profile', user=user)
         self.post = baker.make('posts.Post')
         self.comment_size = 3
-        self.comments = baker.make('comments.Comment', post=self.post, _quantity=self.comment_size)
+        self.comments = baker.make('comments.Comment', post=self.post, owner=user, _quantity=self.comment_size)
         self.url = f'/api/posts/{self.post.id}/comments'
 
     def test_should_list(self):
         """리스트-성공"""
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-
         self.assertEqual(len(response.data), self.comment_size)
 
-        for comment_res in response.data['results']:
-            self.assertIsNotNone(comment_res['id'])
-            self.assertIsNotNone(comment_res['content'])
-            self.assertIsNotNone(comment_res['owner'])
-            self.assertIsNotNone(comment_res['recomments_count'])
-            self.assertEqual(Comment.objects.get(id=comment_res['id']).post, self.post)
+        for comment in response.data['results']:
+            self.assertIsNotNone(comment['id'])
+            self.assertIsNotNone(comment['content'])
+            self.assertIsNotNone(comment['owner'])
+            self.assertIsNotNone(comment['recomments_count'])
+            self.assertEqual(Comment.objects.get(id=comment['id']).post, self.post)
 
 
 class CommentUpdateDeleteTestCase(APITestCase):
@@ -261,8 +266,8 @@ class CommentUpdateDeleteTestCase(APITestCase):
     def setUp(self) -> None:
         self.data = {'content': 'update_comment'}
         self.user = baker.make('users.User', email=email, password=password)
-        profile = baker.make('users.Profile', user=self.user)
-        comment = baker.make('comments.Comment', owner=profile)
+        baker.make('users.Profile', user=self.user)
+        comment = baker.make('comments.Comment', owner=self.user)
         self.url = f'/api/comments/{comment.id}'
 
     def test_should_update(self):
@@ -334,15 +339,21 @@ class ReCommentCreateTestCase(APITestCase):
         response = self.client.post(self.url, data=self.data)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_should_denied_invalid_id(self):
+        """생성-유효하지 않은 comment_id"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(f'/api/comments/{self.comment.id + 1}/recomments', data=self.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 class ReCommentListTestCase(APITestCase):
     """대댓글 리스트 테스트"""
 
     def setUp(self) -> None:
-        user = baker.make('users.User', email=email, password=password)
-        profile = baker.make('users.Profile', user=user, nickname='test_user')
-        self.comment = baker.make('comments.Comment', owner=profile)
-        baker.make('comments.ReComment', comment=self.comment, _quantity=3)
+        user = baker.make('users.User')
+        baker.make('users.Profile', user=user)
+        self.comment = baker.make('comments.Comment', owner=user)
+        baker.make('comments.ReComment', comment=self.comment, owner=user, _quantity=3)
         baker.make('comments.ReComment')
         self.url = f'/api/comments/{self.comment.id}/recomments'
 
@@ -365,8 +376,8 @@ class ReCommentUpdateDeleteTestCase(APITestCase):
     def setUp(self) -> None:
         self.data = {'content': 'update_recomment'}
         self.user = baker.make('users.User', email=email, password=password)
-        profile = baker.make('users.Profile', user=self.user)
-        recomment = baker.make('comments.ReComment', owner=profile)
+        baker.make('users.Profile', user=self.user)
+        recomment = baker.make('comments.ReComment', owner=self.user)
         self.url = f'/api/recomments/{recomment.id}'
 
     def test_should_update(self):

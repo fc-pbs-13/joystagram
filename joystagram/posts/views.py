@@ -26,4 +26,4 @@ class PostViewSet(viewsets.ModelViewSet):
         return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user.profile)
+        serializer.save(owner=self.request.user)

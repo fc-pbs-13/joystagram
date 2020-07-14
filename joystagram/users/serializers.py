@@ -70,3 +70,9 @@ class ProfileSerializer(ModelSerializer):
     class Meta:
         model = Profile
         fields = ('id', 'nickname', 'introduce', 'img')
+
+
+class SimpleProfileSerializer(ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ('id', 'nickname', 'img')
