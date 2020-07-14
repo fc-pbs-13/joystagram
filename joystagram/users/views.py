@@ -18,8 +18,6 @@ class UserViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
                   mixins.DestroyModelMixin,
-                  # TODO 유저 리스트를 하는게 맞을까, 팔로우/팔로잉 리스트로만 하는게 맞을까
-                  # mixins.ListModelMixin,
                   GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer

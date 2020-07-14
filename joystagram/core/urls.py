@@ -1,7 +1,8 @@
 from rest_framework_nested import routers
 
+from comments.views import CommentViewSet, ReCommentViewSet, CommentCreateListViewSet, ReCommentCreateListViewSet
 from likes.views import PostLikeViewSet
-from posts.views import PostViewSet, CommentCreateListViewSet, ReCommentCreateListViewSet, CommentViewSet, ReCommentViewSet
+from posts.views import PostViewSet
 from users.views import UserViewSet
 
 router = routers.SimpleRouter(trailing_slash=False)

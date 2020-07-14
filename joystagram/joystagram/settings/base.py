@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'core',
     'users',
     'posts',
+    'comments',
     'likes',
 ]
 
@@ -139,6 +140,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'core.paginations.IDPagination',
+    'PAGE_SIZE': 5,
 }
 
 AUTH_USER_MODEL = 'users.User'
