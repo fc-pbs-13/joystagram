@@ -21,14 +21,9 @@ class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrReadOnly]
 
     def filter_queryset(self, queryset):
-        if self.action == 'feed':
+        if self.action == 'list':
             queryset = queryset.filter()
         return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.profile)
-
-    @action(detail=False)
-    def feed(self, request, *args, **kwargs):
-        """메인 화면에서 자신이 팔로우한 유저의 게시만"""
-        return super().list(request, *args, **kwargs)
