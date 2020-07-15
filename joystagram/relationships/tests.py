@@ -22,6 +22,8 @@ class FollowTestCase(APITestCase):
         response = self.client.post(self.url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
+        print(res)
+        self.fail()
 
     def test_should_denied_duplicate_likes(self):
         """생성-중복 차단"""
@@ -39,8 +41,7 @@ class FollowTestCase(APITestCase):
         """생성-유효하지 않은 post_id"""
         self.client.force_authenticate(user=self.user)
         response = self.client.post(f'/api/users/{self.to_user.id + 1}/follows')
-        res = response.data
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, res)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
 
     def test_should_delete(self):
         """삭제-성공"""
@@ -78,7 +79,7 @@ class FollowListTestCase(APITestCase):
         for follow in res['results']:
             print(follow)
             self.assertIsNotNone(follow.get('id'))
-            to_user = follow['to_user']
+            to_user = follow['user']
             self.assertTrue('id' in to_user)
             self.assertTrue('nickname' in to_user)
             self.assertTrue('img' in to_user)
