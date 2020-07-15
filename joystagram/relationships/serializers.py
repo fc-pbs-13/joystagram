@@ -20,10 +20,15 @@ class FollowUniqueTogetherValidator(UniqueTogetherValidator):
 
 class FollowSerializer(serializers.ModelSerializer):
     """팔로우 시리얼라이저"""
+    to_user = SimpleProfileSerializer(source='to_user.profile', read_only=True)
 
     class Meta:
         model = Follow
-        fields = ('id', 'from_user_id', 'to_user_id')
+        fields = ('id', 'to_user', 'from_user_id', 'to_user_id')
+        # extra_kwargs = {
+        #     'from_user_id': {'write_only': True},
+        #     'to_user_id': {'write_only': True}
+        # }
         validators = [
             FollowUniqueTogetherValidator(
                 queryset=Follow.objects.all(),
@@ -32,7 +37,7 @@ class FollowSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        """ 검증"""
+        """user_pk 검증"""
         to_user_pk = self.context['view'].kwargs.get('to_user_pk')
         if not to_user_pk or not User.objects.filter(id=to_user_pk).exists():
             raise NotFound('User is not valid')

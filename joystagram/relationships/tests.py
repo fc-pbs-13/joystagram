@@ -55,32 +55,30 @@ class FollowTestCase(APITestCase):
         response = self.client.delete(f'/api/follows/{follow.id}')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
-#
-# class PostLikeListTestCase(APITestCase):
-#     """게시글 좋아요 리스트 테스트"""
-#
-#     def setUp(self) -> None:
-#         self.user = baker.make('users.User')
-#         baker.make('users.Profile', user=self.user)
-#         self.post = baker.make('posts.Post')
-#         self.likes_count = 2
-#         users = baker.make('users.User', _quantity=self.likes_count)
-#         for user in users:
-#             baker.make('users.Profile', user=user)
-#             self.post_likes = baker.make('likes.PostLike', post=self.post, owner=user)
-#         self.url = f'/api/posts/{self.post.id}/post_likes'
-#
-#     def test_should_create(self):
-#         """리스트-성공"""
-#         response = self.client.get(self.url)
-#         res = response.data
-#         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-#         for like in res['results']:
-#             self.assertIsNotNone(like.get('id'))
-#             self.assertIsNotNone(like.get('post_id'))
-#             self.assertIsNotNone(like.get('owner_id'))
-#             owner = like['owner']
-#             self.assertIsNotNone(owner.get('id'))
-#             self.assertIsNotNone(owner.get('nickname'))
-#             self.assertIsNone(owner.get('introduce'))  # introduce 빼고
-#             self.assertTrue('img' in owner)
+
+class FollowListTestCase(APITestCase):
+    """팔로우 리스트 테스트"""
+
+    def setUp(self) -> None:
+        self.user = baker.make('users.User')
+        baker.make('users.Profile', user=self.user)
+        self.follow_count = 3
+        users = baker.make('users.User', _quantity=self.follow_count)
+        for user in users:
+            baker.make('users.Profile', user=user)
+            baker.make('relationships.Follow', from_user=self.user, to_user=user)
+        self.url = f'/api/follows'
+
+    def test_should_list(self):
+        """리스트-성공"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url)
+        res = response.data
+        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+        for follow in res['results']:
+            print(follow)
+            self.assertIsNotNone(follow.get('id'))
+            to_user = follow['to_user']
+            self.assertTrue('id' in to_user)
+            self.assertTrue('nickname' in to_user)
+            self.assertTrue('img' in to_user)

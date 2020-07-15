@@ -1,8 +1,9 @@
+from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import mixins
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
 from relationships.models import Follow
@@ -21,8 +22,14 @@ class FollowViewSet(mixins.CreateModelMixin,
     """
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    # permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(from_user_id=self.request.user.id,
                         to_user_id=self.kwargs['to_user_pk'])
+
+    def filter_queryset(self, queryset):
+        """TODO 비로그인 사용자의 팔로우 리스트"""
+        if not isinstance(self.request.user, AnonymousUser):
+            queryset = queryset.filter(from_user=self.request.user)
+        return super().filter_queryset(queryset)
