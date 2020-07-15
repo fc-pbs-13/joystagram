@@ -1,13 +1,32 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-
 from .models import User, Profile
+
+
+class ProfileSerializer(ModelSerializer):
+    """프로필 시리얼라이저"""
+
+    # is_following = serializers.SerializerMethodField()  # TODO 내가 팔로우하고 있는지
+
+    class Meta:
+        model = Profile
+        fields = ('id', 'nickname', 'introduce', 'img')
+
+
+class SimpleProfileSerializer(ModelSerializer):
+    """함축 프로필 시리얼라이저 (닉네임, 프사)"""
+
+    # is_following = serializers.SerializerMethodField()  # TODO 내가 팔로우하고 있는지
+
+    class Meta:
+        model = Profile
+        fields = ('id', 'nickname', 'img')
 
 
 class UserSerializer(ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
-    introduce = serializers.CharField(read_only=True, default='', source='profile.introduce')
+    introduce = serializers.CharField(default='', source='profile.introduce')
     img = serializers.ImageField(read_only=True, source='profile.img')
 
     class Meta:
@@ -22,6 +41,12 @@ class UserSerializer(ModelSerializer):
         user = User.objects.create(**validated_data)
         Profile.objects.create(user=user, **profile)
         return user
+
+    def update(self, instance, validated_data):
+        """프로필 업데이트"""
+        profile = validated_data.pop('profile')
+        Profile.objects.filter(user=instance).update(**profile)
+        return instance
 
 
 class UserPasswordSerializer(ModelSerializer):
@@ -64,15 +89,3 @@ class LoginSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
-
-
-class ProfileSerializer(ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ('id', 'nickname', 'introduce', 'img')
-
-
-class SimpleProfileSerializer(ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ('id', 'nickname', 'img')

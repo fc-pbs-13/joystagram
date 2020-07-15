@@ -22,8 +22,6 @@ class FollowTestCase(APITestCase):
         response = self.client.post(self.url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
-        print(res)
-        self.fail()
 
     def test_should_denied_duplicate_likes(self):
         """생성-중복 차단"""
