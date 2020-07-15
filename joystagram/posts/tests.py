@@ -232,7 +232,7 @@ class CommentCreateTestCase(APITestCase):
         """생성-유효하지 않은 post_id"""
         self.client.force_authenticate(user=self.user)
         response = self.client.post(f'/api/posts/{self.post.id + 1}/comments', data=self.data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class CommentListTestCase(APITestCase):
@@ -343,7 +343,7 @@ class ReCommentCreateTestCase(APITestCase):
         """생성-유효하지 않은 comment_id"""
         self.client.force_authenticate(user=self.user)
         response = self.client.post(f'/api/comments/{self.comment.id + 1}/recomments', data=self.data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class ReCommentListTestCase(APITestCase):

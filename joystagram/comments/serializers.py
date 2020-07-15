@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 
 from comments.models import Comment, ReComment
 from posts.models import Post
@@ -28,7 +29,7 @@ class CommentSerializer(serializers.ModelSerializer):
         if self.context['view'].action in ('create', 'list'):
             post_pk = self.context['view'].kwargs.get('post_pk')
             if not post_pk or not Post.objects.filter(id=post_pk).exists():
-                raise serializers.ValidationError('Post is not valid')
+                raise NotFound('Post is not valid')
         return super().validate(attrs)
 
 
@@ -46,5 +47,5 @@ class ReCommentSerializer(serializers.ModelSerializer):
         if self.context['view'].action in ('create', 'list'):
             comment_pk = self.context['view'].kwargs.get('comment_pk')
             if not comment_pk or not Comment.objects.filter(id=comment_pk).exists():
-                raise serializers.ValidationError('Comment is not valid')
+                raise NotFound('Comment is not valid')
         return super().validate(attrs)
