@@ -137,20 +137,45 @@ class UserUpdateTestCase(APITestCase):
 
     def setUp(self) -> None:
         self.data = {'password': '1111'}
+        self.profile_data = {
+            'nickname': 'new_nickname',
+            'introduce': 'new_introduce'
+        }
         self.user = baker.make('users.User', email=email, password=password)
-        self.token = baker.make('authtoken.Token', user=self.user)
-        self.url = f'/api/users/{self.user.id}/update_password'
+        baker.make('users.Profile', user=self.user)
+        self.password_url = f'/api/users/{self.user.id}/update_password'
+        self.url = f'/api/users/{self.user.id}'
 
     def test_should_update_password(self):
-        self.client.force_authenticate(user=self.user, token=self.token.key)
-        response = self.client.patch(self.url, data=self.data)
+        """비밀번호 수정-성공"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(self.password_url, data=self.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # 비번변경 잘 되었는지 로그인해서 확인
         response = self.client.post('/api/users/login', {'email': email, 'password': '1111'})
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue('token' in response.data)
 
-    def test_should_denied_update(self):
-        response = self.client.patch(self.url, data=self.data)
+    def test_should_denied_update_password(self):
+        """비밀번호 수정-권한 없음"""
+        response = self.client.patch(self.password_url, data=self.data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_should_update_profile(self):
+        """프로필 수정-성공"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(self.url, data=self.profile_data)
+        res = response.data
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('id' in res)
+        self.assertTrue('email' in res)
+        self.assertTrue('img' in res)
+        self.assertEqual(self.profile_data['nickname'], res['nickname'])
+        self.assertEqual(self.profile_data['introduce'], res['introduce'])
+
+    def test_should_denied_update_profile(self):
+        """프로필 수정-권한 없음"""
+        response = self.client.patch(self.url, data=self.profile_data)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

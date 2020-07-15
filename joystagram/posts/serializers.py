@@ -1,11 +1,10 @@
-from django.contrib.auth.models import AnonymousUser
 from django.db import models
 from rest_framework import serializers
 from rest_framework.fields import ListField, ImageField
 
 from likes.models import PostLike
 from posts.models import Post, Photo
-from users.serializers import ProfileSerializer, SimpleProfileSerializer
+from users.serializers import SimpleProfileSerializer
 
 
 class PhotoSerializer(serializers.ModelSerializer):
