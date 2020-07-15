@@ -13,6 +13,9 @@ class ProfileSerializer(ModelSerializer):
         model = Profile
         fields = ('id', 'nickname', 'introduce', 'img')
 
+    def get_is_following(self, obj):
+        return obj.user
+
 
 class SimpleProfileSerializer(ModelSerializer):
     """함축 프로필 시리얼라이저 (닉네임, 프사)"""

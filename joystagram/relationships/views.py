@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AnonymousUser
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
-
 from relationships.models import Follow
 from relationships.serializers import FollowSerializer
 

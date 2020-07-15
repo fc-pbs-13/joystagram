@@ -7,7 +7,6 @@ from users.serializers import ProfileSerializer, SimpleProfileSerializer
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """TODO create, list 시리얼라이저 나누기"""
     owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
     recomments_count = serializers.SerializerMethodField()
 
@@ -25,7 +24,10 @@ class CommentSerializer(serializers.ModelSerializer):
         return obj.recomments.count()
 
     def validate(self, attrs):
-        """post_id 검증"""
+        """
+        post_pk 검증(nested url 일 때만 옴)
+        TODO create, list 시리얼라이저 나누기?
+        """
         if self.context['view'].action in ('create', 'list'):
             post_pk = self.context['view'].kwargs.get('post_pk')
             if not post_pk or not Post.objects.filter(id=post_pk).exists():
@@ -34,7 +36,6 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class ReCommentSerializer(serializers.ModelSerializer):
-    """TODO create, list 시리얼라이저 나누기"""
     owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
 
     class Meta:
@@ -43,7 +44,10 @@ class ReCommentSerializer(serializers.ModelSerializer):
         read_only_fields = ('post_id', 'owner')
 
     def validate(self, attrs):
-        """comment_id 검증"""
+        """
+        comment_pk 검증(nested url 일 때만 옴)
+        TODO create, list 시리얼라이저 나누기?
+        """
         if self.context['view'].action in ('create', 'list'):
             comment_pk = self.context['view'].kwargs.get('comment_pk')
             if not comment_pk or not Comment.objects.filter(id=comment_pk).exists():

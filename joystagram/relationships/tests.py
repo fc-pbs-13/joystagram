@@ -75,7 +75,6 @@ class FollowListTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         for follow in res['results']:
-            print(follow)
             self.assertIsNotNone(follow.get('id'))
             to_user = follow['user']
             self.assertTrue('id' in to_user)
