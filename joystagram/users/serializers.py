@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
+from relationships.models import Follow
 from .models import User, Profile
 
 
@@ -25,11 +26,11 @@ class UserSerializer(ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
     introduce = serializers.CharField(default='', source='profile.introduce')
     img = serializers.ImageField(read_only=True, source='profile.img')
-    follow = serializers.SerializerMethodField(read_only=True)
+    follow_id = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'nickname', 'introduce', 'img', 'follow')
+        fields = ('id', 'email', 'password', 'nickname', 'introduce', 'img', 'follow_id')
         read_only_fields = ('id',)
         extra_kwargs = {'password': {'write_only': True}}
 
@@ -46,8 +47,13 @@ class UserSerializer(ModelSerializer):
         Profile.objects.filter(user=instance).update(**profile)
         return instance
 
-    def get_follow(self, obj):
-        # TODO 팔로우 id
+    def get_follow_id(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            try:
+                return Follow.objects.get(from_user=user, to_user=obj).id
+            except:
+                pass
         return None
 
 

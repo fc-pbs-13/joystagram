@@ -23,6 +23,12 @@ class UserViewSet(mixins.CreateModelMixin,
     serializer_class = UserSerializer
     permission_classes = [IsUserSelf]
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.action == 'retrieve':
+            qs = qs.prefetch_related('profile')
+        return qs
+
     def get_permissions(self):
         if self.action in ('login', 'create'):
             return [AllowAny()]
@@ -55,14 +61,10 @@ class UserViewSet(mixins.CreateModelMixin,
         return Response({"detail": "Successfully logged out."},
                         status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['delete'])
-    def deactivate(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         """유저 삭제
         TODO safe delete 변경예정(is_active)"""
-        user = get_object_or_404(User.objects.all(), id=request.user.id)
-        user.delete()
-        return Response({"detail": "Account successfully deleted."},
-                        status=status.HTTP_204_NO_CONTENT)
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=['patch'])
     def update_password(self, request, *args, **kwargs):
