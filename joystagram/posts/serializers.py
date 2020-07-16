@@ -14,10 +14,10 @@ class PhotoSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
+    # TODO 모델의 필드에 좋아요 갯수 저장
     photos = ListField(child=ImageField(), write_only=True)
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     comments_count = serializers.SerializerMethodField(read_only=True)
-    likes_count = serializers.SerializerMethodField(read_only=True)
     liked = serializers.SerializerMethodField(read_only=True)
     like_id = serializers.SerializerMethodField(read_only=True)
     owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
@@ -25,7 +25,7 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ('id', 'content', 'owner', 'photos', '_photos', 'comments_count', 'likes_count', 'liked', 'like_id')
-        read_only_fields = ('owner',)
+        read_only_fields = ('owner', 'likes_count')
 
     def create(self, validated_data):
         """Post를 만든 후 이미지들로 Photo들 생성"""
@@ -41,10 +41,6 @@ class PostSerializer(serializers.ModelSerializer):
     def get_comments_count(self, obj):
         """댓글 갯수"""
         return obj.comments.count()
-
-    def get_likes_count(self, obj):
-        """좋아요 갯수"""
-        return obj.likes.count()
 
     def get_liked(self, obj) -> bool:
         """이 사용자가 게시글에 좋아요를 했는지"""

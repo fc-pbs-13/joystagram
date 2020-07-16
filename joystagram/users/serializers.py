@@ -2,28 +2,19 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
-from relationships.serializers import FollowSerializer
 from .models import User, Profile
 
 
 class ProfileSerializer(ModelSerializer):
     """프로필 시리얼라이저"""
 
-    # follow = FollowSerializer(read_only=True, source='user.follow')  # TODO 팔로우 정보!
-    # is_following = serializers.SerializerMethodField()  # TODO 내가 팔로우하고 있는지
-
     class Meta:
         model = Profile
         fields = ('id', 'nickname', 'introduce', 'img')
 
-    def get_is_following(self, obj):
-        return obj.user
-
 
 class SimpleProfileSerializer(ModelSerializer):
     """함축 프로필 시리얼라이저 (닉네임, 프사)"""
-
-    # is_following = serializers.SerializerMethodField()  # TODO 내가 팔로우하고 있는지
 
     class Meta:
         model = Profile
@@ -34,11 +25,11 @@ class UserSerializer(ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
     introduce = serializers.CharField(default='', source='profile.introduce')
     img = serializers.ImageField(read_only=True, source='profile.img')
-    follow = FollowSerializer(read_only=True, source='follow')  # TODO 팔로우 정보!
+    follow = serializers.SerializerMethodField(read_only=True)  # TODO 팔로우 id
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'nickname', 'introduce', 'img')
+        fields = ('id', 'email', 'password', 'nickname', 'introduce', 'img', 'follow')
         read_only_fields = ('id',)
         extra_kwargs = {'password': {'write_only': True}}
 
@@ -54,6 +45,9 @@ class UserSerializer(ModelSerializer):
         profile = validated_data.pop('profile')
         Profile.objects.filter(user=instance).update(**profile)
         return instance
+
+    def get_follow(self, obj):
+        return None
 
 
 class UserPasswordSerializer(ModelSerializer):
