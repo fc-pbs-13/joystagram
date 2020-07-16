@@ -57,7 +57,8 @@ class UserViewSet(mixins.CreateModelMixin,
 
     @action(detail=True, methods=['delete'])
     def deactivate(self, request, *args, **kwargs):
-        """유저 삭제 TODO flag 설정하여 비활성화로 변경예정(is_deactivated Boolean 필드)"""
+        """유저 삭제
+        TODO safe delete 변경예정(is_active)"""
         user = get_object_or_404(User.objects.all(), id=request.user.id)
         user.delete()
         return Response({"detail": "Account successfully deleted."},

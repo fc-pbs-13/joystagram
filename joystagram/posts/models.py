@@ -7,6 +7,11 @@ class Post(TimeStampedModel):
     content = models.TextField(default='')
     likes_count = models.PositiveIntegerField()
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if self.id is None:
+            self.likes_count = 0
+        super().save(force_insert, force_update, using, update_fields)
+
 
 def post_img_path(instance, filename):
     return f'posts_img/{filename}'

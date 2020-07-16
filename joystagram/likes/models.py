@@ -13,9 +13,6 @@ class PostLike(TimeStampedModel):
         unique_together = ['owner', 'post']
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        # 1
-        self.post = F('likes_count') + 1
-        self.post.save()
-        # 2
-        # Post.objects.filter(id=self.post.id).update(like_count=F('likes_count') + 1)
+        """Post의 좋아요 갯수 + 1"""
+        Post.objects.filter(id=self.post.id).update(likes_count=F('likes_count') + 1)
         super().save(force_insert, force_update, using, update_fields)

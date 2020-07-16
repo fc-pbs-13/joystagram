@@ -25,7 +25,7 @@ class UserSerializer(ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
     introduce = serializers.CharField(default='', source='profile.introduce')
     img = serializers.ImageField(read_only=True, source='profile.img')
-    follow = serializers.SerializerMethodField(read_only=True)  # TODO 팔로우 id
+    follow = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -47,6 +47,7 @@ class UserSerializer(ModelSerializer):
         return instance
 
     def get_follow(self, obj):
+        # TODO 팔로우 id
         return None
 
 

@@ -23,6 +23,6 @@ class FollowViewSet(mixins.CreateModelMixin,
                         to_user_id=self.kwargs['to_user_pk'])
 
     def filter_queryset(self, queryset):
-        if not isinstance(self.request.user, AnonymousUser):
+        if self.request.user.is_authenticated:
             queryset = queryset.filter(from_user=self.request.user)
         return super().filter_queryset(queryset)

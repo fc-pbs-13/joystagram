@@ -3,7 +3,8 @@ from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
 
 from comments.models import Comment, ReComment
-from comments.serializers import CommentSerializer, ReCommentSerializer
+from comments.serializers import CommentSerializer, ReCommentSerializer, ReCommentUpdateSerializer, \
+    CommentUpdateSerializer
 from core.permissions import IsOwnerOrReadOnly
 
 
@@ -37,7 +38,7 @@ class CommentViewSet(mixins.UpdateModelMixin,
     PATCH, DELETE
     /api/comments/{comments_id}"""
     queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
+    serializer_class = CommentUpdateSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
 
@@ -73,5 +74,5 @@ class ReCommentViewSet(mixins.UpdateModelMixin,
     /api/recomments/{recomments_id}
     """
     queryset = ReComment.objects.all()
-    serializer_class = ReCommentSerializer
+    serializer_class = ReCommentUpdateSerializer
     permission_classes = [IsOwnerOrReadOnly]
