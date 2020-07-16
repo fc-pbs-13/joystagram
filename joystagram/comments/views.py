@@ -1,7 +1,5 @@
-from django.shortcuts import render
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
-
 from comments.models import Comment, ReComment
 from comments.serializers import CommentSerializer, ReCommentSerializer, ReCommentUpdateSerializer, \
     CommentUpdateSerializer
@@ -20,6 +18,9 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
     def filter_queryset(self, queryset):
         """특정 Post의 Comment만"""
         queryset = queryset.filter(post_id=self.kwargs['post_pk'])
@@ -37,7 +38,7 @@ class CommentViewSet(mixins.UpdateModelMixin,
     댓글 수정, 삭제
     PATCH, DELETE
     /api/comments/{comments_id}"""
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.all().prefetch_related()
     serializer_class = CommentUpdateSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
