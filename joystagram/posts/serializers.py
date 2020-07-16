@@ -19,7 +19,7 @@ class PostSerializer(serializers.ModelSerializer):
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     comments_count = serializers.SerializerMethodField(read_only=True)
     like_id = serializers.SerializerMethodField(read_only=True)
-    owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
+    owner = SimpleProfileSerializer(read_only=True)
 
     class Meta:
         model = Post

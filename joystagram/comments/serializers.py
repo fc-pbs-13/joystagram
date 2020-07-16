@@ -7,7 +7,7 @@ from users.serializers import ProfileSerializer, SimpleProfileSerializer
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
+    owner = SimpleProfileSerializer(read_only=True)
     recomments_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -33,7 +33,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class CommentUpdateSerializer(serializers.ModelSerializer):
-    owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
+    owner = SimpleProfileSerializer(read_only=True)
     recomments_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -46,7 +46,7 @@ class CommentUpdateSerializer(serializers.ModelSerializer):
 
 
 class ReCommentSerializer(serializers.ModelSerializer):
-    owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
+    owner = SimpleProfileSerializer(read_only=True)
 
     class Meta:
         model = ReComment
@@ -63,7 +63,7 @@ class ReCommentSerializer(serializers.ModelSerializer):
 
 
 class ReCommentUpdateSerializer(serializers.ModelSerializer):
-    owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
+    owner = SimpleProfileSerializer(read_only=True)
 
     class Meta:
         model = ReComment

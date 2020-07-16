@@ -16,10 +16,13 @@ class ProfileSerializer(ModelSerializer):
 
 class SimpleProfileSerializer(ModelSerializer):
     """함축 프로필 시리얼라이저 (닉네임, 프사)"""
+    nickname = serializers.CharField(max_length=20, source='profile.nickname')
+    introduce = serializers.CharField(default='', source='profile.introduce')
+    img = serializers.ImageField(read_only=True, source='profile.img')
 
     class Meta:
-        model = Profile
-        fields = ('id', 'nickname', 'img')
+        model = User
+        fields = ('id', 'nickname', 'introduce', 'img')
 
 
 class UserSerializer(ModelSerializer):

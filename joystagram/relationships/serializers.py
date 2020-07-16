@@ -12,7 +12,7 @@ from users.serializers import SimpleProfileSerializer
 class FollowSerializer(serializers.ModelSerializer):
     """팔로우 시리얼라이저"""
 
-    user = SimpleProfileSerializer(source='to_user.profile', required=False)
+    user = SimpleProfileSerializer(source='to_user', required=False)
 
     class Meta:
         model = Follow
@@ -20,7 +20,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         # user_pk lookup 검증
-        to_user_pk = self.context['view'].kwargs.get('to_user_pk')
+        to_user_pk = self.context['view'].kwargs.get('user_pk')
         if not to_user_pk or not User.objects.filter(id=to_user_pk).exists():
             raise NotFound('User is not valid')
 

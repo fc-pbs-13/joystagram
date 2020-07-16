@@ -20,7 +20,7 @@ class FollowViewSet(mixins.CreateModelMixin,
 
     def perform_create(self, serializer):
         serializer.save(from_user_id=self.request.user.id,
-                        to_user_id=self.kwargs['to_user_pk'])
+                        to_user_id=self.kwargs['user_pk'])
 
     def filter_queryset(self, queryset):
         if self.request.user.is_authenticated:

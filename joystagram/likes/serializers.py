@@ -3,12 +3,13 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from likes.models import PostLike
 from posts.models import Post
-from users.serializers import ProfileSerializer, SimpleProfileSerializer
+from posts.serializers import PostSerializer
+from users.serializers import ProfileSerializer, SimpleProfileSerializer, UserSerializer
 
 
 class LikeSerializer(serializers.ModelSerializer):
     """게시글 좋아요 시리얼라이저"""
-    owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
+    owner = SimpleProfileSerializer(read_only=True)
 
     class Meta:
         model = PostLike
@@ -26,3 +27,21 @@ class LikeSerializer(serializers.ModelSerializer):
                                               code='unique')
 
         return attrs
+
+
+class PostLikedUsersSerializer(serializers.ModelSerializer):
+    """게시글을 좋아요한 유저 리스트"""
+    owner = SimpleProfileSerializer(read_only=True)
+
+    class Meta:
+        model = PostLike
+        fields = ('id', 'owner')
+
+
+class UserLikedPostsSerializer(serializers.ModelSerializer):
+    """유저가 좋아요한 게시물 리스트"""
+    post = PostSerializer(read_only=True)
+
+    class Meta:
+        model = PostLike
+        fields = ('id', 'post')
