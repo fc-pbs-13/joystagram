@@ -5,6 +5,7 @@ from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 from likes.models import PostLike
+from posts.models import Post
 
 
 class PostCreateTestCase(APITestCase):
@@ -92,16 +93,20 @@ class PostListTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         res = response.data
-        for post in res['results']:
-            self.assertIsNotNone(post.get('id'))
-            self.assertIsNotNone(post.get('content'))
-            self.assertIsNotNone(post.get('_photos'))
-            self.assertIsNotNone(post.get('comments_count'))
-            self.assertIsNotNone(post.get('likes_count'))
-            self.assertEqual(post.get('comments_count'), self.comments_count)
-            if post.get('like_id'):
-                self.assertIsNotNone(PostLike.objects.get(id=post.get('like_id')).post, post)
-            for photos in post.get('_photos'):
+
+        post_list = Post.objects.filter()
+        self.assertEqual(len(res['results']), len(post_list))
+
+        for post_res, post_obj in zip(res['results'], post_list[::-1]):
+            self.assertIsNotNone(post_res.get('id'))
+            self.assertIsNotNone(post_res.get('content'))
+            self.assertIsNotNone(post_res.get('_photos'))
+            self.assertIsNotNone(post_res.get('comments_count'))
+            self.assertIsNotNone(post_res.get('likes_count'))
+            self.assertEqual(post_res.get('comments_count'), self.comments_count)
+            if post_res.get('like_id'):
+                self.assertIsNotNone(PostLike.objects.get(id=post_res.get('like_id')).post, post_res)
+            for photos in post_res.get('_photos'):
                 self.assertTrue(photos.get('img').endswith(self.img_url))
 
 

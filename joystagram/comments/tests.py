@@ -60,6 +60,7 @@ class CommentListTestCase(APITestCase):
         self.post = baker.make('posts.Post')
         self.comment_size = 3
         self.comments = baker.make('comments.Comment', post=self.post, owner=user, _quantity=self.comment_size)
+        baker.make('comments.Comment')
         self.url = f'/api/posts/{self.post.id}/comments'
 
     def test_should_list(self):
