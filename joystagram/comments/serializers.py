@@ -20,7 +20,6 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """post_pk 검증(nested url 일 때만 옴)"""
-        print(attrs)
         if self.context['view'].action in ('create', 'list'):
             post_pk = self.context['view'].kwargs.get('post_pk')
             if not post_pk or not Post.objects.filter(id=post_pk).exists():

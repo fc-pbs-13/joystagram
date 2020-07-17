@@ -11,6 +11,8 @@ from posts.models import Post
 
 email = 'email@test.com'
 password = '1234'
+INVALID_POST_ID = 999999999
+INVALID_COMMENT_ID = 999999999
 
 
 class PostCreateTestCase(APITestCase):
@@ -225,7 +227,7 @@ class CommentCreateTestCase(APITestCase):
     def test_should_denied_invalid_id(self):
         """생성-유효하지 않은 post_id"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(f'/api/posts/{self.post.id + 1}/comments', data=self.data)
+        response = self.client.post(f'/api/posts/{INVALID_POST_ID}/comments', data=self.data)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
@@ -336,7 +338,7 @@ class ReCommentCreateTestCase(APITestCase):
     def test_should_denied_invalid_id(self):
         """생성-유효하지 않은 comment_id"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(f'/api/comments/{self.comment.id + 1}/recomments', data=self.data)
+        response = self.client.post(f'/api/comments/{INVALID_COMMENT_ID}/recomments', data=self.data)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
