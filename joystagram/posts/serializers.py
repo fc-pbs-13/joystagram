@@ -1,8 +1,5 @@
-from django.db import models
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.fields import ListField, ImageField
-
 from likes.models import PostLike
 from posts.models import Post, Photo
 from users.serializers import SimpleProfileSerializer

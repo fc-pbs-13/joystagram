@@ -4,13 +4,7 @@ from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-from comments.models import Comment, ReComment
 from likes.models import PostLike
-from posts.models import Post
-
-email = 'email@test.com'
-password = '1234'
 
 
 class PostCreateTestCase(APITestCase):
@@ -115,7 +109,7 @@ class PostRetrieveTestCase(APITestCase):
     """게시글 조회 테스트"""
 
     def setUp(self) -> None:
-        self.user = baker.make('users.User', email=email, password=password)
+        self.user = baker.make('users.User')
         baker.make('users.Profile', user=self.user, nickname='test_user')
         post = baker.make('posts.Post', owner=self.user)
         baker.make('comments.Comment', post=post, _quantity=2)
@@ -135,7 +129,7 @@ class PostUpdateDeleteTestCase(APITestCase):
 
     def setUp(self) -> None:
         self.data = {'content': '1111'}
-        self.user = baker.make('users.User', email=email, password=password)
+        self.user = baker.make('users.User')
         baker.make('users.Profile', user=self.user)
         post = baker.make('posts.Post', owner=self.user)
         self.likes_count = 3
