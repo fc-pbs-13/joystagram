@@ -1,10 +1,7 @@
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-from likes.models import PostLike
 from relationships.models import Follow
-from users.models import Profile
 
 
 class FollowTestCase(APITestCase):
@@ -73,37 +70,30 @@ class FollowListTestCase(APITestCase):
 
     def test_should_list_following(self):
         """유저가 팔로우한 유저 리스트"""
-        # self.client.force_authenticate(user=self.user)
         response = self.client.get(f'/api/users/{self.user.id}/followings')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+        self.assertEqual(len(res['results']), Follow.objects.filter(from_user=self.user).count())
 
         for follow in res['results']:
-            print(follow)
             self.assertTrue('id' in follow)
             user = follow['user']
             self.assertTrue('id' in user)
             self.assertTrue('img' in user)
             self.assertTrue('nickname' in user)
-
-            # TODO 테스트 필요
             self.assertTrue(Follow.objects.filter(from_user=self.user, to_user_id=user['id']).exists())
 
     def test_should_list_follower(self):
         """유저를 팔로잉하는 유저 리스트"""
-        # self.client.force_authenticate(user=self.user)
         response = self.client.get(f'/api/users/{self.user.id}/followers')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+        self.assertEqual(len(res['results']), Follow.objects.filter(to_user=self.user).count())
 
         for follow in res['results']:
-            print(follow)
             self.assertTrue('id' in follow)
             user = follow['user']
             self.assertTrue('id' in user)
             self.assertTrue('img' in user)
             self.assertTrue('nickname' in user)
-
-            # TODO 테스트 필요
             self.assertTrue(Follow.objects.filter(from_user=self.user, to_user_id=user['id']).exists())
-            # self.assertTrue(Follow.objects.filter(from_user=user['id'], to_user_id=self.user).exists())
