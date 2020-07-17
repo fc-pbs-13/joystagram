@@ -10,6 +10,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsUserSelf
+from relationships.models import Follow
+from relationships.serializers import FollowSerializer, FollowingSerializer, FollowerSerializer
 from users.models import User, Profile
 from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
 
@@ -17,11 +19,22 @@ from users.serializers import UserSerializer, LoginSerializer, UserPasswordSeria
 class UserViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
+                  mixins.ListModelMixin,
                   mixins.DestroyModelMixin,
                   GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsUserSelf]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.action == 'retrieve':
+            qs = qs.prefetch_related('profile')
+        if self.action == 'followers':
+            return Follow.objects.filter(to_user=self.kwargs['pk'])
+        if self.action == 'followings':
+            return Follow.objects.filter(from_user=self.kwargs['pk'])
+        return qs
 
     def get_permissions(self):
         if self.action in ('login', 'create'):
@@ -33,6 +46,10 @@ class UserViewSet(mixins.CreateModelMixin,
             return LoginSerializer
         elif self.action == 'update_password':
             return UserPasswordSerializer
+        if self.action == 'followers':
+            return FollowerSerializer
+        if self.action == 'followings':
+            return FollowingSerializer
         return super().get_serializer_class()
 
     @action(detail=False, methods=['post'])
@@ -55,15 +72,33 @@ class UserViewSet(mixins.CreateModelMixin,
         return Response({"detail": "Successfully logged out."},
                         status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['delete'])
-    def deactivate(self, request, *args, **kwargs):
-        """유저 삭제 TODO flag 설정하여 비활성화로 변경예정(is_deactivated Boolean 필드)"""
-        user = get_object_or_404(User.objects.all(), id=request.user.id)
-        user.delete()
-        return Response({"detail": "Account successfully deleted."},
-                        status=status.HTTP_204_NO_CONTENT)
+    def destroy(self, request, *args, **kwargs):
+        """유저 삭제
+        TODO safe delete 변경예정(is_active)"""
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=['patch'])
     def update_password(self, request, *args, **kwargs):
         """비밀번호 변경"""
         return super().partial_update(request, *args, **kwargs)
+
+    @action(detail=True)
+    def followers(self, request, *args, **kwargs):
+        """
+        유저를 팔로우하는 유저 리스트
+        followers -> user
+        """
+        return super().list(request, *args, **kwargs)
+
+    @action(detail=True)
+    def followings(self, request, *args, **kwargs):
+        """
+        유저가 팔로잉하는 유저 리스트
+        user -> followings
+        """
+        return super().list(request, *args, **kwargs)
+
+    def list(self, request, *args, **kwargs):
+        """기본 list 엔드포인트는 차단"""
+        response = {'message': 'GET method is not offered in this path.'}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)

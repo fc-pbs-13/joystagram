@@ -51,7 +51,6 @@ class PostCreateTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.data['content'])
-        self.assertFalse(res['liked'])
 
     def test_should_create_multiple(self):
         """생성-성공: 다중 이미지"""
@@ -66,7 +65,6 @@ class PostCreateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.multiple_data['content'])
         self.assertEqual(len(res['_photos']), len(self.multiple_data['photos']))
-        self.assertFalse(res['liked'])
 
     def test_should_denied401(self):
         """생성-인증 필요"""
@@ -106,10 +104,7 @@ class PostListTestCase(APITestCase):
             self.assertIsNotNone(post.get('_photos'))
             self.assertIsNotNone(post.get('comments_count'))
             self.assertIsNotNone(post.get('likes_count'))
-            self.assertEqual(post.get('likes_count'), self.likes_count)
             self.assertEqual(post.get('comments_count'), self.comments_count)
-            self.assertEqual(post.get('liked'),
-                             PostLike.objects.filter(post_id=post['id'], owner=self.user).exists())
             if post.get('like_id'):
                 self.assertIsNotNone(PostLike.objects.get(id=post.get('like_id')).post, post)
             for photos in post.get('_photos'):
@@ -154,7 +149,6 @@ class PostUpdateDeleteTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.assertEqual(res['content'], self.data['content'])
-        self.assertEqual(res['likes_count'], self.likes_count)
 
     def test_should_denied_update401(self):
         """수정-인증 필요"""

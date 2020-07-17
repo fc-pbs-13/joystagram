@@ -7,7 +7,6 @@ from .models import User
 
 email = 'email@test.com'
 password = '1234'
-duplicated_email = 'duplicated_email@test.com'
 
 
 class UserRegisterTestCase(APITestCase):
@@ -42,6 +41,7 @@ class UserRegisterTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_with_duplicated_email(self):
+        duplicated_email = 'duplicated_email@test.com'
         self.user = baker.make(User, email=duplicated_email, password=password)
         response = self.client.post(self.url, {'email': duplicated_email, 'password': password})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -100,7 +100,7 @@ class UserDeactivateTestCase(APITestCase):
     def setUp(self) -> None:
         self.user = baker.make(User, email=email, password=password)
         self.client.force_authenticate(user=self.user)
-        self.url = f'/api/users/{self.user.id}/deactivate'
+        self.url = f'/api/users/{self.user.id}'
 
     def test_should_delete_user(self):
         response = self.client.delete(self.url)

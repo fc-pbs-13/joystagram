@@ -1,7 +1,7 @@
 from rest_framework_nested import routers
 
 from comments.views import CommentViewSet, ReCommentViewSet, CommentCreateListViewSet, ReCommentCreateListViewSet
-from likes.views import PostLikeViewSet
+from likes.views import PostLikeViewSet, UserLikeViewSet
 from posts.views import PostViewSet
 from relationships.views import FollowViewSet
 from users.views import UserViewSet
@@ -13,14 +13,15 @@ router.register(r'comments', CommentViewSet)
 router.register(r'recomments', ReCommentViewSet)
 router.register(r'follows', FollowViewSet)
 
-comments_router = routers.NestedSimpleRouter(router, r'posts', trailing_slash=False, lookup='post')
-comments_router.register(r'comments', CommentCreateListViewSet)
-comments_router.register(r'post_likes', PostLikeViewSet)
+posts_nested_router = routers.NestedSimpleRouter(router, r'posts', trailing_slash=False, lookup='post')
+posts_nested_router.register(r'comments', CommentCreateListViewSet)
+posts_nested_router.register(r'likes', PostLikeViewSet)
 
-recomments_router = routers.NestedSimpleRouter(router, r'comments', trailing_slash=False, lookup='comment')
-recomments_router.register(r'recomments', ReCommentCreateListViewSet)
+comments_nested_router = routers.NestedSimpleRouter(router, r'comments', trailing_slash=False, lookup='comment')
+comments_nested_router.register(r'recomments', ReCommentCreateListViewSet)
 
-follows_router = routers.NestedSimpleRouter(router, r'users', trailing_slash=False, lookup='to_user')
-follows_router.register(r'follows', FollowViewSet)
+users_nested_router = routers.NestedSimpleRouter(router, r'users', trailing_slash=False, lookup='user')
+users_nested_router.register(r'follows', FollowViewSet)
+users_nested_router.register(r'likes', UserLikeViewSet)
 
-urlpatterns = router.urls + comments_router.urls + recomments_router.urls + follows_router.urls
+urlpatterns = router.urls + posts_nested_router.urls + comments_nested_router.urls + users_nested_router.urls

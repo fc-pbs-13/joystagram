@@ -3,35 +3,45 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from likes.models import PostLike
 from posts.models import Post
-from users.serializers import ProfileSerializer, SimpleProfileSerializer
+from posts.serializers import PostSerializer
+from users.serializers import ProfileSerializer, SimpleProfileSerializer, UserSerializer
 
 
-class PostLikeUniqueTogetherValidator(UniqueTogetherValidator):
-
-    def enforce_required_fields(self, attrs, serializer):
-        """게시글 좋아요 UniqueTogether 검사"""
-        attrs['owner_id'] = serializer.context['request'].user.id
-        attrs['post_id'] = serializer.context['view'].kwargs['post_pk']
-        super().enforce_required_fields(attrs, serializer)
-
-
-class PostLikeSerializer(serializers.ModelSerializer):
+class LikeSerializer(serializers.ModelSerializer):
     """게시글 좋아요 시리얼라이저"""
-    owner = SimpleProfileSerializer(source='owner.profile', read_only=True)
+    owner = SimpleProfileSerializer(read_only=True)
 
     class Meta:
         model = PostLike
         fields = ('id', 'post_id', 'owner_id', 'owner')
-        validators = [
-            PostLikeUniqueTogetherValidator(
-                queryset=PostLike.objects.all(),
-                fields=('post_id', 'owner_id')
-            )
-        ]
 
     def validate(self, attrs):
-        """post_id 검증"""
+        # post_pk lookup 검증
         post_pk = self.context['view'].kwargs.get('post_pk')
         if not post_pk or not Post.objects.filter(id=post_pk).exists():
             raise serializers.ValidationError('Post is not valid')
-        return super().validate(attrs)
+
+        # UniqueTogether 검증
+        if PostLike.objects.filter(owner=self.context['request'].user, post=post_pk).exists():
+            raise serializers.ValidationError('The fields `user`, `post` must make a unique set.',
+                                              code='unique')
+
+        return attrs
+
+
+class PostLikedUsersSerializer(serializers.ModelSerializer):
+    """게시글을 좋아요한 유저 리스트"""
+    owner = SimpleProfileSerializer(read_only=True)
+
+    class Meta:
+        model = PostLike
+        fields = ('id', 'owner')
+
+
+class UserLikedPostsSerializer(serializers.ModelSerializer):
+    """유저가 좋아요한 게시물 리스트"""
+    post = PostSerializer(read_only=True)
+
+    class Meta:
+        model = PostLike
+        fields = ('id', 'post')
