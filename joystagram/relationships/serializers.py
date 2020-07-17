@@ -1,9 +1,6 @@
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
-from rest_framework.validators import UniqueTogetherValidator
 
-from likes.models import PostLike
-from posts.models import Post
 from relationships.models import Follow
 from users.models import User
 from users.serializers import SimpleProfileSerializer
@@ -30,3 +27,19 @@ class FollowSerializer(serializers.ModelSerializer):
                                               code='unique')
 
         return attrs
+
+
+class FollowerSerializer(serializers.ModelSerializer):
+    user = SimpleProfileSerializer(source='from_user')
+
+    class Meta:
+        model = Follow
+        fields = ('id', 'user')
+
+
+class FollowingSerializer(serializers.ModelSerializer):
+    user = SimpleProfileSerializer(source='to_user')
+
+    class Meta:
+        model = Follow
+        fields = ('id', 'user')

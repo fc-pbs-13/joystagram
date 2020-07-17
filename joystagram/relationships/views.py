@@ -11,7 +11,7 @@ class FollowViewSet(mixins.CreateModelMixin,
                     GenericViewSet):
     """
     팔로우
-    생성, 리스트, 삭제
+    생성, 삭제
     POST, GET /api/users/{user_id}/follows
     DELETE /api/users/{user_id}/follows/{follows_id}
     """

@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from likes.models import PostLike
+from relationships.models import Follow
 from users.models import Profile
 
 
@@ -59,24 +60,50 @@ class FollowListTestCase(APITestCase):
     """팔로우 리스트 테스트"""
 
     def setUp(self) -> None:
-        self.user = baker.make('users.User')
-        baker.make('users.Profile', user=self.user)
-        self.follow_count = 3
-        users = baker.make('users.User', _quantity=self.follow_count)
+        users = baker.make('users.User', _quantity=4)
         for user in users:
             baker.make('users.Profile', user=user)
-            baker.make('relationships.Follow', from_user=self.user, to_user=user)
-        self.url = f'/api/follows'
 
-    def test_should_list(self):
-        """리스트-성공"""
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(self.url)
+        baker.make('relationships.Follow', from_user=users[0], to_user=users[1])
+        baker.make('relationships.Follow', from_user=users[0], to_user=users[2])
+        baker.make('relationships.Follow', from_user=users[1], to_user=users[2])
+        baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
+        baker.make('relationships.Follow', from_user=users[2], to_user=users[0])
+        self.user = users[1]
+
+    def test_should_list_following(self):
+        """유저가 팔로우한 유저 리스트"""
+        # self.client.force_authenticate(user=self.user)
+        response = self.client.get(f'/api/users/{self.user.id}/followings')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+
         for follow in res['results']:
-            self.assertIsNotNone(follow.get('id'))
-            to_user = follow['user']
-            self.assertTrue('id' in to_user)
-            self.assertTrue('nickname' in to_user)
-            self.assertTrue('img' in to_user)
+            print(follow)
+            self.assertTrue('id' in follow)
+            user = follow['user']
+            self.assertTrue('id' in user)
+            self.assertTrue('img' in user)
+            self.assertTrue('nickname' in user)
+
+            # TODO 테스트 필요
+            self.assertTrue(Follow.objects.filter(from_user=self.user, to_user_id=user['id']).exists())
+
+    def test_should_list_follower(self):
+        """유저를 팔로잉하는 유저 리스트"""
+        # self.client.force_authenticate(user=self.user)
+        response = self.client.get(f'/api/users/{self.user.id}/followers')
+        res = response.data
+        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+
+        for follow in res['results']:
+            print(follow)
+            self.assertTrue('id' in follow)
+            user = follow['user']
+            self.assertTrue('id' in user)
+            self.assertTrue('img' in user)
+            self.assertTrue('nickname' in user)
+
+            # TODO 테스트 필요
+            self.assertTrue(Follow.objects.filter(from_user=self.user, to_user_id=user['id']).exists())
+            # self.assertTrue(Follow.objects.filter(from_user=user['id'], to_user_id=self.user).exists())
