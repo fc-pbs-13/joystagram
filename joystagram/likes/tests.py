@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 from likes.models import PostLike
 from users.models import Profile, User
 
-INVALID_POST_ID = 999999999
+INVALID_ID = -1
 
 
 class PostLikeTestCase(APITestCase):
@@ -40,7 +40,7 @@ class PostLikeTestCase(APITestCase):
     def test_should_denied_invalid_post_id(self):
         """생성-유효하지 않은 post_id"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(f'/api/posts/{INVALID_POST_ID}/likes')
+        response = self.client.post(f'/api/posts/{INVALID_ID}/likes')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, res)
 

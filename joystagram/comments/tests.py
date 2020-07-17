@@ -3,8 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from comments.models import Comment, ReComment
 
-INVALID_POST_ID = 999999999
-INVALID_COMMENT_ID = 999999999
+INVALID_ID = -1
 
 
 class CommentCreateTestCase(APITestCase):
@@ -15,9 +14,8 @@ class CommentCreateTestCase(APITestCase):
             'content': 'hello joy This is Comment!!'
         }
         self.user = baker.make('users.User')
-        baker.make('users.Profile', user=self.user, nickname='test_user')
-        self.post = baker.make('posts.Post', content='우리 인생 화이팅...!', owner=self.user)
-        baker.make('posts.Photo', post=self.post, img='post_image/test.png')
+        baker.make('users.Profile', user=self.user)
+        self.post = baker.make('posts.Post', owner=self.user)
         self.url = f'/api/posts/{self.post.id}/comments'
 
     def test_should_create(self):
@@ -49,7 +47,7 @@ class CommentCreateTestCase(APITestCase):
     def test_should_denied_invalid_id(self):
         """생성-유효하지 않은 post_id"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(f'/api/posts/{INVALID_POST_ID}/comments', data=self.data)
+        response = self.client.post(f'/api/posts/{INVALID_ID}/comments', data=self.data)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
@@ -70,12 +68,14 @@ class CommentListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(len(response.data), self.comment_size)
 
-        for comment in response.data['results']:
-            self.assertIsNotNone(comment['id'])
-            self.assertIsNotNone(comment['content'])
-            self.assertIsNotNone(comment['owner'])
-            self.assertIsNotNone(comment['recomments_count'])
-            self.assertEqual(Comment.objects.get(id=comment['id']).post, self.post)
+        for comment_res, comment_obj in zip(response.data['results'], Comment.objects.filter(post=self.post)[::-1]):
+            self.assertEqual(comment_res['id'], comment_obj.id)
+            self.assertEqual(comment_res['content'], comment_obj.content)
+            owner = comment_res['owner']
+            self.assertEqual(owner['id'], comment_obj.owner.id)
+            self.assertEqual(owner['nickname'], comment_obj.owner.profile.nickname)
+            self.assertEqual(comment_res['recomments_count'], comment_obj.recomments.count())
+            self.assertEqual(Comment.objects.get(id=comment_res['id']).post, self.post)
 
 
 class CommentUpdateDeleteTestCase(APITestCase):
@@ -160,7 +160,7 @@ class ReCommentCreateTestCase(APITestCase):
     def test_should_denied_invalid_id(self):
         """생성-유효하지 않은 comment_id"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(f'/api/comments/{INVALID_COMMENT_ID}/recomments', data=self.data)
+        response = self.client.post(f'/api/comments/{INVALID_ID}/recomments', data=self.data)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
@@ -172,7 +172,7 @@ class ReCommentListTestCase(APITestCase):
         baker.make('users.Profile', user=user)
         self.comment = baker.make('comments.Comment', owner=user)
         baker.make('comments.ReComment', comment=self.comment, owner=user, _quantity=3)
-        baker.make('comments.ReComment')
+        baker.make('comments.ReComment', _quantity=2)
         self.url = f'/api/comments/{self.comment.id}/recomments'
 
     def test_should_list(self):
@@ -186,6 +186,15 @@ class ReCommentListTestCase(APITestCase):
             self.assertIsNotNone(recomment['content'])
             self.assertIsNotNone(recomment['owner'])
             self.assertEqual(ReComment.objects.get(id=recomment['id']).comment, self.comment)
+
+        for recomment_res, recomment_obj in zip(response.data['results'],
+                                                ReComment.objects.filter(comment=self.comment)[::-1]):
+            self.assertEqual(recomment_res['id'], recomment_obj.id)
+            self.assertEqual(recomment_res['content'], recomment_obj.content)
+            owner = recomment_res['owner']
+            self.assertEqual(owner['id'], recomment_obj.owner.id)
+            self.assertEqual(owner['nickname'], recomment_obj.owner.profile.nickname)
+            self.assertEqual(ReComment.objects.get(id=recomment_res['id']).comment, self.comment)
 
 
 class ReCommentUpdateDeleteTestCase(APITestCase):
