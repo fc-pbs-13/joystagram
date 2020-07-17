@@ -66,7 +66,8 @@ class FollowListTestCase(APITestCase):
         baker.make('relationships.Follow', from_user=users[1], to_user=users[2])
         baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
         baker.make('relationships.Follow', from_user=users[2], to_user=users[0])
-        self.user = users[1]
+        baker.make('relationships.Follow', from_user=users[3], to_user=users[0])
+        self.user = users[0]
 
     def test_should_list_following(self):
         """유저가 팔로우한 유저 리스트"""
@@ -96,4 +97,4 @@ class FollowListTestCase(APITestCase):
             self.assertTrue('id' in user)
             self.assertTrue('img' in user)
             self.assertTrue('nickname' in user)
-            self.assertTrue(Follow.objects.filter(from_user=self.user, to_user_id=user['id']).exists())
+            self.assertTrue(Follow.objects.filter(from_user=user['id'], to_user=self.user).exists())

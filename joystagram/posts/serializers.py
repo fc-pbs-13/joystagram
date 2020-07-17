@@ -14,7 +14,6 @@ class PhotoSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-    # TODO 모델의 필드에 좋아요 갯수 저장
     photos = ListField(child=ImageField(), write_only=True)
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     comments_count = serializers.SerializerMethodField(read_only=True)
