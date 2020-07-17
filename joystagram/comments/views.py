@@ -1,9 +1,11 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
 from comments.models import Comment, ReComment
 from comments.serializers import CommentSerializer, ReCommentSerializer, ReCommentUpdateSerializer, \
     CommentUpdateSerializer
 from core.permissions import IsOwnerOrReadOnly
+from posts.models import Post
 
 
 class CommentCreateListViewSet(mixins.CreateModelMixin,
@@ -27,8 +29,7 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
         return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):
-        post_id = self.kwargs['post_pk']
-        serializer.save(owner=self.request.user, post_id=post_id)
+        serializer.save(owner=self.request.user, post_id=self.kwargs.get('post_pk'))
 
 
 class CommentViewSet(mixins.UpdateModelMixin,
@@ -61,9 +62,7 @@ class ReCommentCreateListViewSet(mixins.CreateModelMixin,
         return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):
-        comment_id = self.kwargs['comment_pk']
-        serializer.save(owner=self.request.user,
-                        comment_id=comment_id)
+        serializer.save(owner=self.request.user, comment_id=self.kwargs['comment_pk'])
 
 
 class ReCommentViewSet(mixins.UpdateModelMixin,

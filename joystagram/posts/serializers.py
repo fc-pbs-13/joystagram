@@ -1,7 +1,5 @@
-from django.db import models
 from rest_framework import serializers
 from rest_framework.fields import ListField, ImageField
-
 from likes.models import PostLike
 from posts.models import Post, Photo
 from users.serializers import SimpleProfileSerializer
@@ -37,12 +35,35 @@ class PostSerializer(serializers.ModelSerializer):
         return post
 
     def get_comments_count(self, obj):
-        """
-        댓글 갯수
-        TODO N+1 문제 발생
-        """
+        """댓글 갯수
+        TODO N+1 문제 발생"""
         return obj.comments.count()
 
-    def get_like_id(self, obj) -> bool:
-        """사용자가 게시글에 한 좋아요 id"""
-        pass
+    def get_like_id(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            like_qs = PostLike.objects.filter(post=obj, owner=user)
+            if like_qs.exists():
+                return like_qs.first().id
+        return None
+
+
+class PostListSerializer(serializers.ModelSerializer):
+    _photos = PhotoSerializer(many=True, read_only=True, source='photos')
+    comments_count = serializers.SerializerMethodField(read_only=True)
+    like_id = serializers.SerializerMethodField(read_only=True)
+    owner = SimpleProfileSerializer(read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ('id', 'content', 'owner', '_photos', 'comments_count', 'likes_count', 'like_id')
+        read_only_fields = ('owner', 'likes_count')
+
+    def get_comments_count(self, obj):
+        """댓글 갯수
+        TODO N+1 문제 발생"""
+        return obj.comments.count()
+
+    def get_like_id(self, obj):
+        like_id = self.context['view'].like_id_dict.get(obj.id)
+        return like_id

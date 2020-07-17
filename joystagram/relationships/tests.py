@@ -98,3 +98,4 @@ class FollowListTestCase(APITestCase):
             self.assertTrue('img' in user)
             self.assertTrue('nickname' in user)
             self.assertTrue(Follow.objects.filter(from_user=user['id'], to_user=self.user).exists())
+

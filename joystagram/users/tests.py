@@ -31,7 +31,6 @@ class UserRegisterTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_email_format(self):
-        # wrong format
         wrong_email = 'wrong@format'
         response = self.client.post(self.url, {'email': wrong_email, 'password': password})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

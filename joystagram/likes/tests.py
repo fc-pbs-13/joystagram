@@ -5,6 +5,8 @@ from rest_framework.test import APITestCase
 from likes.models import PostLike
 from users.models import Profile, User
 
+INVALID_POST_ID = 999999999
+
 
 class PostLikeTestCase(APITestCase):
     """게시글 좋아요 생성, 삭제 테스트"""
@@ -38,7 +40,7 @@ class PostLikeTestCase(APITestCase):
     def test_should_denied_invalid_post_id(self):
         """생성-유효하지 않은 post_id"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(f'/api/posts/{self.post.id + 1}/likes')
+        response = self.client.post(f'/api/posts/{INVALID_POST_ID}/likes')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, res)
 
@@ -73,7 +75,7 @@ class PostLikedUsersListTestCase(APITestCase):
         self.user = users[0]
         self.post = posts[0]
 
-    def test_post_liked_people_list(self):
+    def test_post_liked_user_list(self):
         """게시글을 좋아요한 유저 리스트"""
         url = f'/api/posts/{self.post.id}/likes'
         response = self.client.get(url)
@@ -88,7 +90,7 @@ class PostLikedUsersListTestCase(APITestCase):
             self.assertTrue('nickname' in owner)
             self.assertTrue(PostLike.objects.filter(post_id=self.post.id, owner_id=owner['id']).exists())
 
-    def test_my_like_post_list(self):
+    def test_user_liked_post_list(self):
         """유저가 좋아요한 게시글 리스트"""
         url = f'/api/users/{self.user.id}/likes'
         response = self.client.get(url)

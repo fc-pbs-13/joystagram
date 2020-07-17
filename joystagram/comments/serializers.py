@@ -15,11 +15,6 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'content', 'owner', 'recomments', 'recomments_count')
         read_only_fields = ('owner', 'recomments', 'recomments_count')
 
-    def create(self, validated_data):
-        post = Post.objects.get(pk=self.context["view"].kwargs["post_pk"])
-        validated_data["post"] = post
-        return super().create(validated_data)
-
     def get_recomments_count(self, obj):
         return obj.recomments.count()
 
@@ -29,7 +24,7 @@ class CommentSerializer(serializers.ModelSerializer):
             post_pk = self.context['view'].kwargs.get('post_pk')
             if not post_pk or not Post.objects.filter(id=post_pk).exists():
                 raise NotFound('Post is not valid')
-        return super().validate(attrs)
+        return attrs
 
 
 class CommentUpdateSerializer(serializers.ModelSerializer):
@@ -59,7 +54,7 @@ class ReCommentSerializer(serializers.ModelSerializer):
             comment_pk = self.context['view'].kwargs.get('comment_pk')
             if not comment_pk or not Comment.objects.filter(id=comment_pk).exists():
                 raise NotFound('Comment is not valid')
-        return super().validate(attrs)
+        return attrs
 
 
 class ReCommentUpdateSerializer(serializers.ModelSerializer):
