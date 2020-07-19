@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from story.models import Story, StoryCheck
+from users.serializers import SimpleProfileSerializer
 
 
 class StorySerializer(serializers.ModelSerializer):
@@ -15,11 +16,14 @@ class StorySerializer(serializers.ModelSerializer):
 
 
 class StoryListSerializer(serializers.ModelSerializer):
-    is_watched = serializers.SerializerMethodField()  # TODO 본 스토리인지
+    _duration = serializers.IntegerField(source='duration.seconds')
+    is_watched = serializers.SerializerMethodField()
+    owner = SimpleProfileSerializer()
 
     class Meta:
         model = Story
-        fields = ('id', 'content', 'img', 'is_watched')
+        fields = ('id', 'content', 'img', '_duration', 'is_watched', 'owner')
 
     def get_is_watched(self, obj):
+        # 이미 본 스토리인지
         return self.context['view'].story_check_dict.get(obj.id)

@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 
 from core.permissions import IsOwnerOrReadOnly
+from relationships.models import Follow
 from story.models import Story, StoryCheck
 from story.serializers import StorySerializer, StoryListSerializer
 
@@ -23,6 +24,15 @@ class StoryViewSet(viewsets.ModelViewSet):
             user = self.request.user
             self.story_check_dict = {story.id: check_qs.filter(story_id=story.id, user=user).exists() for story in page}
         return page
+
+    def filter_queryset(self, queryset):
+        # queryset = Post.objects.filter(
+        #     owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')
+        # )
+
+        return super().filter_queryset(queryset).filter(
+            owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')
+        )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
