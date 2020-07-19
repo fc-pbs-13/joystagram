@@ -29,7 +29,7 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)
-        # TODO 조회 성공 시 StoryCheck 생성
+        # 스토리 조회 성공 시 StoryCheck get_or_create
         if response.status_code == status.HTTP_200_OK:
-            StoryCheck.objects.create(user=request.user, story_id=response.data.get('id'))
+            StoryCheck.objects.get_or_create(user=request.user, story_id=response.data.get('id'))
         return response

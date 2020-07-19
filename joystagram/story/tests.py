@@ -63,6 +63,9 @@ class StoryTestCase(APITestCase):
         self.assertTrue('img' in res)
         self.assertTrue(StoryCheck.objects.filter(user=self.user, story_id=res['id']).exists())
 
+        response = self.client.get(f'{self.url}/{story.id}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+
 
 class StoryListTestCase(APITestCase):
     """스토리 리스트"""
