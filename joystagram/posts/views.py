@@ -7,6 +7,7 @@ from core.permissions import IsOwnerOrReadOnly
 from likes.models import PostLike
 from posts.models import Post
 from posts.serializers import PostSerializer, PostListSerializer
+from relationships.models import Follow
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -28,18 +29,18 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def filter_queryset(self, queryset):
         if self.action == 'list':
-            queryset = queryset.filter()
+            queryset = Post.objects.filter(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id'))
         return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
     def paginate_queryset(self, queryset):
-        # 모든 포스트
         page = super().paginate_queryset(queryset)
-        # 해당 포스트의 좋아요중 내가 한것만
+
+        # like_id 주입
         self.like_id_dict = {}
         if self.request.user.is_authenticated:
-            like_list = list(PostLike.objects.filter(owner=self.request.user, post__in=page))
+            like_list = PostLike.objects.filter(owner=self.request.user, post__in=page)
             self.like_id_dict = {like.post_id: like.id for like in like_list}
         return page

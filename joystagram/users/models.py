@@ -71,9 +71,13 @@ class User(AbstractUser):
     #     return user_qs
 
 
+def profile_img_path(instance, filename):
+    return f'profile_img/{instance.user.id}/{filename}'
+
+
 class Profile(TimeStampedModel):
     """1to1 사용자 확장 모델"""
     user = models.OneToOneField('users.User', on_delete=models.CASCADE)
     nickname = models.CharField(max_length=20)
     introduce = models.CharField(max_length=255)
-    img = models.ImageField(upload_to='profile_image')
+    img = models.ImageField(upload_to=profile_img_path)
