@@ -8,8 +8,9 @@ def story_img_path(instance, filename):
 
 class Story(TimeStampedModel):
     owner = models.ForeignKey('users.User', on_delete=models.CASCADE)
-    content = models.TextField()
+    content = models.TextField(blank=True, null=True)
     img = models.ImageField(upload_to=story_img_path)
+    duration = models.DurationField()
 
 
 class StoryCheck(TimeStampedModel):

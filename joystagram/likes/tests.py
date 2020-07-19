@@ -64,18 +64,20 @@ class PostLikedUsersListTestCase(APITestCase):
     """게시글을 좋아요한 유저 리스트"""
 
     def setUp(self) -> None:
-        users = baker.make('users.User', _quantity=3)
+        users = baker.make('users.User', _quantity=4)
         posts = []
         for user in users:
             baker.make('users.Profile', user=user)
             posts.append(baker.make('posts.Post', owner=user))
 
-        baker.make('likes.PostLike', post=posts[0], owner=users[0])
-        baker.make('likes.PostLike', post=posts[2], owner=users[0])
-        baker.make('likes.PostLike', post=posts[0], owner=users[1])
-        baker.make('likes.PostLike', post=posts[1], owner=users[1])
         self.user = users[0]
         self.post = posts[0]
+        baker.make('likes.PostLike', post=self.post, owner=self.user)
+        baker.make('likes.PostLike', post=posts[1], owner=self.user)
+        baker.make('likes.PostLike', post=posts[2], owner=self.user)
+
+        baker.make('likes.PostLike', post=self.post, owner=users[1])
+        baker.make('likes.PostLike', post=posts[1], owner=users[1])
 
     def test_post_liked_user_list(self):
         """게시글을 좋아요한 유저 리스트"""
