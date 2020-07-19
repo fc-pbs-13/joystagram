@@ -93,7 +93,6 @@ class StoryTestCase(APITestCase):
         self.assertEqual(len(res['results']), len(story_list))
         self.assertEqual(len(res['results']), 2)
         for story_res, story_obj in zip(res['results'], story_list[::-1]):
-            print(story_res)
             self.story_test(story_res, story_obj)
             owner = story_res['owner']
             self.assertTrue(Follow.objects.filter(from_user=self.user, to_user_id=owner['id']).exists())
