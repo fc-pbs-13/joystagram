@@ -61,7 +61,7 @@ class PostLikeTestCase(APITestCase):
 
 
 class PostLikedUsersListTestCase(APITestCase):
-    """게시글을 좋아요한 유저 리스트"""
+    """좋아요 리스트"""
 
     def setUp(self) -> None:
         users = baker.make('users.User', _quantity=4)
@@ -89,13 +89,14 @@ class PostLikedUsersListTestCase(APITestCase):
         self.assertEqual(len(res['results']), len(like_list))
 
         for like_res, like_obj in zip(res['results'], like_list[::-1]):
-            print(like_res)
             self.assertEqual(like_res['id'], like_obj.id)
             self.assertEqual(like_res['id'], like_obj.id)
+
             owner = like_res['owner']
             self.assertEqual(owner['id'], like_obj.owner.id)
             self.assertEqual(owner['nickname'], like_obj.owner.profile.nickname)
             self.assertTrue('img' in owner)
+
             self.assertEqual(PostLike.objects.get(id=like_res['id']).post, self.post)
 
     def test_user_liked_post_list(self):

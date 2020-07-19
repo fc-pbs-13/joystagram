@@ -3,7 +3,7 @@ from model_utils.models import TimeStampedModel
 
 
 def story_img_path(instance, filename):
-    return f'stories_img/{filename}'
+    return f'story_img/{instance.owner.id}/{filename}'
 
 
 class Story(TimeStampedModel):
@@ -15,7 +15,7 @@ class Story(TimeStampedModel):
 
 class StoryCheck(TimeStampedModel):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
-    story = models.ForeignKey('stories.Story', on_delete=models.CASCADE)
+    story = models.ForeignKey('story.Story', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ['user', 'story']

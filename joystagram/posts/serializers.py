@@ -14,7 +14,7 @@ class PhotoSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     photos = ListField(child=ImageField(), write_only=True)
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
-    comments_count = serializers.SerializerMethodField(read_only=True)
+    comments_count = serializers.IntegerField(source='comments.count', read_only=True)  # TODO N+1 문제 발생
     like_id = serializers.SerializerMethodField(read_only=True)
     owner = SimpleProfileSerializer(read_only=True)
 
@@ -34,12 +34,8 @@ class PostSerializer(serializers.ModelSerializer):
         Photo.objects.bulk_create(photo_bulk_list)
         return post
 
-    def get_comments_count(self, obj):
-        """댓글 갯수
-        TODO N+1 문제 발생"""
-        return obj.comments.count()
-
     def get_like_id(self, obj):
+        # TODO N+1 문제
         user = self.context['request'].user
         if user.is_authenticated:
             like_qs = PostLike.objects.filter(post=obj, owner=user)
@@ -50,7 +46,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 class PostListSerializer(serializers.ModelSerializer):
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
-    comments_count = serializers.SerializerMethodField(read_only=True)
+    comments_count = serializers.IntegerField(source='comments.count', read_only=True)  # TODO N+1 문제
     like_id = serializers.SerializerMethodField(read_only=True)
     owner = SimpleProfileSerializer(read_only=True)
 
@@ -58,11 +54,6 @@ class PostListSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('id', 'content', 'owner', '_photos', 'comments_count', 'likes_count', 'like_id')
         read_only_fields = ('owner', 'likes_count')
-
-    def get_comments_count(self, obj):
-        """댓글 갯수
-        TODO N+1 문제 발생"""
-        return obj.comments.count()
 
     def get_like_id(self, obj):
         like_id = self.context['view'].like_id_dict.get(obj.id)

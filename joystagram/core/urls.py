@@ -4,7 +4,7 @@ from comments.views import CommentViewSet, ReCommentViewSet, CommentCreateListVi
 from likes.views import PostLikeViewSet, UserLikeViewSet
 from posts.views import PostViewSet
 from relationships.views import FollowViewSet
-from stories.views import StoryViewSet
+from story.views import StoryViewSet
 from users.views import UserViewSet
 
 router = routers.SimpleRouter(trailing_slash=False)

@@ -17,6 +17,7 @@ class FollowViewSet(mixins.CreateModelMixin,
     """
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
+    # permission_classes = []  # TODO 정책결정 필요: 인증되지 않은 사용자도 다른 사용자의 팔로우 리스트 조회 가능??
 
     def perform_create(self, serializer):
         serializer.save(from_user_id=self.request.user.id,

@@ -1,0 +1,25 @@
+from rest_framework import serializers
+
+from story.models import Story, StoryCheck
+
+
+class StorySerializer(serializers.ModelSerializer):
+    _duration = serializers.IntegerField(read_only=True, source='duration.seconds')
+
+    class Meta:
+        model = Story
+        fields = ('id', 'content', 'img', 'duration', '_duration')
+        extra_kwargs = {
+            'duration': {'write_only': True}
+        }
+
+
+class StoryListSerializer(serializers.ModelSerializer):
+    is_watched = serializers.SerializerMethodField()  # TODO 본 스토리인지
+
+    class Meta:
+        model = Story
+        fields = ('id', 'content', 'img', 'is_watched')
+
+    def get_is_watched(self, obj):
+        return self.context['view'].story_check_dict.get(obj.id)
