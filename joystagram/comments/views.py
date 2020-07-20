@@ -54,7 +54,7 @@ class ReCommentCreateListViewSet(mixins.CreateModelMixin,
 
     def get_queryset(self):
         """특정 Comment의 ReComment만"""
-        return super().get_queryset().filter(post_id=self.kwargs.get('comment_pk'))
+        return super().get_queryset().filter(comment_id=self.kwargs.get('comment_pk'))
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user, comment_id=self.kwargs['comment_pk'])

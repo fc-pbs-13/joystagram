@@ -34,5 +34,6 @@ class ReComment(TimeStampedModel):
 
     def delete(self, using=None, keep_parents=False):
         """Post의 댓글 갯수 - 1"""
+        result = super().delete(using, keep_parents)
         Post.objects.filter(id=self.comment.post.id).update(comments_count=F('comments_count') - 1)
-        return super().delete(using, keep_parents)
+        return result

@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
-
 from relationships.models import Follow
 from users.models import User
 from users.serializers import SimpleProfileSerializer
@@ -25,7 +24,6 @@ class FollowSerializer(serializers.ModelSerializer):
         if Follow.objects.filter(from_user=self.context['request'].user, to_user=to_user_pk).exists():
             raise serializers.ValidationError('The fields `from_user`, `to_user` must make a unique set.',
                                               code='unique')
-
         return attrs
 
 

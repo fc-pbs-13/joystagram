@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
-
 from comments.models import Comment, ReComment
 from posts.models import Post
-from users.serializers import ProfileSerializer, SimpleProfileSerializer
+from users.serializers import SimpleProfileSerializer
 
 
 class CommentSerializer(serializers.ModelSerializer):

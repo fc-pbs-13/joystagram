@@ -24,7 +24,7 @@ class StoryViewSet(viewsets.ModelViewSet):
         page = super().paginate_queryset(queryset)
         self.story_check_dict = {}
         if self.request.user.is_authenticated:
-            # is_watched 주입 TODO N+1 문제
+            # is_watched 주입
             user = self.request.user
             story_check_list = StoryCheck.objects.filter(user=user, story__in=page)
             self.story_check_dict = {story_check.story_id: story_check.id for story_check in story_check_list}
@@ -38,7 +38,7 @@ class StoryViewSet(viewsets.ModelViewSet):
         yesterday = timezone.now() - timedelta(days=1)
         queryset = Story.objects.filter(created__gte=yesterday,
                                         created__lte=timezone.now())
-        # owner가 자신 or 팔로잉 유저 TODO 자신 포함시키기
+        # owner가 자신 or 팔로잉 유저
         queryset = queryset.filter(
             Q(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')) |
             Q(owner=self.request.user)

@@ -1,8 +1,6 @@
-from rest_framework import mixins, viewsets
-from rest_framework.decorators import action
+from django.db.models import Q
+from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
-
-from core.paginations import IDPagination
 from core.permissions import IsOwnerOrReadOnly
 from likes.models import PostLike
 from posts.models import Post
@@ -22,7 +20,7 @@ class PostViewSet(mixins.CreateModelMixin,
     UPDATE, DELETE
     /api/posts/{post_id}
     """
-    queryset = Post.objects.all().select_related('owner__profile')
+    queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
     serializer_class = PostSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
@@ -33,8 +31,10 @@ class PostViewSet(mixins.CreateModelMixin,
 
     def filter_queryset(self, queryset):
         if self.action == 'list':
-            queryset = Post.objects.filter(
-                owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id'))
+            queryset = queryset.filter(
+                Q(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')) |
+                Q(owner=self.request.user)
+            )
         return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):

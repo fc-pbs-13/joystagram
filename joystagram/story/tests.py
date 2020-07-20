@@ -1,13 +1,11 @@
 from datetime import timedelta
 import io
-
 from django.db.models import Q
 from django.utils import timezone
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 from PIL import Image
-
 from relationships.models import Follow
 from story.models import StoryCheck, Story
 
@@ -44,13 +42,33 @@ class StoryTestCase(APITestCase):
     def test_should_create(self):
         """생성-성공"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(self.url, data=self.data, format='multipart')  # TODO 포맷 적용 안바꿔도 이미지 업로드 가능?
+        response = self.client.post(self.url, data=self.data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
     def test_should_denied_create(self):
         """생성-인증 필요"""
         response = self.client.post(self.url, data=self.data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+
+    def test_should_update(self):
+        """수정"""
+        story = baker.make('story.Story', owner=self.user)
+        data = {
+            'content': 'updated_content'
+        }
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(f'{self.url}/{story.id}', data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['content'], data['content'])
+        self.assertEqual(Story.objects.get(id=story.id).content, data['content'])
+
+    def test_should_destroy(self):
+        """삭제"""
+        story = baker.make('story.Story', owner=self.user)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(f'{self.url}/{story.id}')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertFalse(Story.objects.filter(id=story.id).exists())
 
     def test_should_retrieve(self):
         """스토리 조회"""
@@ -95,7 +113,7 @@ class StoryTestCase(APITestCase):
         ).filter(created__gte=timezone.now() - timedelta(days=1),
                  created__lte=timezone.now())
 
-        # TODO 팔로우 하는 사용자의 스토리인지, 등록 시간이 24시간 내 인지 체크
+        # 자신 혹은 팔로우 하는 사용자의 스토리, 등록 시간 24시간 테스트
         self.assertEqual(len(res['results']), valid_story_count)
         self.assertEqual(len(res['results']), len(story_list))
         for story_res, story_obj in zip(res['results'], story_list[::-1]):

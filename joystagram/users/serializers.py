@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-
 from relationships.models import Follow
 from .models import User, Profile
 
@@ -19,7 +19,6 @@ class SimpleProfileSerializer(ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
     introduce = serializers.CharField(default='', source='profile.introduce')
     img = serializers.ImageField(read_only=True, source='profile.img')
-    # TODO 팔로우 id
 
     class Meta:
         model = User
@@ -56,7 +55,7 @@ class UserSerializer(ModelSerializer):
         if user.is_authenticated:
             try:
                 return Follow.objects.get(from_user=user, to_user=obj).id
-            except:
+            except ObjectDoesNotExist:
                 pass
         return None
 
