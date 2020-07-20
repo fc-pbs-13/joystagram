@@ -13,7 +13,7 @@ from core.permissions import IsUserSelf
 from relationships.models import Follow
 from relationships.serializers import FollowSerializer, FollowingSerializer, FollowerSerializer
 from users.models import User, Profile
-from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
+from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer, SimpleProfileSerializer
 
 
 class UserViewSet(mixins.CreateModelMixin,
@@ -29,11 +29,21 @@ class UserViewSet(mixins.CreateModelMixin,
     def get_queryset(self):
         qs = super().get_queryset()
         if self.action == 'retrieve':
-            qs = qs.prefetch_related('profile')
+            qs = qs.select_related('profile')
+
         if self.action == 'followers':
-            return Follow.objects.filter(to_user=self.kwargs['pk'])
+            qs = qs.filter(
+                id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('from_user_id')
+            )
         if self.action == 'followings':
-            return Follow.objects.filter(from_user=self.kwargs['pk'])
+            qs = qs.filter(
+                id__in=Follow.objects.filter(from_user_id=self.kwargs['pk']).values('to_user_id')
+            )
+            # return Follow.objects.filter(from_user=self.kwargs['pk'])
+
+        # User 조회, 리스트 시 Profile select_related
+        # if self.action in ('retrieve', 'followings', 'followers'):
+        #     qs = qs.select_related('profile')
         return qs
 
     def get_permissions(self):
@@ -47,9 +57,9 @@ class UserViewSet(mixins.CreateModelMixin,
         elif self.action == 'update_password':
             return UserPasswordSerializer
         if self.action == 'followers':
-            return FollowerSerializer
+            return SimpleProfileSerializer
         if self.action == 'followings':
-            return FollowingSerializer
+            return SimpleProfileSerializer
         return super().get_serializer_class()
 
     @action(detail=False, methods=['post'])

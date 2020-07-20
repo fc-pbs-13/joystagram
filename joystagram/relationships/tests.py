@@ -2,6 +2,7 @@ from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 from relationships.models import Follow
+from users.models import User
 
 
 class FollowTestCase(APITestCase):
@@ -78,6 +79,7 @@ class FollowListTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.follow_test(res, True)
+        self.fail()
 
     def test_should_list_following(self):
         """유저가 팔로우한 유저 리스트"""
@@ -86,26 +88,34 @@ class FollowListTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.follow_test(res, False)
+        self.fail()
 
     def follow_test(self, res, is_follower):
         if is_follower:
-            follow_list = Follow.objects.filter(to_user=self.user)
+            user_list = User.objects.filter(
+                id__in=Follow.objects.filter(to_user_id=self.user).values('from_user_id')
+            ).select_related('profile')
+            self.assertEqual(len(user_list), len(Follow.objects.filter(to_user_id=self.user)))
         else:
-            follow_list = Follow.objects.filter(from_user=self.user)
+            user_list = User.objects.filter(
+                id__in=Follow.objects.filter(from_user_id=self.user).values('to_user_id')
+            ).select_related('profile')
+            self.assertEqual(len(user_list), len(Follow.objects.filter(from_user_id=self.user)))
 
-        self.assertEqual(len(res['results']), follow_list.count())  # 리스트의 길이 체크: 페이지네이션 고려?
+        self.assertEqual(len(res['results']), user_list.count())
 
-        for follow_res, follow_obj in zip(res['results'], follow_list[::-1]):
-            self.assertEqual(follow_res['id'], follow_obj.id)
-            user_res = follow_res['user']
-
-            user_obj = follow_obj.from_user if is_follower else follow_obj.to_user
-
+        for user_res, user_obj in zip(res['results'], user_list[::-1]):
+            print(user_res)
             self.assertEqual(user_res['id'], user_obj.id)
             self.assertTrue('img' in user_res)
             self.assertEqual(user_res['nickname'], user_obj.profile.nickname)
+            self.assertEqual(user_res['introduce'], user_obj.profile.introduce)
 
             if is_follower:
-                self.assertTrue(Follow.objects.filter(from_user=user_res['id'], to_user_id=self.user).exists())
+                self.assertTrue(Follow.objects.filter(id=user_res['follow']['id'],
+                                                      from_user=user_res['id'],
+                                                      to_user_id=self.user).exists())
             else:
-                self.assertTrue(Follow.objects.filter(from_user=self.user, to_user_id=user_res['id']).exists())
+                self.assertTrue(Follow.objects.filter(id=user_res['follow']['id'],
+                                                      from_user=self.user,
+                                                      to_user_id=user_res['id']).exists())

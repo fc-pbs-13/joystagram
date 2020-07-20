@@ -30,16 +30,16 @@ class FollowSerializer(serializers.ModelSerializer):
 
 
 class FollowerSerializer(serializers.ModelSerializer):
-    user = SimpleProfileSerializer(source='from_user')
+    # user = SimpleProfileSerializer(source='from_user')
 
     class Meta:
-        model = Follow
-        fields = ('id', 'user')
+        model = User
+        fields = ('id', 'profile')
 
 
 class FollowingSerializer(serializers.ModelSerializer):
-    user = SimpleProfileSerializer(source='to_user')
+    # user = SimpleProfileSerializer(source='to_user')
 
     class Meta:
-        model = Follow
-        fields = ('id', 'user')
+        model = User
+        fields = ('id', 'profile')
