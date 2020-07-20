@@ -1,5 +1,6 @@
 import io
 from PIL import Image
+from django.db.models import Q
 from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from model_bakery import baker
 from rest_framework import status
@@ -97,8 +98,10 @@ class PostListTestCase(APITestCase):
         res = response.data
 
         post_list = Post.objects.filter(
-            owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')
+            Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
+            Q(owner=self.user)
         )
+
         self.assertEqual(len(res['results']), len(post_list))
 
         for post_res, post_obj in zip(res['results'], post_list[::-1]):

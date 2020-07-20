@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from story.models import Story, StoryCheck
+from story.models import Story
 from users.serializers import SimpleProfileSerializer
 
 

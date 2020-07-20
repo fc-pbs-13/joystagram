@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet
@@ -33,8 +34,10 @@ class PostViewSet(mixins.CreateModelMixin,
 
     def filter_queryset(self, queryset):
         if self.action == 'list':
-            queryset = Post.objects.filter(
-                owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id'))
+            queryset = queryset.filter(
+                Q(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')) |
+                Q(owner=self.request.user)
+            )
         return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):

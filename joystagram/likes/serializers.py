@@ -1,10 +1,8 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
-
 from likes.models import PostLike
 from posts.models import Post
-from posts.serializers import PostSerializer, PostListSerializer, LikedPostSerializer
-from users.serializers import ProfileSerializer, SimpleProfileSerializer, UserSerializer
+from posts.serializers import LikedPostSerializer
+from users.serializers import SimpleProfileSerializer
 
 
 class LikeSerializer(serializers.ModelSerializer):

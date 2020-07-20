@@ -1,19 +1,16 @@
-from django.contrib.auth import logout as django_logout
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, mixins
-from rest_framework import viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsUserSelf
 from relationships.models import Follow
-from relationships.serializers import FollowSerializer, FollowUserListSerializer
-from users.models import User, Profile
-from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer, SimpleProfileSerializer
+from relationships.serializers import FollowUserListSerializer
+from users.models import User
+from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
 
 
 class UserViewSet(mixins.CreateModelMixin,

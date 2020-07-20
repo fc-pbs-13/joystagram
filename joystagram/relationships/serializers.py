@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
-
 from relationships.models import Follow
 from users.models import User
 from users.serializers import SimpleProfileSerializer
