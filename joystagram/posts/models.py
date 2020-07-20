@@ -5,12 +5,8 @@ from model_utils.models import TimeStampedModel
 class Post(TimeStampedModel):
     owner = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='posts')
     content = models.TextField(default='')
-    likes_count = models.PositiveIntegerField()
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if self.id is None:
-            self.likes_count = 0
-        super().save(force_insert, force_update, using, update_fields)
+    likes_count = models.PositiveIntegerField(default=0)
+    comments_count = models.PositiveIntegerField(default=0)
 
 
 def post_img_path(instance, filename):

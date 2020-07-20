@@ -3,7 +3,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from likes.models import PostLike
 from posts.models import Post
-from posts.serializers import PostSerializer
+from posts.serializers import PostSerializer, PostListSerializer, LikedPostSerializer
 from users.serializers import ProfileSerializer, SimpleProfileSerializer, UserSerializer
 
 
@@ -40,7 +40,7 @@ class PostLikedUsersSerializer(serializers.ModelSerializer):
 
 class UserLikedPostsSerializer(serializers.ModelSerializer):
     """유저가 좋아요한 게시물 리스트"""
-    post = PostSerializer(read_only=True)
+    post = LikedPostSerializer(read_only=True)
 
     class Meta:
         model = PostLike

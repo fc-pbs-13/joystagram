@@ -67,7 +67,7 @@ class PostLikedUsersListTestCase(APITestCase):
         users = baker.make('users.User', _quantity=4)
         posts = []
         for user in users:
-            baker.make('users.Profile', user=user)
+            baker.make('users.Profile', user=user, _create_files=True)
             posts.append(baker.make('posts.Post', owner=user))
 
         self.user = users[0]
@@ -86,6 +86,7 @@ class PostLikedUsersListTestCase(APITestCase):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         like_list = PostLike.objects.filter(post=self.post)
+
         self.assertEqual(len(res['results']), len(like_list))
 
         for like_res, like_obj in zip(res['results'], like_list[::-1]):
@@ -96,7 +97,6 @@ class PostLikedUsersListTestCase(APITestCase):
             self.assertEqual(owner['id'], like_obj.owner.id)
             self.assertEqual(owner['nickname'], like_obj.owner.profile.nickname)
             self.assertTrue('img' in owner)
-
             self.assertEqual(PostLike.objects.get(id=like_res['id']).post, self.post)
 
     def test_user_liked_post_list(self):
@@ -110,14 +110,10 @@ class PostLikedUsersListTestCase(APITestCase):
 
         for like_res, like_obj in zip(res['results'], like_list[::-1]):
             self.assertEqual(like_res['id'], like_obj.id)
-            self.assertEqual(like_res['id'], like_obj.id)
 
             post = like_res['post']
             self.assertEqual(post['id'], like_obj.post.id)
             self.assertEqual(post['content'], like_obj.post.content)
-            self.assertEqual(post['likes_count'], like_obj.post.likes_count)
-            self.assertEqual(post['comments_count'], like_obj.post.comments.count())
-            self.assertTrue('like_id' in post)
 
             owner = post['owner']
             self.assertEqual(owner['id'], like_obj.post.owner_id)

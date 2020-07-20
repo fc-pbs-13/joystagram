@@ -75,20 +75,20 @@ class FollowListTestCase(APITestCase):
     def test_should_list_follower(self):
         """유저를 팔로잉하는 유저 리스트"""
         # TODO View 분리 필요
+        self.client.force_authenticate(user=self.user)
         response = self.client.get(f'/api/users/{self.user.id}/followers')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.follow_test(res, True)
-        self.fail()
 
     def test_should_list_following(self):
         """유저가 팔로우한 유저 리스트"""
         # TODO View 분리 필요
+        self.client.force_authenticate(user=self.user)
         response = self.client.get(f'/api/users/{self.user.id}/followings')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.follow_test(res, False)
-        self.fail()
 
     def follow_test(self, res, is_follower):
         if is_follower:
@@ -105,17 +105,15 @@ class FollowListTestCase(APITestCase):
         self.assertEqual(len(res['results']), user_list.count())
 
         for user_res, user_obj in zip(res['results'], user_list[::-1]):
-            print(user_res)
             self.assertEqual(user_res['id'], user_obj.id)
             self.assertTrue('img' in user_res)
             self.assertEqual(user_res['nickname'], user_obj.profile.nickname)
             self.assertEqual(user_res['introduce'], user_obj.profile.introduce)
 
             if is_follower:
-                self.assertTrue(Follow.objects.filter(id=user_res['follow']['id'],
-                                                      from_user=user_res['id'],
+                self.assertTrue(Follow.objects.filter(from_user=user_res['id'],
                                                       to_user_id=self.user).exists())
             else:
-                self.assertTrue(Follow.objects.filter(id=user_res['follow']['id'],
+                self.assertTrue(Follow.objects.filter(id=user_res['follow_id'],
                                                       from_user=self.user,
                                                       to_user_id=user_res['id']).exists())

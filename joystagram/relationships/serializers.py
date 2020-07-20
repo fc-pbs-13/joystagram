@@ -29,17 +29,16 @@ class FollowSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class FollowerSerializer(serializers.ModelSerializer):
-    # user = SimpleProfileSerializer(source='from_user')
+class FollowUserListSerializer(serializers.ModelSerializer):
+    follow_id = serializers.SerializerMethodField()
+    nickname = serializers.CharField(max_length=20, source='profile.nickname')
+    introduce = serializers.CharField(default='', source='profile.introduce')
+    img = serializers.ImageField(read_only=True, source='profile.img')
 
     class Meta:
         model = User
-        fields = ('id', 'profile')
+        fields = ('id', 'nickname', 'introduce', 'img', 'follow_id')
 
-
-class FollowingSerializer(serializers.ModelSerializer):
-    # user = SimpleProfileSerializer(source='to_user')
-
-    class Meta:
-        model = User
-        fields = ('id', 'profile')
+    def get_follow_id(self, obj):
+        follow_id = self.context['view'].follow_id_dict.get(obj.id)
+        return follow_id

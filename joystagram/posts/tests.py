@@ -42,7 +42,7 @@ class PostCreateTestCase(APITestCase):
         response = self.client.post(
             self.url,
             self.data,
-            format='multipart'
+            # format='multipart'
         )
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
@@ -111,25 +111,6 @@ class PostListTestCase(APITestCase):
                 self.assertIsNotNone(PostLike.objects.get(id=post_res.get('like_id')).post, post_res)
             for photos in post_res.get('_photos'):
                 self.assertTrue(photos.get('img').endswith('jpg'))
-
-
-class PostRetrieveTestCase(APITestCase):
-    """게시글 조회 테스트"""
-
-    def setUp(self) -> None:
-        self.user = baker.make('users.User')
-        baker.make('users.Profile', user=self.user, nickname='test_user')
-        post = baker.make('posts.Post', owner=self.user)
-        baker.make('comments.Comment', post=post, _quantity=2)
-        self.url = f'/api/posts/{post.id}'
-
-    def test_should_retrieve_post(self):
-        """조회-성공"""
-        response = self.client.get(self.url)
-        res = response.data
-        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-        self.assertIsNotNone(res.get('id'))
-        self.assertIsNotNone(res.get('content'))
 
 
 class PostUpdateDeleteTestCase(APITestCase):

@@ -38,6 +38,7 @@ class UserLikeViewSet(mixins.ListModelMixin, GenericViewSet):
     """
     유저가 좋아요한 게시글 리스트
     GET /api/users/{user_id}/likes
+    GET /api/likes
     """
     queryset = PostLike.objects.all()
     serializer_class = UserLikedPostsSerializer

@@ -14,14 +14,12 @@ class PhotoSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     photos = ListField(child=ImageField(), write_only=True)
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
-    comments_count = serializers.IntegerField(source='comments.count', read_only=True)  # TODO N+1 문제 발생
-    like_id = serializers.SerializerMethodField(read_only=True)
     owner = SimpleProfileSerializer(read_only=True)
 
     class Meta:
         model = Post
-        fields = ('id', 'content', 'owner', 'photos', '_photos', 'comments_count', 'likes_count', 'like_id')
-        read_only_fields = ('owner', 'likes_count')
+        fields = ('id', 'content', 'owner', 'photos', '_photos')
+        read_only_fields = ('owner',)
 
     def create(self, validated_data):
         """Post를 만든 후 이미지들로 Photo들 생성"""
@@ -34,19 +32,10 @@ class PostSerializer(serializers.ModelSerializer):
         Photo.objects.bulk_create(photo_bulk_list)
         return post
 
-    def get_like_id(self, obj):
-        # TODO N+1 문제
-        user = self.context['request'].user
-        if user.is_authenticated:
-            like_qs = PostLike.objects.filter(post=obj, owner=user)
-            if like_qs.exists():
-                return like_qs.first().id
-        return None
-
 
 class PostListSerializer(serializers.ModelSerializer):
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
-    comments_count = serializers.IntegerField(source='comments.count', read_only=True)  # TODO N+1 문제
+    comments_count = serializers.IntegerField(source='comments.count', read_only=True)  # TODO N+1 문제: 모델 필드에 추가?
     like_id = serializers.SerializerMethodField(read_only=True)
     owner = SimpleProfileSerializer(read_only=True)
 
@@ -58,3 +47,13 @@ class PostListSerializer(serializers.ModelSerializer):
     def get_like_id(self, obj):
         like_id = self.context['view'].like_id_dict.get(obj.id)
         return like_id
+
+
+class LikedPostSerializer(serializers.ModelSerializer):
+    owner = SimpleProfileSerializer()
+    _photos = PhotoSerializer(many=True, read_only=True, source='photos')
+
+    class Meta:
+        model = Post
+        fields = ('id', 'content', 'owner', '_photos')
+        read_only_fields = ('owner', 'likes_count')

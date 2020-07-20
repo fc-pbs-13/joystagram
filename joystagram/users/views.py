@@ -11,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsUserSelf
 from relationships.models import Follow
-from relationships.serializers import FollowSerializer, FollowingSerializer, FollowerSerializer
+from relationships.serializers import FollowSerializer, FollowUserListSerializer
 from users.models import User, Profile
 from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer, SimpleProfileSerializer
 
@@ -28,23 +28,29 @@ class UserViewSet(mixins.CreateModelMixin,
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if self.action == 'retrieve':
-            qs = qs.select_related('profile')
-
         if self.action == 'followers':
             qs = qs.filter(
                 id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('from_user_id')
-            )
+            ).select_related('profile')
         if self.action == 'followings':
             qs = qs.filter(
                 id__in=Follow.objects.filter(from_user_id=self.kwargs['pk']).values('to_user_id')
-            )
-            # return Follow.objects.filter(from_user=self.kwargs['pk'])
-
-        # User 조회, 리스트 시 Profile select_related
-        # if self.action in ('retrieve', 'followings', 'followers'):
-        #     qs = qs.select_related('profile')
+            ).select_related('profile')
         return qs
+
+    def paginate_queryset(self, queryset):
+        page = super().paginate_queryset(queryset)
+
+        # like_id 주입
+        self.follow_id_dict = {}
+        if self.request.user.is_authenticated:
+            if self.action == 'followers':
+                follow_list = Follow.objects.filter(to_user=self.request.user)
+                self.follow_id_dict = {follow.from_user_id: follow.id for follow in follow_list}
+            elif self.action == 'followings':
+                follow_list = Follow.objects.filter(from_user=self.request.user)
+                self.follow_id_dict = {follow.to_user_id: follow.id for follow in follow_list}
+        return page
 
     def get_permissions(self):
         if self.action in ('login', 'create'):
@@ -56,10 +62,8 @@ class UserViewSet(mixins.CreateModelMixin,
             return LoginSerializer
         elif self.action == 'update_password':
             return UserPasswordSerializer
-        if self.action == 'followers':
-            return SimpleProfileSerializer
-        if self.action == 'followings':
-            return SimpleProfileSerializer
+        if self.action == ('followers', 'followings'):
+            return FollowUserListSerializer
         return super().get_serializer_class()
 
     @action(detail=False, methods=['post'])
@@ -81,11 +85,6 @@ class UserViewSet(mixins.CreateModelMixin,
                             status=status.HTTP_400_BAD_REQUEST)
         return Response({"detail": "Successfully logged out."},
                         status=status.HTTP_200_OK)
-
-    def destroy(self, request, *args, **kwargs):
-        """유저 삭제
-        TODO safe delete 변경예정(is_active)"""
-        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=['patch'])
     def update_password(self, request, *args, **kwargs):

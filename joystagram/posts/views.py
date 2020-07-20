@@ -10,7 +10,11 @@ from posts.serializers import PostSerializer, PostListSerializer
 from relationships.models import Follow
 
 
-class PostViewSet(viewsets.ModelViewSet):
+class PostViewSet(mixins.CreateModelMixin,
+                  mixins.UpdateModelMixin,
+                  mixins.DestroyModelMixin,
+                  mixins.ListModelMixin,
+                  GenericViewSet):
     """
     게시글 생성, 리스트, 수정, 삭제
     POST, GET
@@ -18,7 +22,7 @@ class PostViewSet(viewsets.ModelViewSet):
     UPDATE, DELETE
     /api/posts/{post_id}
     """
-    queryset = Post.objects.all()
+    queryset = Post.objects.all().select_related('owner__profile')
     serializer_class = PostSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
@@ -29,7 +33,8 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def filter_queryset(self, queryset):
         if self.action == 'list':
-            queryset = Post.objects.filter(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id'))
+            queryset = Post.objects.filter(
+                owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id'))
         return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):
