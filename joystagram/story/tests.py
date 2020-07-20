@@ -52,6 +52,26 @@ class StoryTestCase(APITestCase):
         response = self.client.post(self.url, data=self.data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
+    def test_should_update(self):
+        """수정"""
+        story = baker.make('story.Story', owner=self.user)
+        data = {
+            'content': 'updated_content'
+        }
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(f'{self.url}/{story.id}', data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['content'], data['content'])
+        self.assertEqual(Story.objects.get(id=story.id).content, data['content'])
+
+    def test_should_destroy(self):
+        """삭제"""
+        story = baker.make('story.Story', owner=self.user)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(f'{self.url}/{story.id}')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertFalse(Story.objects.filter(id=story.id).exists())
+
     def test_should_retrieve(self):
         """스토리 조회"""
         story = baker.make('story.Story', owner=self.owner, duration=timedelta(seconds=self.duration_sec))
