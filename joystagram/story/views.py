@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 from rest_framework import viewsets, status
 
 from core.permissions import IsOwnerOrReadOnly
@@ -26,13 +28,15 @@ class StoryViewSet(viewsets.ModelViewSet):
         return page
 
     def filter_queryset(self, queryset):
-        # queryset = Post.objects.filter(
-        #     owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')
-        # )
+        """자신이 팔로우하는 유저의 스토리 중 등록시간 24시간 이내의 것만 필터링"""
+        qs = super().filter_queryset(queryset)
 
-        return super().filter_queryset(queryset).filter(
-            owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')
-        )
+        # TODO 등록시간 24시간 이내의 스토리만
+        yesterday = timezone.now() - timedelta(days=1)
+        qs = Story.objects.filter(created__gte=yesterday,
+                                  created__lte=timezone.now())
+        # 자신이 팔로우한 유저의 것만
+        return qs.filter(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id'))
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

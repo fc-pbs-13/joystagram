@@ -43,14 +43,12 @@ class StoryTestCase(APITestCase):
         """생성-성공"""
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.url, data=self.data, format='multipart')  # TODO 포맷 적용 안바꿔도 이미지 업로드 가능?
-        res = response.data
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
     def test_should_denied_create(self):
         """생성-인증 필요"""
         response = self.client.post(self.url, data=self.data, format='multipart')
-        res = response.data
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, res)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
     def test_should_retrieve(self):
         """스토리 조회"""
@@ -64,9 +62,9 @@ class StoryTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.story_test(res, story)
 
-        # 다시 조회
+        # 다시 조회: StoryCheck 갯수 하나인지 체크
         response = self.client.get(f'{self.url}/{story.id}')
-        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(StoryCheck.objects.filter(user=self.user, story_id=response.data['id']).count(), 1)
 
     def test_should_list(self):
@@ -74,13 +72,12 @@ class StoryTestCase(APITestCase):
         스토리 리스트
         내가 팔로우하는 유저의 스토리 중 등록 후 24시간이 지나지 않은 것만
         """
+        valid_story_count = 2
         baker.make('story.Story', owner=self.user, _quantity=2)
-        baker.make('story.Story', owner=self.owner, _quantity=2)
+        baker.make('story.Story', owner=self.owner, _quantity=valid_story_count)
         baker.make('story.Story', owner=self.users[2])
-        self.url = '/api/story'
 
         self.client.force_authenticate(user=self.user)
-
         response = self.client.get(self.url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
@@ -91,7 +88,7 @@ class StoryTestCase(APITestCase):
 
         # TODO 팔로우 하는 사용자의 스토리인지, 등록 시간이 24시간 내 인지 체크
         self.assertEqual(len(res['results']), len(story_list))
-        self.assertEqual(len(res['results']), 2)
+        self.assertEqual(len(res['results']), valid_story_count)
         for story_res, story_obj in zip(res['results'], story_list[::-1]):
             self.story_test(story_res, story_obj)
             owner = story_res['owner']
