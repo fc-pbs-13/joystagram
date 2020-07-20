@@ -22,9 +22,10 @@ class StoryViewSet(viewsets.ModelViewSet):
         page = super().paginate_queryset(queryset)
         self.story_check_dict = {}
         if self.request.user.is_authenticated:
-            check_qs = StoryCheck.objects
+            # is_watched 주입 TODO N+1 문제
             user = self.request.user
-            self.story_check_dict = {story.id: check_qs.filter(story_id=story.id, user=user).exists() for story in page}
+            story_check_list = StoryCheck.objects.filter(user=user, story__in=page)
+            self.story_check_dict = {story_check.story_id: story_check.id for story_check in story_check_list}
         return page
 
     def filter_queryset(self, queryset):
