@@ -35,14 +35,13 @@ class PostSerializer(serializers.ModelSerializer):
 
 class PostListSerializer(serializers.ModelSerializer):
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
-    comments_count = serializers.IntegerField(source='comments.count', read_only=True)  # TODO N+1 문제: 모델 필드에 추가?
     like_id = serializers.SerializerMethodField(read_only=True)
     owner = SimpleProfileSerializer(read_only=True)
 
     class Meta:
         model = Post
         fields = ('id', 'content', 'owner', '_photos', 'comments_count', 'likes_count', 'like_id')
-        read_only_fields = ('owner', 'likes_count')
+        read_only_fields = ('owner', 'likes_count', 'comments_count')
 
     def get_like_id(self, obj):
         like_id = self.context['view'].like_id_dict.get(obj.id)
