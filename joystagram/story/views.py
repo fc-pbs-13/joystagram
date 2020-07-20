@@ -28,15 +28,16 @@ class StoryViewSet(viewsets.ModelViewSet):
         return page
 
     def filter_queryset(self, queryset):
-        """자신이 팔로우하는 유저의 스토리 중 등록시간 24시간 이내의 것만 필터링"""
-        qs = super().filter_queryset(queryset)
+        """자신 or 자신이 팔로우하는 유저의 스토리 중
+        등록시간 24시간 이내의 것만 리스트"""
 
-        # TODO 등록시간 24시간 이내의 스토리만
+        # 등록시간 24시간 이내
         yesterday = timezone.now() - timedelta(days=1)
-        qs = Story.objects.filter(created__gte=yesterday,
-                                  created__lte=timezone.now())
-        # 자신이 팔로우한 유저의 것만
-        return qs.filter(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id'))
+        queryset = Story.objects.filter(created__gte=yesterday,
+                                        created__lte=timezone.now())
+        # owner가 자신 or 팔로잉 유저 TODO 자신 포함시키기
+        queryset = queryset.filter(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id'))
+        return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

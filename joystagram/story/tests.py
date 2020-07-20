@@ -1,6 +1,7 @@
-import datetime
+from datetime import timedelta
 import io
 
+from django.utils import timezone
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -36,7 +37,7 @@ class StoryTestCase(APITestCase):
         self.data = {
             'content': 'dsds',
             'img': self.generate_photo_file(),
-            'duration': datetime.timedelta(seconds=self.duration_sec)
+            'duration': timedelta(seconds=self.duration_sec)
         }
 
     def test_should_create(self):
@@ -52,7 +53,7 @@ class StoryTestCase(APITestCase):
 
     def test_should_retrieve(self):
         """스토리 조회"""
-        story = baker.make('story.Story', owner=self.owner, duration=datetime.timedelta(seconds=self.duration_sec))
+        story = baker.make('story.Story', owner=self.owner, duration=timedelta(seconds=self.duration_sec))
         self.client.force_authenticate(user=self.user)
 
         self.assertEqual(StoryCheck.objects.filter(user=self.owner, story_id=story.id).count(), 0)
@@ -73,9 +74,14 @@ class StoryTestCase(APITestCase):
         내가 팔로우하는 유저의 스토리 중 등록 후 24시간이 지나지 않은 것만
         """
         valid_story_count = 2
-        baker.make('story.Story', owner=self.user, _quantity=2)
-        baker.make('story.Story', owner=self.owner, _quantity=valid_story_count)
-        baker.make('story.Story', owner=self.users[2])
+        valid_created = timezone.now() - timedelta(hours=23, minutes=59)
+        invalid_created = timezone.now() - timedelta(days=1, seconds=1)
+        # valid 2 stories
+        baker.make('story.Story', owner=self.owner, created=valid_created)
+        baker.make('story.Story', owner=self.user, created=valid_created)
+        # invalid 3 stories
+        baker.make('story.Story', owner=self.owner, created=invalid_created)
+        baker.make('story.Story', owner=self.users[2], _quantity=2, created=valid_created)
 
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
@@ -87,8 +93,8 @@ class StoryTestCase(APITestCase):
         )
 
         # TODO 팔로우 하는 사용자의 스토리인지, 등록 시간이 24시간 내 인지 체크
-        self.assertEqual(len(res['results']), len(story_list))
         self.assertEqual(len(res['results']), valid_story_count)
+        self.assertEqual(len(res['results']), len(story_list))
         for story_res, story_obj in zip(res['results'], story_list[::-1]):
             self.story_test(story_res, story_obj)
             owner = story_res['owner']
@@ -99,3 +105,5 @@ class StoryTestCase(APITestCase):
         self.assertEqual(story_res['_duration'], story_obj.duration.seconds)
         self.assertEqual(story_res['content'], story_obj.content)
         self.assertTrue('img' in story_res)
+        self.assertGreater(story_obj.created, timezone.now() - timedelta(days=1))
+        self.assertLess(story_obj.created, timezone.now())

@@ -22,7 +22,7 @@ class StoryListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Story
-        fields = ('id', 'content', 'img', '_duration', 'is_watched', 'owner')
+        fields = ('id', 'content', 'img', '_duration', 'is_watched', 'owner', 'created')
 
     def get_is_watched(self, obj):
         # 이미 본 스토리인지
