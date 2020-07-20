@@ -1,6 +1,6 @@
-from django.contrib.auth.models import AnonymousUser
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
+from core.permissions import IsOwnerOrReadOnly
 from relationships.models import Follow
 from relationships.serializers import FollowSerializer
 
@@ -17,7 +17,7 @@ class FollowViewSet(mixins.CreateModelMixin,
     """
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
-    # permission_classes = []  # TODO 정책결정 필요: 인증되지 않은 사용자도 다른 사용자의 팔로우 리스트 조회 가능??
+    permission_classes = [IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(from_user_id=self.request.user.id,

@@ -23,7 +23,6 @@ class LikeSerializer(serializers.ModelSerializer):
         if PostLike.objects.filter(owner=self.context['request'].user, post=post_pk).exists():
             raise serializers.ValidationError('The fields `user`, `post` must make a unique set.',
                                               code='unique')
-
         return attrs
 
 
