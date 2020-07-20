@@ -1,4 +1,6 @@
 from datetime import timedelta
+
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import viewsets, status
 
@@ -37,7 +39,10 @@ class StoryViewSet(viewsets.ModelViewSet):
         queryset = Story.objects.filter(created__gte=yesterday,
                                         created__lte=timezone.now())
         # owner가 자신 or 팔로잉 유저 TODO 자신 포함시키기
-        queryset = queryset.filter(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id'))
+        queryset = queryset.filter(
+            Q(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')) |
+            Q(owner=self.request.user)
+        )
         return super().filter_queryset(queryset)
 
     def perform_create(self, serializer):

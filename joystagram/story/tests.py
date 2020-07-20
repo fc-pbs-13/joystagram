@@ -1,6 +1,7 @@
 from datetime import timedelta
 import io
 
+from django.db.models import Q
 from django.utils import timezone
 from model_bakery import baker
 from rest_framework import status
@@ -89,8 +90,10 @@ class StoryTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 
         story_list = Story.objects.filter(
-            owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')
-        )
+            Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
+            Q(owner=self.user)
+        ).filter(created__gte=timezone.now() - timedelta(days=1),
+                 created__lte=timezone.now())
 
         # TODO 팔로우 하는 사용자의 스토리인지, 등록 시간이 24시간 내 인지 체크
         self.assertEqual(len(res['results']), valid_story_count)
@@ -98,7 +101,10 @@ class StoryTestCase(APITestCase):
         for story_res, story_obj in zip(res['results'], story_list[::-1]):
             self.story_test(story_res, story_obj)
             owner = story_res['owner']
-            self.assertTrue(Follow.objects.filter(from_user=self.user, to_user_id=owner['id']).exists())
+            self.assertTrue(
+                Follow.objects.filter(from_user=self.user, to_user_id=owner['id']).exists()
+                or self.user.id == owner['id']
+            )
 
     def story_test(self, story_res, story_obj):
         self.assertEqual(story_res['id'], story_obj.id)
