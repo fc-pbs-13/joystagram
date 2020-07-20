@@ -51,10 +51,33 @@ class User(AbstractUser):
         self.set_password(self.password)
         super().save(*args, **kwargs)
 
+    # @property
+    # def followings(self):
+    #     # 내가 팔로우를 건 유저
+    #     user_qs = User.objects.filter(
+    #         # to_users_relation__from_user=self,
+    #         to_users_relation__from_user=self,
+    #         # to_users_relation__related_type='f'
+    #     )
+    #     return user_qs
+    #
+    # @property
+    # def followers(self):
+    #     # 나를 팔로우를 건 유저
+    #     user_qs = User.objects.filter(
+    #         from_users_relation__to_user=self,
+    #         from_users_relation__related_type='f'
+    #     )
+    #     return user_qs
+
+
+def profile_img_path(instance, filename):
+    return f'profile_img/{instance.user.id}/{filename}'
+
 
 class Profile(TimeStampedModel):
     """1to1 사용자 확장 모델"""
     user = models.OneToOneField('users.User', on_delete=models.CASCADE)
     nickname = models.CharField(max_length=20)
     introduce = models.CharField(max_length=255)
-    img = models.ImageField(upload_to='profile_image')
+    img = models.ImageField(upload_to=profile_img_path)

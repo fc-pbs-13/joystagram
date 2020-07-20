@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'comments',
     'likes',
     'relationships',
-    'stories',
+    'story',
 ]
 
 MIDDLEWARE = [
@@ -145,7 +145,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_PAGINATION_CLASS': 'core.paginations.IDPagination',
-    'PAGE_SIZE': 5,
+    'PAGE_SIZE': 15,
 }
 
 AUTH_USER_MODEL = 'users.User'

@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 from likes.models import PostLike
 from users.models import Profile, User
 
-INVALID_POST_ID = 999999999
+INVALID_ID = -1
 
 
 class PostLikeTestCase(APITestCase):
@@ -40,7 +40,7 @@ class PostLikeTestCase(APITestCase):
     def test_should_denied_invalid_post_id(self):
         """생성-유효하지 않은 post_id"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(f'/api/posts/{INVALID_POST_ID}/likes')
+        response = self.client.post(f'/api/posts/{INVALID_ID}/likes')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, res)
 
@@ -61,19 +61,23 @@ class PostLikeTestCase(APITestCase):
 
 
 class PostLikedUsersListTestCase(APITestCase):
-    """게시글을 좋아요한 유저 리스트"""
+    """좋아요 리스트"""
 
     def setUp(self) -> None:
-        users = baker.make('users.User', _quantity=3)
+        users = baker.make('users.User', _quantity=4)
+        posts = []
         for user in users:
             baker.make('users.Profile', user=user)
-        posts = baker.make('posts.Post', _quantity=3)
+            posts.append(baker.make('posts.Post', owner=user))
 
-        baker.make('likes.PostLike', post=posts[0], owner=users[0])
-        baker.make('likes.PostLike', post=posts[0], owner=users[1])
-        baker.make('likes.PostLike', post=posts[1], owner=users[1])
         self.user = users[0]
         self.post = posts[0]
+        baker.make('likes.PostLike', post=self.post, owner=self.user)
+        baker.make('likes.PostLike', post=posts[1], owner=self.user)
+        baker.make('likes.PostLike', post=posts[2], owner=self.user)
+
+        baker.make('likes.PostLike', post=self.post, owner=users[1])
+        baker.make('likes.PostLike', post=posts[1], owner=users[1])
 
     def test_post_liked_user_list(self):
         """게시글을 좋아요한 유저 리스트"""
@@ -81,14 +85,19 @@ class PostLikedUsersListTestCase(APITestCase):
         response = self.client.get(url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+        like_list = PostLike.objects.filter(post=self.post)
+        self.assertEqual(len(res['results']), len(like_list))
 
-        for like in res['results']:
-            self.assertTrue('id' in like)
-            owner = like['owner']
-            self.assertTrue('id' in owner)
+        for like_res, like_obj in zip(res['results'], like_list[::-1]):
+            self.assertEqual(like_res['id'], like_obj.id)
+            self.assertEqual(like_res['id'], like_obj.id)
+
+            owner = like_res['owner']
+            self.assertEqual(owner['id'], like_obj.owner.id)
+            self.assertEqual(owner['nickname'], like_obj.owner.profile.nickname)
             self.assertTrue('img' in owner)
-            self.assertTrue('nickname' in owner)
-            self.assertTrue(PostLike.objects.filter(post_id=self.post.id, owner_id=owner['id']).exists())
+
+            self.assertEqual(PostLike.objects.get(id=like_res['id']).post, self.post)
 
     def test_user_liked_post_list(self):
         """유저가 좋아요한 게시글 리스트"""
@@ -96,11 +105,24 @@ class PostLikedUsersListTestCase(APITestCase):
         response = self.client.get(url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-        for like in res['results']:
-            self.assertIsNotNone(like.get('id'))
-            post = like['post']
-            self.assertTrue('id' in post)
-            self.assertTrue('content' in post)
-            self.assertTrue('likes_count' in post)
+        like_list = PostLike.objects.filter(owner=self.user)
+        self.assertEqual(len(res['results']), len(like_list))
+
+        for like_res, like_obj in zip(res['results'], like_list[::-1]):
+            self.assertEqual(like_res['id'], like_obj.id)
+            self.assertEqual(like_res['id'], like_obj.id)
+
+            post = like_res['post']
+            self.assertEqual(post['id'], like_obj.post.id)
+            self.assertEqual(post['content'], like_obj.post.content)
+            self.assertEqual(post['likes_count'], like_obj.post.likes_count)
+            self.assertEqual(post['comments_count'], like_obj.post.comments.count())
             self.assertTrue('like_id' in post)
-            self.assertTrue(PostLike.objects.filter(post_id=post['id'], owner_id=self.user.id).exists())
+
+            owner = post['owner']
+            self.assertEqual(owner['id'], like_obj.post.owner_id)
+            self.assertEqual(owner['nickname'], like_obj.post.owner.profile.nickname)
+            self.assertEqual(owner['introduce'], like_obj.post.owner.profile.introduce)
+            self.assertTrue('img' in owner)
+
+            self.assertEqual(PostLike.objects.get(id=like_res['id']).owner, self.user)

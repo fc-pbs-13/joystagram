@@ -20,13 +20,9 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
     def filter_queryset(self, queryset):
         """특정 Post의 Comment만"""
-        queryset = queryset.filter(post_id=self.kwargs['post_pk'])
-        return super().filter_queryset(queryset)
+        return super().filter_queryset(queryset.filter(post_id=self.kwargs['post_pk']))
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user, post_id=self.kwargs.get('post_pk'))
@@ -58,8 +54,7 @@ class ReCommentCreateListViewSet(mixins.CreateModelMixin,
 
     def filter_queryset(self, queryset):
         """특정 Comment의 ReComment만"""
-        queryset = queryset.filter(comment_id=self.kwargs['comment_pk'])
-        return super().filter_queryset(queryset)
+        return super().filter_queryset(queryset.filter(comment_id=self.kwargs['comment_pk']))
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user, comment_id=self.kwargs['comment_pk'])

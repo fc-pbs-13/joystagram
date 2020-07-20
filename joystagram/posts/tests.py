@@ -5,6 +5,8 @@ from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 from likes.models import PostLike
+from posts.models import Post
+from relationships.models import Follow
 
 
 class PostCreateTestCase(APITestCase):
@@ -71,38 +73,44 @@ class PostCreateTestCase(APITestCase):
 
 
 class PostListTestCase(APITestCase):
-    """게시물 리스트 테스트"""
+    """내가 팔로우하는 유저들의 게시글 리스트"""
     url = f'/api/posts'
 
     def setUp(self) -> None:
-        self.user = baker.make('users.User')
-        self.profile = baker.make('users.Profile', user=self.user)
-        self.posts = baker.make('posts.Post', owner=self.user, _quantity=2)
-        self.img_url = 'post_image/test.png'
-        self.likes_count = 3
-        self.comments_count = 2
+        users = baker.make('users.User', _quantity=4)
+        for user in users:
+            self.profile = baker.make('users.Profile', user=user)
+            self.posts = baker.make('posts.Post', owner=user, _quantity=2)
         for post in self.posts:
-            baker.make('posts.Photo', post=post, img=self.img_url, _quantity=2)
-            self.post_likes = baker.make('likes.PostLike', post=post, _quantity=self.likes_count)
-            self.post_likes = baker.make('comments.Comment', post=post, _quantity=self.comments_count)
+            self.comments = baker.make('comments.Comment', post=post, _quantity=2)
+        baker.make('relationships.Follow', from_user=users[0], to_user=users[1])
+        baker.make('relationships.Follow', from_user=users[0], to_user=users[2])
+        baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
+        self.user = users[0]
 
     def test_should_list_posts(self):
         """리스트-성공"""
+        self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         res = response.data
-        for post in res['results']:
-            self.assertIsNotNone(post.get('id'))
-            self.assertIsNotNone(post.get('content'))
-            self.assertIsNotNone(post.get('_photos'))
-            self.assertIsNotNone(post.get('comments_count'))
-            self.assertIsNotNone(post.get('likes_count'))
-            self.assertEqual(post.get('comments_count'), self.comments_count)
-            if post.get('like_id'):
-                self.assertIsNotNone(PostLike.objects.get(id=post.get('like_id')).post, post)
-            for photos in post.get('_photos'):
-                self.assertTrue(photos.get('img').endswith(self.img_url))
+
+        post_list = Post.objects.filter(
+            owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')
+        )
+        self.assertEqual(len(res['results']), len(post_list))
+
+        for post_res, post_obj in zip(res['results'], post_list[::-1]):
+            self.assertEqual(post_res.get('id'), post_obj.id)
+            self.assertEqual(post_res.get('content'), post_obj.content)
+            self.assertIsNotNone(post_res.get('_photos'))
+            self.assertEqual(post_res.get('likes_count'), post_obj.likes.count())
+            self.assertEqual(post_res.get('comments_count'), post_obj.comments.count())
+            if post_res.get('like_id'):
+                self.assertIsNotNone(PostLike.objects.get(id=post_res.get('like_id')).post, post_res)
+            for photos in post_res.get('_photos'):
+                self.assertTrue(photos.get('img').endswith('jpg'))
 
 
 class PostRetrieveTestCase(APITestCase):

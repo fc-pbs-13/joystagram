@@ -19,6 +19,7 @@ class SimpleProfileSerializer(ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
     introduce = serializers.CharField(default='', source='profile.introduce')
     img = serializers.ImageField(read_only=True, source='profile.img')
+    # TODO 팔로우 id
 
     class Meta:
         model = User

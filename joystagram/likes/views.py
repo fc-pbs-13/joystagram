@@ -44,4 +44,4 @@ class UserLikeViewSet(mixins.ListModelMixin, GenericViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return super().get_queryset().filter(post_id=self.kwargs['user_pk'])
+        return super().get_queryset().filter(owner_id=self.kwargs['user_pk'])
