@@ -1,7 +1,7 @@
 from django.db.models import Q
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
-from core.permissions import IsOwnerOrReadOnly
+from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from likes.models import PostLike
 from posts.models import Post
 from posts.serializers import PostSerializer, PostListSerializer
@@ -22,7 +22,7 @@ class PostViewSet(mixins.CreateModelMixin,
     """
     queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
     serializer_class = PostSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
     def get_serializer_class(self):
         if self.action == 'list':

@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework import viewsets, status
 
-from core.permissions import IsOwnerOrReadOnly
+from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from relationships.models import Follow
 from story.models import Story, StoryCheck
 from story.serializers import StorySerializer, StoryListSerializer
@@ -13,7 +13,7 @@ from story.serializers import StorySerializer, StoryListSerializer
 class StoryViewSet(viewsets.ModelViewSet):
     queryset = Story.objects.all()
     serializer_class = StorySerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
     def get_serializer_class(self):
         if self.action == 'list':

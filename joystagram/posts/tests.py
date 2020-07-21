@@ -25,13 +25,22 @@ class PostCreateTestCase(APITestCase):
         return file
 
     def setUp(self) -> None:
+        tags = ['ttt', 'ggg']
         self.data = {
             'photos': self.generate_photo_file(),
-            'content': 'hello joystagram!'
+            'content': 'hello joystagram!',
+
+            # TODO 사진을 보내려면 multipart, 태그를 보내려면 json???????????????
+            # 'Invalid json list. A tag list submitted in string form must be valid json.'
+
+            'tags': str(tags).replace("'", '"')
+            # 'tags': '["ttt", "ggg", "ggg"]'
         }
+
         self.multiple_data = {
             'photos': [self.generate_photo_file(), self.generate_photo_file()],
-            'content': 'hello joystagram!'
+            'content': 'hello joystagram!',
+            'tags': str(tags).replace("'", '"')
         }
         self.user = baker.make('users.User')
         self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
@@ -43,9 +52,10 @@ class PostCreateTestCase(APITestCase):
         response = self.client.post(
             self.url,
             self.data,
-            # format='multipart'
+            format='multipart',
         )
         res = response.data
+        print(res)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.data['content'])
 

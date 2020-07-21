@@ -55,16 +55,17 @@ class CommentListTestCase(APITestCase):
     """댓글 리스트 테스트"""
 
     def setUp(self) -> None:
-        user = baker.make('users.User')
-        baker.make('users.Profile', user=user)
+        self.user = baker.make('users.User')
+        baker.make('users.Profile', user=self.user)
         self.post = baker.make('posts.Post')
         self.comment_size = 3
-        self.comments = baker.make('comments.Comment', post=self.post, owner=user, _quantity=self.comment_size)
+        self.comments = baker.make('comments.Comment', post=self.post, owner=self.user, _quantity=self.comment_size)
         baker.make('comments.Comment')
         self.url = f'/api/posts/{self.post.id}/comments'
 
     def test_should_list(self):
         """리스트-성공"""
+        self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(len(response.data), self.comment_size)
@@ -169,15 +170,16 @@ class ReCommentListTestCase(APITestCase):
     """대댓글 리스트 테스트"""
 
     def setUp(self) -> None:
-        user = baker.make('users.User')
-        baker.make('users.Profile', user=user)
-        self.comment = baker.make('comments.Comment', owner=user)
-        baker.make('comments.ReComment', comment=self.comment, owner=user, _quantity=3)
+        self.user = baker.make('users.User')
+        baker.make('users.Profile', user=self.user)
+        self.comment = baker.make('comments.Comment', owner=self.user)
+        baker.make('comments.ReComment', comment=self.comment, owner=self.user, _quantity=3)
         baker.make('comments.ReComment', _quantity=2)
         self.url = f'/api/comments/{self.comment.id}/recomments'
 
     def test_should_list(self):
         """리스트-성공"""
+        self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 

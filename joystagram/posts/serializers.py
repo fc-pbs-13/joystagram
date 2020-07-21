@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.fields import ListField, ImageField
 from posts.models import Post, Photo
 from users.serializers import SimpleProfileSerializer
+from taggit_serializer.serializers import TagListSerializerField, TaggitSerializer
 
 
 class PhotoSerializer(serializers.ModelSerializer):
@@ -10,14 +11,15 @@ class PhotoSerializer(serializers.ModelSerializer):
         fields = ('id', 'img')
 
 
-class PostSerializer(serializers.ModelSerializer):
-    photos = ListField(child=ImageField(), write_only=True)
+class PostSerializer(TaggitSerializer, serializers.ModelSerializer):
+    photos = ListField(child=ImageField(), write_only=True)  # todo required=False 지우기
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     owner = SimpleProfileSerializer(read_only=True)
+    tags = TagListSerializerField()
 
     class Meta:
         model = Post
-        fields = ('id', 'content', 'owner', 'photos', '_photos')
+        fields = ('id', 'content', 'owner', 'photos', '_photos', 'tags')
         read_only_fields = ('owner',)
 
     def create(self, validated_data):
