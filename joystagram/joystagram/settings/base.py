@@ -42,10 +42,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'rest_framework',
     'rest_framework.authtoken',
     'debug_toolbar',
     'mptt',
+
     'core',
     'users',
     'posts',
@@ -53,7 +55,6 @@ INSTALLED_APPS = [
     'likes',
     'relationships',
     'story',
-    'tags',
 ]
 
 MIDDLEWARE = [
