@@ -8,7 +8,7 @@ class StorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Story
-        fields = ('id', 'content', 'img', 'duration', '_duration')
+        fields = ('id', 'content', 'img', 'duration', '_duration', 'created')
         extra_kwargs = {
             'duration': {'write_only': True}
         }

@@ -1,10 +1,15 @@
 from django.db.models import Q
+from django_filters import rest_framework as filters
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins
+from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import GenericViewSet
-from core.permissions import IsOwnerOrReadOnly
+from taggit.models import Tag
+
+from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from likes.models import PostLike
 from posts.models import Post
-from posts.serializers import PostSerializer, PostListSerializer
+from posts.serializers import PostSerializer, PostListSerializer, TagListSerializer
 from relationships.models import Follow
 
 
@@ -22,7 +27,7 @@ class PostViewSet(mixins.CreateModelMixin,
     """
     queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
     serializer_class = PostSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -30,6 +35,7 @@ class PostViewSet(mixins.CreateModelMixin,
         return super().get_serializer_class()
 
     def filter_queryset(self, queryset):
+        """자신과 자신이 팔로우하는 유저들의 스토리(등록시간 24시간 이내)"""
         if self.action == 'list':
             queryset = queryset.filter(
                 Q(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')) |
@@ -49,3 +55,14 @@ class PostViewSet(mixins.CreateModelMixin,
             like_list = PostLike.objects.filter(owner=self.request.user, post__in=page)
             self.like_id_dict = {like.post_id: like.id for like in like_list}
         return page
+
+
+class TagViewSet(mixins.ListModelMixin,
+                 GenericViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagListSerializer
+
+    def get_queryset(self):
+        name = self.request.query_params.get('name', None)
+        # return super().get_queryset().filter(name__)
+        return self.queryset.filter(name__icontains=name)

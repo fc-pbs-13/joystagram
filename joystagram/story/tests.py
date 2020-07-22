@@ -1,5 +1,7 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import io
+
+import pytz
 from django.db.models import Q
 from django.utils import timezone
 from model_bakery import baker
@@ -38,6 +40,7 @@ class StoryTestCase(APITestCase):
             'img': self.generate_photo_file(),
             'duration': timedelta(seconds=self.duration_sec)
         }
+        self.yesterday = timezone.now() - timedelta(hours=24)
 
     def test_should_create(self):
         """생성-성공"""
@@ -113,11 +116,13 @@ class StoryTestCase(APITestCase):
         ).filter(created__gte=timezone.now() - timedelta(days=1),
                  created__lte=timezone.now())
 
-        # 자신 혹은 팔로우 하는 사용자의 스토리, 등록 시간 24시간 테스트
         self.assertEqual(len(res['results']), valid_story_count)
         self.assertEqual(len(res['results']), len(story_list))
+
         for story_res, story_obj in zip(res['results'], story_list[::-1]):
             self.story_test(story_res, story_obj)
+
+            # 자신 혹은 팔로우 하는 사용자의 스토리
             owner = story_res['owner']
             self.assertTrue(
                 Follow.objects.filter(from_user=self.user, to_user_id=owner['id']).exists()
@@ -125,9 +130,14 @@ class StoryTestCase(APITestCase):
             )
 
     def story_test(self, story_res, story_obj):
+        """스토리 필드 검사"""
         self.assertEqual(story_res['id'], story_obj.id)
         self.assertEqual(story_res['_duration'], story_obj.duration.seconds)
         self.assertEqual(story_res['content'], story_obj.content)
         self.assertTrue('img' in story_res)
+
         self.assertGreater(story_obj.created, timezone.now() - timedelta(days=1))
         self.assertLess(story_obj.created, timezone.now())
+        # 등록시간 24시간 검사
+        created_res = pytz.utc.localize(datetime.strptime(story_res['created'], '%Y-%m-%dT%H:%M:%S.%fZ'))
+        self.assertTrue(self.yesterday < created_res < timezone.now())

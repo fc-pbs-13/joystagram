@@ -1,5 +1,7 @@
 from django.db import models
 from model_utils.models import TimeStampedModel
+from taggit.managers import TaggableManager
+from taggit.models import TagBase, TaggedItemBase, Tag
 
 
 class Post(TimeStampedModel):
@@ -7,6 +9,7 @@ class Post(TimeStampedModel):
     content = models.TextField(default='')
     likes_count = models.PositiveIntegerField(default=0)
     comments_count = models.PositiveIntegerField(default=0)
+    tags = TaggableManager()
 
 
 def post_img_path(instance, filename):

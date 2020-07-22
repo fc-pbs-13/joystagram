@@ -8,22 +8,19 @@ class IsUserSelf(permissions.BasePermission):
         return obj == request.user
 
 
-class IsOwnerOrReadOnly(permissions.BasePermission):
+class IsOwnerOrAuthenticatedReadOnly(permissions.BasePermission):
     """
-    생성: IsAuthenticated
+    생성, 조회: IsAuthenticated
     수정, 삭제: IsOwner
-    조회: AllowAny
     """
 
     def has_permission(self, request, view):
-        if request.method == 'POST':
-            return request.user and request.user.is_authenticated
-        return True
+        return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
         if request.method in ('PATCH', 'PUT', 'DELETE'):
             return obj.owner == request.user
-        return True
+        return request.user and request.user.is_authenticated
 
 
 class IsFromUserOrReadOnly(permissions.BasePermission):

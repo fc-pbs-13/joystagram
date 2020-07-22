@@ -42,10 +42,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'rest_framework',
     'rest_framework.authtoken',
     'debug_toolbar',
-    'mptt',
+    'taggit',
+    'taggit_serializer',
+    'django_filters',
+
     'core',
     'users',
     'posts',
@@ -146,6 +150,9 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'core.paginations.IDPagination',
     'PAGE_SIZE': 15,
+    # 'DEFAULT_FILTER_BACKENDS': (
+    #     'django_filters.rest_framework.DjangoFilterBackend',
+    # ),
 }
 
 AUTH_USER_MODEL = 'users.User'
