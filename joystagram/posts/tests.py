@@ -150,17 +150,17 @@ class PostListTestCase(APITestCase):
         baker.make('relationships.Follow', from_user=users[0], to_user=users[2])
         baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
 
-        tag1 = 'django rest framework'
+        self.tag1 = 'django rest framework'
         tag2 = 'django'
         tag3 = 'python'
         tag4 = 'python programming'
         tag5 = 'java'
-        posts[1].tags.add(tag1, tag2)
+        posts[1].tags.add(self.tag1, tag2)
         posts[2].tags.add(tag2, tag3)
         posts[3].tags.add(tag5)
-        posts[4].tags.add(tag1, tag2, tag3, tag4)
+        posts[4].tags.add(self.tag1, tag2, tag3, tag4)
         self.user = users[0]
-        self.tag = Tag.objects.get(name=tag1)
+        self.tag = Tag.objects.get(name=self.tag1)
 
     def test_should_list_posts(self):
         """리스트-성공"""
@@ -188,15 +188,15 @@ class PostListTestCase(APITestCase):
             for photos in post_res.get('_photos'):
                 self.assertTrue(photos.get('img').endswith('jpg'))
 
-    # def test_tagged_post_list(self):
-    #     self.client.force_authenticate(user=self.user)
-    #     response = self.client.get(f'/api/tags/{self.tag.id}/posts')
-    #     res = response.data['results']
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-    #     for post in res:
-    #         # print(post)
-    #         pass
-    #     self.fail()
+    def test_tagged_post_list(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(f'/api/tags/{self.tag.id}/posts')
+        res = response.data['results']
+        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+
+        for post in res:
+            print(post)
+            self.assertTrue(self.tag1 in post['tags'])
 
     def test_search_tag_list(self):
         """태그 검색"""

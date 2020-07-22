@@ -1,12 +1,8 @@
 from django.db.models import Q
-from django_filters import rest_framework as filters
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, status
+from rest_framework import mixins
 from rest_framework.exceptions import ParseError
-from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import GenericViewSet
 from taggit.models import Tag
-from rest_framework.response import Response
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from likes.models import PostLike
 from posts.models import Post
@@ -64,9 +60,9 @@ class TagViewSet(mixins.ListModelMixin,
     serializer_class = TagListSerializer
 
     def get_queryset(self):
-        name = self.request.query_params.get('name', None)
+        name = self.request.query_params.get('name')
         if not name:
-            raise ParseError('query_params required: name not supplied')
+            raise ParseError('query parameter required: name not supplied')
         return super().get_queryset().filter(name__icontains=name)
 
 
@@ -77,5 +73,4 @@ class TaggedPostViewSet(mixins.ListModelMixin,
     serializer_class = PostListSerializer
 
     def get_queryset(self):
-        # name = self.request.query_params.get('name', None)
-        return super().get_queryset()
+        return Post.objects.filter(tags=self.kwargs.get('tag_pk'))
