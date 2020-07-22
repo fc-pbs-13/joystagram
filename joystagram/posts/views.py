@@ -4,19 +4,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins
 from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import GenericViewSet
+from taggit.models import Tag
+
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from likes.models import PostLike
 from posts.models import Post
-from posts.serializers import PostSerializer, PostListSerializer
+from posts.serializers import PostSerializer, PostListSerializer, TagListSerializer
 from relationships.models import Follow
-
-
-# class TagFilter(filters.FilterSet):
-#     tag = filters.NumberFilter(field_name="price", lookup_expr='gte')
-#
-#     class Meta:
-#         model = Post
-#         fields = ['tags']
 
 
 class PostViewSet(mixins.CreateModelMixin,
@@ -34,8 +28,6 @@ class PostViewSet(mixins.CreateModelMixin,
     queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
     serializer_class = PostSerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
-    filter_backends = [DjangoFilterBackend]
-    # filterset_class = TagFilter  # TODO 태그로 검색
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -64,6 +56,13 @@ class PostViewSet(mixins.CreateModelMixin,
             self.like_id_dict = {like.post_id: like.id for like in like_list}
         return page
 
-# class TagAPIView(mixins.ListModelMixin, GenericAPIView):
-#     queryset = HashTag
-#     serializer_class =
+
+class TagViewSet(mixins.ListModelMixin,
+                 GenericViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagListSerializer
+
+    def get_queryset(self):
+        name = self.request.query_params.get('name', None)
+        # return super().get_queryset().filter(name__)
+        return self.queryset.filter(name__icontains=name)

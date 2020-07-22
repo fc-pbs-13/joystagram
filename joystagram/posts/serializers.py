@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from rest_framework.fields import ListField, ImageField
+from taggit.models import Tag
+
 from posts.models import Post, Photo
 from users.serializers import SimpleProfileSerializer
 from taggit_serializer.serializers import TagListSerializerField, TaggitSerializer
@@ -38,10 +40,11 @@ class PostListSerializer(serializers.ModelSerializer):
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     like_id = serializers.SerializerMethodField(read_only=True)
     owner = SimpleProfileSerializer(read_only=True)
+    tags = TagListSerializerField()
 
     class Meta:
         model = Post
-        fields = ('id', 'content', 'owner', '_photos', 'comments_count', 'likes_count', 'like_id')
+        fields = ('id', 'content', 'owner', '_photos', 'comments_count', 'likes_count', 'like_id', 'tags')
         read_only_fields = ('owner', 'likes_count', 'comments_count')
 
     def get_like_id(self, obj):
@@ -58,3 +61,10 @@ class LikedPostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('id', 'content', 'owner', '_photos')
         read_only_fields = ('owner', 'likes_count')
+
+
+class TagListSerializer(serializers.ModelSerializer):
+    # TODO 태그를 가진 Post
+    class Meta:
+        model = Tag
+        fields = ('id', 'name')

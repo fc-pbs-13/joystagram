@@ -5,6 +5,8 @@ from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
+from taggit.models import Tag
+
 from likes.models import PostLike
 from posts.models import Post
 from relationships.models import Follow
@@ -29,10 +31,6 @@ class PostCreateTestCase(APITestCase):
         self.data = {
             'photos': self.generate_photo_file(),
             'content': 'hello joystagram!',
-
-            # TODO 사진을 보내려면 multipart, 태그를 보내려면 json???????????????
-            # 'Invalid json list. A tag list submitted in string form must be valid json.'
-
             'tags': str(tags).replace("'", '"')
             # 'tags': '["ttt", "ggg", "ggg"]'
         }
@@ -55,7 +53,6 @@ class PostCreateTestCase(APITestCase):
             format='multipart',
         )
         res = response.data
-        print(res)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.data['content'])
 
@@ -81,49 +78,6 @@ class PostCreateTestCase(APITestCase):
             content_type=MULTIPART_CONTENT
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
-class PostListTestCase(APITestCase):
-    """내가 팔로우하는 유저들의 게시글 리스트"""
-    url = f'/api/posts'
-
-    def setUp(self) -> None:
-        users = baker.make('users.User', _quantity=4)
-        for user in users:
-            self.profile = baker.make('users.Profile', user=user)
-            self.posts = baker.make('posts.Post', owner=user, _quantity=2)
-        for post in self.posts:
-            self.comments = baker.make('comments.Comment', post=post, _quantity=2)
-        baker.make('relationships.Follow', from_user=users[0], to_user=users[1])
-        baker.make('relationships.Follow', from_user=users[0], to_user=users[2])
-        baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
-        self.user = users[0]
-
-    def test_should_list_posts(self):
-        """리스트-성공"""
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        res = response.data
-
-        post_list = Post.objects.filter(
-            Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
-            Q(owner=self.user)
-        )
-
-        self.assertEqual(len(res['results']), len(post_list))
-
-        for post_res, post_obj in zip(res['results'], post_list[::-1]):
-            self.assertEqual(post_res.get('id'), post_obj.id)
-            self.assertEqual(post_res.get('content'), post_obj.content)
-            self.assertIsNotNone(post_res.get('_photos'))
-            self.assertEqual(post_res.get('likes_count'), post_obj.likes.count())
-            self.assertEqual(post_res.get('comments_count'), post_obj.comments.count())
-            if post_res.get('like_id'):
-                self.assertIsNotNone(PostLike.objects.get(id=post_res.get('like_id')).post, post_res)
-            for photos in post_res.get('_photos'):
-                self.assertTrue(photos.get('img').endswith('jpg'))
 
 
 class PostUpdateDeleteTestCase(APITestCase):
@@ -177,3 +131,72 @@ class PostUpdateDeleteTestCase(APITestCase):
         self.client.force_authenticate(user=invalid_user)
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class PostListTestCase(APITestCase):
+    """내가 팔로우하는 유저들의 게시글 리스트"""
+    url = f'/api/posts'
+
+    def setUp(self) -> None:
+        users = baker.make('users.User', _quantity=4)
+        posts = []
+        for user in users:
+            self.profile = baker.make('users.Profile', user=user)
+            posts += baker.make('posts.Post', owner=user, _quantity=2)
+
+        for post in posts:
+            baker.make('comments.Comment', post=post, _quantity=2)
+        baker.make('relationships.Follow', from_user=users[0], to_user=users[1])
+        baker.make('relationships.Follow', from_user=users[0], to_user=users[2])
+        baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
+
+        posts[1].tags.add('tag11', 'tag22')
+        posts[2].tags.add('tag11', 'tag33')
+        self.user = users[0]
+        self.tag = Tag.objects.get(name='tag11')
+
+    def test_should_list_posts(self):
+        """리스트-성공"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        res = response.data
+
+        post_list = Post.objects.filter(
+            Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
+            Q(owner=self.user)
+        )
+
+        self.assertEqual(len(res['results']), len(post_list))
+
+        for post_res, post_obj in zip(res['results'], post_list[::-1]):
+            self.assertEqual(post_res.get('id'), post_obj.id)
+            self.assertEqual(post_res.get('content'), post_obj.content)
+            self.assertIsNotNone(post_res.get('_photos'))
+            self.assertEqual(post_res.get('likes_count'), post_obj.likes.count())
+            self.assertEqual(post_res.get('comments_count'), post_obj.comments.count())
+            if post_res.get('like_id'):
+                self.assertIsNotNone(PostLike.objects.get(id=post_res.get('like_id')).post, post_res)
+            for photos in post_res.get('_photos'):
+                self.assertTrue(photos.get('img').endswith('jpg'))
+
+    def test_tagged_post_list(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(f'/api/tags/{self.tag.id}/posts')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        res = response.data['results']
+        for post in res:
+            print(post)
+
+        self.fail()
+
+    def test_search_tag_list(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(f'/api/tags?name=1')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        res = response.data['results']
+        for post in res:
+            print(post)
+
+        self.fail()
