@@ -1,11 +1,9 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
 from comments.models import Comment, ReComment
+from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from comments.serializers import CommentSerializer, ReCommentSerializer, ReCommentUpdateSerializer, \
     CommentUpdateSerializer
-from core.permissions import IsOwnerOrAuthenticatedReadOnly
-from posts.models import Post
 
 
 class CommentCreateListViewSet(mixins.CreateModelMixin,

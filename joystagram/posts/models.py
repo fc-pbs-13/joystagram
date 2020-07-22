@@ -18,21 +18,3 @@ def post_img_path(instance, filename):
 class Photo(models.Model):
     post = models.ForeignKey('posts.Post', on_delete=models.CASCADE, related_name='photos')
     img = models.ImageField(upload_to=post_img_path)
-
-
-# class HashTag(models.Model):
-#     """
-#     TODO 태그 구현...
-#     포스트 생성시 HashTag get_or_create()
-#     태그가 여러개 so N+1문제 고려
-#
-#     """
-#     name = models.SlugField(unique=True)
-#
-#
-# class HashTaggedPost(models.Model):
-#     post = models.ForeignKey('posts.Post', on_delete=models.CASCADE)
-#     tag = models.ForeignKey('posts.HashTag', on_delete=models.CASCADE)
-#
-#     class Meta:
-#         unique_together = ['post', 'tag']

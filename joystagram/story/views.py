@@ -15,6 +15,10 @@ class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.story_check_dict = {}
+
     def get_serializer_class(self):
         if self.action == 'list':
             return StoryListSerializer

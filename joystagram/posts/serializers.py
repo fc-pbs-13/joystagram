@@ -45,7 +45,8 @@ class PostListSerializer(serializers.ModelSerializer):
         read_only_fields = ('owner', 'likes_count', 'comments_count')
 
     def get_like_id(self, obj):
-        like_id = self.context['view'].like_id_dict.get(obj.id)
+        like_id_dict = getattr(self.context['view'], 'like_id_dict', {})
+        like_id = like_id_dict.get(obj.id)
         return like_id
 
 

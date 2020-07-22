@@ -38,5 +38,6 @@ class FollowUserListSerializer(serializers.ModelSerializer):
         fields = ('id', 'nickname', 'introduce', 'img', 'follow_id')
 
     def get_follow_id(self, obj):
-        follow_id = self.context['view'].follow_id_dict.get(obj.id)
+        follow_id_dict = getattr(self.context['view'], 'follow_id_dict', {})
+        follow_id = follow_id_dict.get(obj.id)
         return follow_id

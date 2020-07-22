@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'taggit',
     'taggit_serializer',
+    'django_filters',
 
     'core',
     'users',
@@ -149,6 +150,9 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'core.paginations.IDPagination',
     'PAGE_SIZE': 15,
+    # 'DEFAULT_FILTER_BACKENDS': (
+    #     'django_filters.rest_framework.DjangoFilterBackend',
+    # ),
 }
 
 AUTH_USER_MODEL = 'users.User'
