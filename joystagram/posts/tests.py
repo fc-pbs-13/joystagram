@@ -209,8 +209,5 @@ class PostListTestCase(APITestCase):
         tag_list = Tag.objects.filter(name__icontains=search_str)
         self.assertEqual(len(res), len(tag_list))
         for tag_res, tag_obj in zip(res, tag_list[::-1]):
-            print(tag_res)
             self.assertEqual(tag_res['id'], tag_obj.id)
             self.assertEqual(tag_res['name'], tag_obj.name)
-
-        self.fail()
