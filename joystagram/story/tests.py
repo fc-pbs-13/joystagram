@@ -40,7 +40,7 @@ class StoryTestCase(APITestCase):
             'img': self.generate_photo_file(),
             'duration': timedelta(seconds=self.duration_sec)
         }
-        self.yesterday = timezone.now() - timedelta(hours=24)
+        self.yesterday = timezone.now() - timedelta(days=1)
 
     def test_should_create(self):
         """생성-성공"""
@@ -114,12 +114,12 @@ class StoryTestCase(APITestCase):
             Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
             Q(owner=self.user)
         ).filter(created__gte=timezone.now() - timedelta(days=1),
-                 created__lte=timezone.now())
+                 created__lte=timezone.now()).order_by('-id')
 
         self.assertEqual(len(res['results']), valid_story_count)
         self.assertEqual(len(res['results']), len(story_list))
 
-        for story_res, story_obj in zip(res['results'], story_list[::-1]):
+        for story_res, story_obj in zip(res['results'], story_list):
             self.story_test(story_res, story_obj)
 
             # 자신 혹은 팔로우 하는 사용자의 스토리

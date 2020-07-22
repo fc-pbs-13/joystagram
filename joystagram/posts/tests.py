@@ -173,11 +173,11 @@ class PostListTestCase(APITestCase):
         post_list = Post.objects.filter(
             Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
             Q(owner=self.user)
-        )
+        ).order_by('-id')
 
         self.assertEqual(len(res['results']), len(post_list))
 
-        for post_res, post_obj in zip(res['results'], post_list[::-1]):
+        for post_res, post_obj in zip(res['results'], post_list):
             self.assertEqual(post_res.get('id'), post_obj.id)
             self.assertEqual(post_res.get('content'), post_obj.content)
             self.assertIsNotNone(post_res.get('_photos'))
@@ -206,8 +206,8 @@ class PostListTestCase(APITestCase):
         res = response.data['results']
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 
-        tag_list = Tag.objects.filter(name__icontains=search_str)
+        tag_list = Tag.objects.filter(name__icontains=search_str).order_by('-id')
         self.assertEqual(len(res), len(tag_list))
-        for tag_res, tag_obj in zip(res, tag_list[::-1]):
+        for tag_res, tag_obj in zip(res, tag_list):
             self.assertEqual(tag_res['id'], tag_obj.id)
             self.assertEqual(tag_res['name'], tag_obj.name)

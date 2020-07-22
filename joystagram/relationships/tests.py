@@ -94,17 +94,17 @@ class FollowListTestCase(APITestCase):
         if is_follower:
             user_list = User.objects.filter(
                 id__in=Follow.objects.filter(to_user_id=self.user).values('from_user_id')
-            ).select_related('profile')
+            ).select_related('profile').order_by('-id')
             self.assertEqual(len(user_list), len(Follow.objects.filter(to_user_id=self.user)))
         else:
             user_list = User.objects.filter(
                 id__in=Follow.objects.filter(from_user_id=self.user).values('to_user_id')
-            ).select_related('profile')
+            ).select_related('profile').order_by('-id')
             self.assertEqual(len(user_list), len(Follow.objects.filter(from_user_id=self.user)))
 
         self.assertEqual(len(res['results']), user_list.count())
 
-        for user_res, user_obj in zip(res['results'], user_list[::-1]):
+        for user_res, user_obj in zip(res['results'], user_list):
             self.assertEqual(user_res['id'], user_obj.id)
             self.assertTrue('img' in user_res)
             self.assertEqual(user_res['nickname'], user_obj.profile.nickname)

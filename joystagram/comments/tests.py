@@ -70,7 +70,8 @@ class CommentListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(len(response.data), self.comment_size)
 
-        for comment_res, comment_obj in zip(response.data['results'], Comment.objects.filter(post=self.post)[::-1]):
+        for comment_res, comment_obj in zip(response.data['results'],
+                                            Comment.objects.filter(post=self.post).order_by('-id')):
             self.assertEqual(comment_res['id'], comment_obj.id)
             self.assertEqual(comment_res['content'], comment_obj.content)
             owner = comment_res['owner']
@@ -191,7 +192,7 @@ class ReCommentListTestCase(APITestCase):
             self.assertEqual(ReComment.objects.get(id=recomment['id']).comment, self.comment)
 
         for recomment_res, recomment_obj in zip(response.data['results'],
-                                                ReComment.objects.filter(comment=self.comment)[::-1]):
+                                                ReComment.objects.filter(comment=self.comment).order_by('-id')):
             self.assertEqual(recomment_res['id'], recomment_obj.id)
             self.assertEqual(recomment_res['content'], recomment_obj.content)
             owner = recomment_res['owner']

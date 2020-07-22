@@ -24,4 +24,5 @@ class StoryListSerializer(serializers.ModelSerializer):
         fields = ('id', 'content', 'img', '_duration', 'is_watched', 'owner', 'created')
 
     def get_is_watched(self, obj):
-        return self.context['view'].story_check_dict.get(obj.id)
+        story_check_dict = getattr(self.context['view'], 'story_check_dict', {})
+        return story_check_dict.get(obj.id)

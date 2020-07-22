@@ -14,7 +14,7 @@ router.register(r'comments', CommentViewSet)
 router.register(r'recomments', ReCommentViewSet)
 router.register(r'follows', FollowViewSet)
 router.register(r'story', StoryViewSet)
-router.register(r'tags', TagViewSet)
+router.register(r'tags', TagViewSet) 
 
 posts_nested_router = routers.NestedSimpleRouter(router, r'posts', trailing_slash=False, lookup='post')
 posts_nested_router.register(r'comments', CommentCreateListViewSet)

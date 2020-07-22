@@ -50,7 +50,6 @@ class PostViewSet(mixins.CreateModelMixin,
         page = super().paginate_queryset(queryset)
 
         # like_id 주입
-        self.like_id_dict = {}
         if self.request.user.is_authenticated:
             like_list = PostLike.objects.filter(owner=self.request.user, post__in=page)
             self.like_id_dict = {like.post_id: like.id for like in like_list}
@@ -64,5 +63,4 @@ class TagViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         name = self.request.query_params.get('name', None)
-        # return super().get_queryset().filter(name__)
         return self.queryset.filter(name__icontains=name)
