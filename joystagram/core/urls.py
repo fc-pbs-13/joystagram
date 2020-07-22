@@ -14,7 +14,7 @@ router.register(r'comments', CommentViewSet)
 router.register(r'recomments', ReCommentViewSet)
 router.register(r'follows', FollowViewSet)
 router.register(r'story', StoryViewSet)
-router.register(r'tags', TagViewSet) 
+router.register(r'tags', TagViewSet)
 
 posts_nested_router = routers.NestedSimpleRouter(router, r'posts', trailing_slash=False, lookup='post')
 posts_nested_router.register(r'comments', CommentCreateListViewSet)
@@ -26,5 +26,8 @@ comments_nested_router.register(r'recomments', ReCommentCreateListViewSet)
 users_nested_router = routers.NestedSimpleRouter(router, r'users', trailing_slash=False, lookup='user')
 users_nested_router.register(r'follows', FollowViewSet)
 users_nested_router.register(r'likes', UserLikeViewSet)
+
+tags_nested_router = routers.NestedSimpleRouter(router, r'tags', trailing_slash=False, lookup='tag')
+tags_nested_router.register(r'posts', )
 
 urlpatterns = router.urls + posts_nested_router.urls + comments_nested_router.urls + users_nested_router.urls

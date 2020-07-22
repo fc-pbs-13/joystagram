@@ -1,11 +1,12 @@
 from django.db.models import Q
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins
+from rest_framework import mixins, status
+from rest_framework.exceptions import ParseError
 from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import GenericViewSet
 from taggit.models import Tag
-
+from rest_framework.response import Response
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from likes.models import PostLike
 from posts.models import Post
@@ -58,9 +59,23 @@ class PostViewSet(mixins.CreateModelMixin,
 
 class TagViewSet(mixins.ListModelMixin,
                  GenericViewSet):
+    """query parameter 이름으로 태그 검색"""
     queryset = Tag.objects.all()
     serializer_class = TagListSerializer
 
     def get_queryset(self):
         name = self.request.query_params.get('name', None)
-        return self.queryset.filter(name__icontains=name)
+        if not name:
+            raise ParseError('query_params required: name not supplied')
+        return super().get_queryset().filter(name__icontains=name)
+
+
+class TaggedPostViewSet(mixins.ListModelMixin,
+                        GenericViewSet):
+    """태그(name)을 가진 포스트 검색"""
+    queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
+    serializer_class = PostListSerializer
+
+    def get_queryset(self):
+        # name = self.request.query_params.get('name', None)
+        return super().get_queryset()
