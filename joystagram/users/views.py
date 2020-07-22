@@ -8,7 +8,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsUserSelf
 from relationships.models import Follow
-from relationships.serializers import FollowUserListSerializer
+from relationships.serializers import UserListSerializer
 from users.models import User
 from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
 
@@ -39,12 +39,8 @@ class UserViewSet(mixins.CreateModelMixin,
         page = super().paginate_queryset(queryset)
 
         # like_id 주입
-        self.follow_id_dict = {}
         if self.request.user.is_authenticated:
-            if self.action == 'followers':
-                follow_list = Follow.objects.filter(to_user=self.request.user)
-                self.follow_id_dict = {follow.from_user_id: follow.id for follow in follow_list}
-            elif self.action == 'followings':
+            if self.action in ('list', 'followers', 'followings'):
                 follow_list = Follow.objects.filter(from_user=self.request.user)
                 self.follow_id_dict = {follow.to_user_id: follow.id for follow in follow_list}
         return page
@@ -59,8 +55,8 @@ class UserViewSet(mixins.CreateModelMixin,
             return LoginSerializer
         elif self.action == 'update_password':
             return UserPasswordSerializer
-        if self.action == ('followers', 'followings'):
-            return FollowUserListSerializer
+        if self.action == ('list', 'followers', 'followings'):
+            return UserListSerializer
         return super().get_serializer_class()
 
     @action(detail=False, methods=['post'])
@@ -105,8 +101,3 @@ class UserViewSet(mixins.CreateModelMixin,
         user -> followings
         """
         return super().list(request, *args, **kwargs)
-
-    def list(self, request, *args, **kwargs):
-        """기본 list 엔드포인트는 차단"""
-        response = {'message': 'GET method is not offered in this path.'}
-        return Response(response, status=status.HTTP_403_FORBIDDEN)

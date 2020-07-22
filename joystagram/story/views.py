@@ -26,7 +26,6 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     def paginate_queryset(self, queryset):
         page = super().paginate_queryset(queryset)
-        self.story_check_dict = {}
         if self.request.user.is_authenticated:
             # is_watched 주입
             user = self.request.user

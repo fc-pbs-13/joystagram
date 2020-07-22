@@ -132,6 +132,27 @@ class UserRetrieveTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
+class UserListTestCase(APITestCase):
+
+    def setUp(self) -> None:
+        users = baker.make('users.User', _quantity=3)
+        for user in users:
+            baker.make('users.profile', user=user)
+        self.user = users[0]
+
+    def test_should_list_user(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get('/api/users')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        res = response.data['results']
+        for user_res in res:
+            self.assertEqual(user_res['id'], self.user.id)
+            self.assertEqual(res['email'], email)
+            self.assertTrue('introduce' in res)
+            self.assertTrue('img' in res)
+
+
 class UserUpdateTestCase(APITestCase):
 
     def setUp(self) -> None:

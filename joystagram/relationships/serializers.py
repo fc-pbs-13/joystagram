@@ -27,11 +27,11 @@ class FollowSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class FollowUserListSerializer(serializers.ModelSerializer):
-    follow_id = serializers.SerializerMethodField()
+class UserListSerializer(serializers.ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
     introduce = serializers.CharField(default='', source='profile.introduce')
     img = serializers.ImageField(read_only=True, source='profile.img')
+    follow_id = serializers.SerializerMethodField()
 
     class Meta:
         model = User

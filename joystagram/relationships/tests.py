@@ -110,10 +110,9 @@ class FollowListTestCase(APITestCase):
             self.assertEqual(user_res['nickname'], user_obj.profile.nickname)
             self.assertEqual(user_res['introduce'], user_obj.profile.introduce)
 
-            if is_follower:
-                self.assertTrue(Follow.objects.filter(from_user=user_res['id'],
-                                                      to_user_id=self.user).exists())
-            else:
+            if user_res['follow_id']:
                 self.assertTrue(Follow.objects.filter(id=user_res['follow_id'],
                                                       from_user=self.user,
                                                       to_user_id=user_res['id']).exists())
+            if is_follower:
+                self.assertTrue(Follow.objects.filter(from_user=user_res['id'], to_user_id=self.user).exists())

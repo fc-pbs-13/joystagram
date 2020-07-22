@@ -6,7 +6,6 @@ from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 from taggit.models import Tag
-
 from likes.models import PostLike
 from posts.models import Post
 from relationships.models import Follow
@@ -135,7 +134,6 @@ class PostUpdateDeleteTestCase(APITestCase):
 
 class PostListTestCase(APITestCase):
     """내가 팔로우하는 유저들의 게시글 리스트"""
-    url = f'/api/posts'
 
     def setUp(self) -> None:
         users = baker.make('users.User', _quantity=4)
@@ -150,22 +148,18 @@ class PostListTestCase(APITestCase):
         baker.make('relationships.Follow', from_user=users[0], to_user=users[2])
         baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
 
-        self.tag1 = 'django rest framework'
-        tag2 = 'django'
-        tag3 = 'python'
-        tag4 = 'python programming'
-        tag5 = 'java'
-        posts[1].tags.add(self.tag1, tag2)
-        posts[2].tags.add(tag2, tag3)
-        posts[3].tags.add(tag5)
-        posts[4].tags.add(self.tag1, tag2, tag3, tag4)
+        self.tags = ['django rest framework', 'django', 'python', 'python programming', 'java']
+        posts[1].tags.add(self.tags[0], self.tags[1])
+        posts[2].tags.add(self.tags[0])
+        posts[3].tags.add(self.tags[1], self.tags[3])
+        posts[4].tags.add(self.tags[0], self.tags[1], self.tags[2])
         self.user = users[0]
-        self.tag = Tag.objects.get(name=self.tag1)
+        self.tag = Tag.objects.get(name=self.tags[0])
 
     def test_should_list_posts(self):
         """리스트-성공"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(self.url)
+        response = self.client.get('/api/posts')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         res = response.data
@@ -174,7 +168,6 @@ class PostListTestCase(APITestCase):
             Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
             Q(owner=self.user)
         ).order_by('-id')
-
         self.assertEqual(len(res['results']), len(post_list))
 
         for post_res, post_obj in zip(res['results'], post_list):
@@ -195,8 +188,7 @@ class PostListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 
         for post in res:
-            print(post)
-            self.assertTrue(self.tag1 in post['tags'])
+            self.assertTrue(self.tag.name in post['tags'])
 
     def test_search_tag_list(self):
         """태그 검색"""
