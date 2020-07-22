@@ -150,10 +150,17 @@ class PostListTestCase(APITestCase):
         baker.make('relationships.Follow', from_user=users[0], to_user=users[2])
         baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
 
-        posts[1].tags.add('tag11', 'tag22')
-        posts[2].tags.add('tag11', 'tag33')
+        tag1 = 'django rest framework'
+        tag2 = 'django'
+        tag3 = 'python'
+        tag4 = 'python programming'
+        tag5 = 'java'
+        posts[1].tags.add(tag1, tag2)
+        posts[2].tags.add(tag2, tag3)
+        posts[3].tags.add(tag5)
+        posts[4].tags.add(tag1, tag2, tag3, tag4)
         self.user = users[0]
-        self.tag = Tag.objects.get(name='tag11')
+        self.tag = Tag.objects.get(name=tag1)
 
     def test_should_list_posts(self):
         """리스트-성공"""
@@ -181,22 +188,29 @@ class PostListTestCase(APITestCase):
             for photos in post_res.get('_photos'):
                 self.assertTrue(photos.get('img').endswith('jpg'))
 
-    def test_tagged_post_list(self):
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(f'/api/tags/{self.tag.id}/posts')
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        res = response.data['results']
-        for post in res:
-            print(post)
-
-        self.fail()
+    # def test_tagged_post_list(self):
+    #     self.client.force_authenticate(user=self.user)
+    #     response = self.client.get(f'/api/tags/{self.tag.id}/posts')
+    #     res = response.data['results']
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+    #     for post in res:
+    #         # print(post)
+    #         pass
+    #     self.fail()
 
     def test_search_tag_list(self):
+        """태그 검색"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(f'/api/tags?name=1')
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        search_str = 't'
+        response = self.client.get(f'/api/tags?name={search_str}')
         res = response.data['results']
-        for post in res:
-            print(post)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+
+        tag_list = Tag.objects.filter(name__icontains=search_str)
+        self.assertEqual(len(res), len(tag_list))
+        for tag_res, tag_obj in zip(res, tag_list[::-1]):
+            print(tag_res)
+            self.assertEqual(tag_res['id'], tag_obj.id)
+            self.assertEqual(tag_res['name'], tag_obj.name)
 
         self.fail()
