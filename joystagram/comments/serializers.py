@@ -7,15 +7,11 @@ from users.serializers import SimpleProfileSerializer
 
 class CommentSerializer(serializers.ModelSerializer):
     owner = SimpleProfileSerializer(read_only=True)
-    recomments_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = ('id', 'content', 'owner', 'recomments', 'recomments_count')
         read_only_fields = ('owner', 'recomments', 'recomments_count')
-
-    def get_recomments_count(self, obj):
-        return obj.recomments.count()
 
     def validate(self, attrs):
         """post_pk 검증(nested url 일 때만 옴)"""
@@ -28,15 +24,11 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class CommentUpdateSerializer(serializers.ModelSerializer):
     owner = SimpleProfileSerializer(read_only=True)
-    recomments_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = ('id', 'content', 'owner', 'recomments', 'recomments_count')
         read_only_fields = ('owner', 'recomments', 'recomments_count')
-
-    def get_recomments_count(self, obj):
-        return obj.recomments.count()
 
 
 class ReCommentSerializer(serializers.ModelSerializer):
@@ -45,7 +37,7 @@ class ReCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReComment
         fields = ('id', 'content', 'comment_id', 'owner')
-        read_only_fields = ('post_id', 'owner')
+        read_only_fields = ('post_id',  'owner')
 
     def validate(self, attrs):
         """comment_pk 검증(nested url 일 때만 옴)"""

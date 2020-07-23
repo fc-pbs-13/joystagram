@@ -1,5 +1,5 @@
 from rest_framework import mixins
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 from likes.models import PostLike
 from likes.serializers import LikeSerializer, UserLikedPostsSerializer, PostLikedUsersSerializer
@@ -38,11 +38,10 @@ class UserLikeViewSet(mixins.ListModelMixin, GenericViewSet):
     """
     유저가 좋아요한 게시글 리스트
     GET /api/users/{user_id}/likes
-    GET /api/likes
     """
     queryset = PostLike.objects.all()
     serializer_class = UserLikedPostsSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return super().get_queryset().filter(owner_id=self.kwargs['user_pk'])
+        return super().get_queryset().filter(owner_id=self.kwargs.get('user_pk'))

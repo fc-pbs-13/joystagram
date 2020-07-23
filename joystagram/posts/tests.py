@@ -1,44 +1,32 @@
-import io
-from PIL import Image
 from django.db.models import Q
 from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 from taggit.models import Tag
-
+from core.tests import TempFileMixin
 from likes.models import PostLike
 from posts.models import Post
 from relationships.models import Follow
 
+INVALID_ID = -1
 
-class PostCreateTestCase(APITestCase):
+
+class PostCreateTestCase(APITestCase, TempFileMixin):
     """게시글 생성 테스트"""
     url = '/api/posts'
 
-    @staticmethod
-    def generate_photo_file():
-        """업로드 테스트용 사진 파일 생성"""
-        file = io.BytesIO()
-        image = Image.new('RGBA', size=(1, 1), color=(0, 0, 0))
-        image.save(file, 'png')
-        file.name = 'test.png'
-        file.seek(0)
-        return file
-
     def setUp(self) -> None:
-        tags = ['ttt', 'ggg']
+        self.tags = ['ttt', 'ggg']
         self.data = {
             'photos': self.generate_photo_file(),
             'content': 'hello joystagram!',
-            'tags': str(tags).replace("'", '"')
-            # 'tags': '["ttt", "ggg", "ggg"]'
+            'tags': str(self.tags).replace("'", '"')  # '["ttt", "ggg", "ggg"]'
         }
-
         self.multiple_data = {
             'photos': [self.generate_photo_file(), self.generate_photo_file()],
             'content': 'hello joystagram!',
-            'tags': str(tags).replace("'", '"')
+            'tags': str(self.tags).replace("'", '"')
         }
         self.user = baker.make('users.User')
         self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
@@ -69,6 +57,7 @@ class PostCreateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.multiple_data['content'])
         self.assertEqual(len(res['_photos']), len(self.multiple_data['photos']))
+        self.assertEqual(res['tags'], self.tags)
 
     def test_should_denied401(self):
         """생성-인증 필요"""
@@ -135,7 +124,6 @@ class PostUpdateDeleteTestCase(APITestCase):
 
 class PostListTestCase(APITestCase):
     """내가 팔로우하는 유저들의 게시글 리스트"""
-    url = f'/api/posts'
 
     def setUp(self) -> None:
         users = baker.make('users.User', _quantity=4)
@@ -150,22 +138,19 @@ class PostListTestCase(APITestCase):
         baker.make('relationships.Follow', from_user=users[0], to_user=users[2])
         baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
 
-        tag1 = 'django rest framework'
-        tag2 = 'django'
-        tag3 = 'python'
-        tag4 = 'python programming'
-        tag5 = 'java'
-        posts[1].tags.add(tag1, tag2)
-        posts[2].tags.add(tag2, tag3)
-        posts[3].tags.add(tag5)
-        posts[4].tags.add(tag1, tag2, tag3, tag4)
+        self.tags = ['django', 'django rest framework', 'python', 'python programming', 'java']
+        posts[0].tags.add(self.tags[0])
+        posts[1].tags.add(self.tags[0], self.tags[1])
+        posts[2].tags.add(self.tags[0], self.tags[1])
+        posts[3].tags.add(self.tags[1], self.tags[3])
+        posts[4].tags.add(self.tags[0], self.tags[1], self.tags[2])
         self.user = users[0]
-        self.tag = Tag.objects.get(name=tag1)
+        self.tag = Tag.objects.get(name=self.tags[0])
 
     def test_should_list_posts(self):
         """리스트-성공"""
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(self.url)
+        response = self.client.get('/api/posts')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         res = response.data
@@ -173,11 +158,10 @@ class PostListTestCase(APITestCase):
         post_list = Post.objects.filter(
             Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
             Q(owner=self.user)
-        )
-
+        ).order_by('-id')
         self.assertEqual(len(res['results']), len(post_list))
 
-        for post_res, post_obj in zip(res['results'], post_list[::-1]):
+        for post_res, post_obj in zip(res['results'], post_list):
             self.assertEqual(post_res.get('id'), post_obj.id)
             self.assertEqual(post_res.get('content'), post_obj.content)
             self.assertIsNotNone(post_res.get('_photos'))
@@ -188,26 +172,36 @@ class PostListTestCase(APITestCase):
             for photos in post_res.get('_photos'):
                 self.assertTrue(photos.get('img').endswith('jpg'))
 
-    # def test_tagged_post_list(self):
-    #     self.client.force_authenticate(user=self.user)
-    #     response = self.client.get(f'/api/tags/{self.tag.id}/posts')
-    #     res = response.data['results']
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-    #     for post in res:
-    #         # print(post)
-    #         pass
-    #     self.fail()
+    def test_tagged_post_list(self):
+        """태그를 가진 포스트 검색"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(f'/api/tags/{self.tag.id}/posts')
+        res = response.data['results']
+        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+
+        for post in res:
+            self.assertTrue(self.tag.name in post['tags'])
+
+    def test_tagged_post_list_invalid_tag_id(self):
+        """포스트 검색-유효하지 않은 태그id"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(f'/api/tags/{INVALID_ID}/posts')
+        res = response.data['results']
+        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+
+        for post in res:
+            self.assertTrue(self.tag.name in post['tags'])
 
     def test_search_tag_list(self):
-        """태그 검색"""
+        """검색어로 태그 검색"""
         self.client.force_authenticate(user=self.user)
-        search_str = 't'
+        search_str = 'd'
         response = self.client.get(f'/api/tags?name={search_str}')
         res = response.data['results']
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 
-        tag_list = Tag.objects.filter(name__icontains=search_str)
+        tag_list = Tag.objects.filter(name__icontains=search_str).order_by('-id')  # .distinct()
         self.assertEqual(len(res), len(tag_list))
-        for tag_res, tag_obj in zip(res, tag_list[::-1]):
+        for tag_res, tag_obj in zip(res, tag_list):
             self.assertEqual(tag_res['id'], tag_obj.id)
             self.assertEqual(tag_res['name'], tag_obj.name)

@@ -8,7 +8,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsUserSelf
 from relationships.models import Follow
-from relationships.serializers import FollowUserListSerializer
+from relationships.serializers import UserListSerializer
 from users.models import User
 from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
 
@@ -23,8 +23,7 @@ class UserViewSet(mixins.CreateModelMixin,
     serializer_class = UserSerializer
     permission_classes = [IsUserSelf]
 
-    def get_queryset(self):
-        qs = super().get_queryset()
+    def filter_queryset(self, qs):
         if self.action == 'followers':
             qs = qs.filter(
                 id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('from_user_id')
@@ -33,18 +32,18 @@ class UserViewSet(mixins.CreateModelMixin,
             qs = qs.filter(
                 id__in=Follow.objects.filter(from_user_id=self.kwargs['pk']).values('to_user_id')
             ).select_related('profile')
-        return qs
+        if self.action == 'list':
+            tag = self.request.query_params.get('nickname')
+            qs = qs.filter(profile__nickname__icontains=tag).select_related('profile')
+
+        return super().filter_queryset(qs)
 
     def paginate_queryset(self, queryset):
         page = super().paginate_queryset(queryset)
 
         # like_id 주입
-        self.follow_id_dict = {}
         if self.request.user.is_authenticated:
-            if self.action == 'followers':
-                follow_list = Follow.objects.filter(to_user=self.request.user)
-                self.follow_id_dict = {follow.from_user_id: follow.id for follow in follow_list}
-            elif self.action == 'followings':
+            if self.action in ('list', 'followers', 'followings'):
                 follow_list = Follow.objects.filter(from_user=self.request.user)
                 self.follow_id_dict = {follow.to_user_id: follow.id for follow in follow_list}
         return page
@@ -59,8 +58,8 @@ class UserViewSet(mixins.CreateModelMixin,
             return LoginSerializer
         elif self.action == 'update_password':
             return UserPasswordSerializer
-        if self.action == ('followers', 'followings'):
-            return FollowUserListSerializer
+        if self.action == ('list', 'followers', 'followings'):
+            return UserListSerializer
         return super().get_serializer_class()
 
     @action(detail=False, methods=['post'])
@@ -91,7 +90,6 @@ class UserViewSet(mixins.CreateModelMixin,
     @action(detail=True)
     def followers(self, request, *args, **kwargs):
         """
-        TODO nested url ViewSet 으로 분리 /api/users/{user_id}/followers
         유저를 팔로우하는 유저 리스트
         followers -> user
         """
@@ -100,13 +98,7 @@ class UserViewSet(mixins.CreateModelMixin,
     @action(detail=True)
     def followings(self, request, *args, **kwargs):
         """
-        TODO nested url ViewSet 으로 분리 /api/users/{user_id}/followings
         유저가 팔로잉하는 유저 리스트
         user -> followings
         """
         return super().list(request, *args, **kwargs)
-
-    def list(self, request, *args, **kwargs):
-        """기본 list 엔드포인트는 차단"""
-        response = {'message': 'GET method is not offered in this path.'}
-        return Response(response, status=status.HTTP_403_FORBIDDEN)

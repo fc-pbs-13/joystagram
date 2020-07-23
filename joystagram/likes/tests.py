@@ -85,11 +85,11 @@ class PostLikedUsersListTestCase(APITestCase):
         response = self.client.get(url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-        like_list = PostLike.objects.filter(post=self.post)
+        like_list = PostLike.objects.filter(post=self.post).order_by('-id')
 
         self.assertEqual(len(res['results']), len(like_list))
 
-        for like_res, like_obj in zip(res['results'], like_list[::-1]):
+        for like_res, like_obj in zip(res['results'], like_list):
             self.assertEqual(like_res['id'], like_obj.id)
             self.assertEqual(like_res['id'], like_obj.id)
 
@@ -105,10 +105,10 @@ class PostLikedUsersListTestCase(APITestCase):
         response = self.client.get(url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-        like_list = PostLike.objects.filter(owner=self.user)
+        like_list = PostLike.objects.filter(owner=self.user).order_by('-id')
         self.assertEqual(len(res['results']), len(like_list))
 
-        for like_res, like_obj in zip(res['results'], like_list[::-1]):
+        for like_res, like_obj in zip(res['results'], like_list):
             self.assertEqual(like_res['id'], like_obj.id)
 
             post = like_res['post']

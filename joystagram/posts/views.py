@@ -1,11 +1,8 @@
 from django.db.models import Q
-from django_filters import rest_framework as filters
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins
-from rest_framework.generics import GenericAPIView
+from rest_framework.exceptions import ParseError
 from rest_framework.viewsets import GenericViewSet
 from taggit.models import Tag
-
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from likes.models import PostLike
 from posts.models import Post
@@ -50,19 +47,28 @@ class PostViewSet(mixins.CreateModelMixin,
         page = super().paginate_queryset(queryset)
 
         # like_id 주입
-        self.like_id_dict = {}
         if self.request.user.is_authenticated:
-            like_list = PostLike.objects.filter(owner=self.request.user, post__in=page)
-            self.like_id_dict = {like.post_id: like.id for like in like_list}
+            like_qs = PostLike.objects.filter(owner=self.request.user, post__in=page)
+            self.like_id_dict = {like.post_id: like.id for like in like_qs}
         return page
 
 
-class TagViewSet(mixins.ListModelMixin,
-                 GenericViewSet):
+class TagViewSet(mixins.ListModelMixin, GenericViewSet):
+    """query parameter 검색어로 태그 검색"""
     queryset = Tag.objects.all()
     serializer_class = TagListSerializer
 
     def get_queryset(self):
-        name = self.request.query_params.get('name', None)
-        # return super().get_queryset().filter(name__)
-        return self.queryset.filter(name__icontains=name)
+        name = self.request.query_params.get('name')
+        if not name:
+            raise ParseError('query parameter required: name not supplied')
+        return super().get_queryset().filter(name__icontains=name)
+
+
+class TaggedPostViewSet(mixins.ListModelMixin, GenericViewSet):
+    """태그id를 가진 포스트 검색"""
+    queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
+    serializer_class = PostListSerializer
+
+    def get_queryset(self):
+        return Post.objects.filter(tags=self.kwargs.get('tag_pk')).distinct()
