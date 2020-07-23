@@ -71,48 +71,47 @@ class FollowListTestCase(APITestCase):
         baker.make('relationships.Follow', from_user=users[3], to_user=self.user)
 
         baker.make('relationships.Follow', from_user=users[1], to_user=users[2])
+        self.client.force_authenticate(user=self.user)
 
     def test_should_list_follower(self):
         """유저를 팔로잉하는 유저 리스트"""
-        # TODO View 분리 필요
-        self.client.force_authenticate(user=self.user)
         response = self.client.get(f'/api/users/{self.user.id}/followers')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-        self.follow_test(res, True)
+
+        user_list = User.objects.filter(
+            id__in=Follow.objects.filter(to_user_id=self.user).values('from_user_id')
+        ).select_related('profile').order_by('-id')
+        self.assertEqual(len(user_list), len(Follow.objects.filter(to_user_id=self.user)))
+
+        self.assertEqual(len(res['results']), user_list.count())
+        for user_res, user_obj in zip(res['results'], user_list):
+            self.follow_test(user_res, user_obj, True)
 
     def test_should_list_following(self):
         """유저가 팔로우한 유저 리스트"""
-        # TODO View 분리 필요
-        self.client.force_authenticate(user=self.user)
         response = self.client.get(f'/api/users/{self.user.id}/followings')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-        self.follow_test(res, False)
 
-    def follow_test(self, res, is_follower):
-        if is_follower:
-            user_list = User.objects.filter(
-                id__in=Follow.objects.filter(to_user_id=self.user).values('from_user_id')
-            ).select_related('profile').order_by('-id')
-            self.assertEqual(len(user_list), len(Follow.objects.filter(to_user_id=self.user)))
-        else:
-            user_list = User.objects.filter(
-                id__in=Follow.objects.filter(from_user_id=self.user).values('to_user_id')
-            ).select_related('profile').order_by('-id')
-            self.assertEqual(len(user_list), len(Follow.objects.filter(from_user_id=self.user)))
+        user_list = User.objects.filter(
+            id__in=Follow.objects.filter(from_user_id=self.user).values('to_user_id')
+        ).select_related('profile').order_by('-id')
+        self.assertEqual(len(user_list), len(Follow.objects.filter(from_user_id=self.user)))
 
         self.assertEqual(len(res['results']), user_list.count())
-
         for user_res, user_obj in zip(res['results'], user_list):
-            self.assertEqual(user_res['id'], user_obj.id)
-            self.assertTrue('img' in user_res)
-            self.assertEqual(user_res['nickname'], user_obj.profile.nickname)
-            self.assertEqual(user_res['introduce'], user_obj.profile.introduce)
+            self.follow_test(user_res, user_obj, False)
 
-            if user_res['follow_id']:
-                self.assertTrue(Follow.objects.filter(id=user_res['follow_id'],
-                                                      from_user=self.user,
-                                                      to_user_id=user_res['id']).exists())
-            if is_follower:
-                self.assertTrue(Follow.objects.filter(from_user=user_res['id'], to_user_id=self.user).exists())
+    def follow_test(self, user_res, user_obj, is_follower):
+        self.assertEqual(user_res['id'], user_obj.id)
+        self.assertTrue('img' in user_res)
+        self.assertEqual(user_res['nickname'], user_obj.profile.nickname)
+        self.assertEqual(user_res['introduce'], user_obj.profile.introduce)
+
+        if user_res['follow_id']:
+            self.assertTrue(Follow.objects.filter(id=user_res['follow_id'],
+                                                  from_user=self.user,
+                                                  to_user_id=user_res['id']).exists())
+        if is_follower:
+            self.assertTrue(Follow.objects.filter(from_user=user_res['id'], to_user_id=self.user).exists())

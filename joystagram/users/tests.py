@@ -135,22 +135,21 @@ class UserRetrieveTestCase(APITestCase):
 class UserListTestCase(APITestCase):
 
     def setUp(self) -> None:
-        users = baker.make('users.User', _quantity=3)
-        for user in users:
-            baker.make('users.profile', user=user)
+        users = baker.make('users.User', _quantity=5)
+        for i in range(len(users)):
+            baker.make('users.profile', user=users[0], nickname=f'user{i}')
         self.user = users[0]
 
     def test_should_list_user(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/api/users')
+        search_nick = '1'
+        response = self.client.get(f'/api/users?nickname={search_nick}')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        res = response.data['results']
-        for user_res in res:
-            self.assertEqual(user_res['id'], self.user.id)
-            self.assertEqual(res['email'], email)
-            self.assertTrue('introduce' in res)
-            self.assertTrue('img' in res)
+        for user_res in response.data['results']:
+            self.assertTrue('img' in user_res)
+            nick = user_res['nickname']
+            self.assertTrue(search_nick in nick or search_nick.capitalize() in nick)
 
 
 class UserUpdateTestCase(APITestCase):

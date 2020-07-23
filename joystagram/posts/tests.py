@@ -30,8 +30,7 @@ class PostCreateTestCase(APITestCase):
         self.data = {
             'photos': self.generate_photo_file(),
             'content': 'hello joystagram!',
-            'tags': str(tags).replace("'", '"')
-            # 'tags': '["ttt", "ggg", "ggg"]'
+            'tags': str(tags).replace("'", '"')  # '["ttt", "ggg", "ggg"]'
         }
 
         self.multiple_data = {
@@ -148,9 +147,10 @@ class PostListTestCase(APITestCase):
         baker.make('relationships.Follow', from_user=users[0], to_user=users[2])
         baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
 
-        self.tags = ['django rest framework', 'django', 'python', 'python programming', 'java']
+        self.tags = ['django', 'django rest framework', 'python', 'python programming', 'java']
+        posts[0].tags.add(self.tags[0])
         posts[1].tags.add(self.tags[0], self.tags[1])
-        posts[2].tags.add(self.tags[0])
+        posts[2].tags.add(self.tags[0], self.tags[1])
         posts[3].tags.add(self.tags[1], self.tags[3])
         posts[4].tags.add(self.tags[0], self.tags[1], self.tags[2])
         self.user = users[0]
@@ -182,6 +182,7 @@ class PostListTestCase(APITestCase):
                 self.assertTrue(photos.get('img').endswith('jpg'))
 
     def test_tagged_post_list(self):
+        """태그를 가진 포스트 검색"""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(f'/api/tags/{self.tag.id}/posts')
         res = response.data['results']
@@ -191,14 +192,14 @@ class PostListTestCase(APITestCase):
             self.assertTrue(self.tag.name in post['tags'])
 
     def test_search_tag_list(self):
-        """태그 검색"""
+        """검색어로 태그 검색"""
         self.client.force_authenticate(user=self.user)
-        search_str = 't'
+        search_str = 'd'
         response = self.client.get(f'/api/tags?name={search_str}')
         res = response.data['results']
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 
-        tag_list = Tag.objects.filter(name__icontains=search_str).order_by('-id')
+        tag_list = Tag.objects.filter(name__icontains=search_str).order_by('-id')  # .distinct()
         self.assertEqual(len(res), len(tag_list))
         for tag_res, tag_obj in zip(res, tag_list):
             self.assertEqual(tag_res['id'], tag_obj.id)

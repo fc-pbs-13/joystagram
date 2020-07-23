@@ -23,8 +23,7 @@ class UserViewSet(mixins.CreateModelMixin,
     serializer_class = UserSerializer
     permission_classes = [IsUserSelf]
 
-    def get_queryset(self):
-        qs = super().get_queryset()
+    def filter_queryset(self, qs):
         if self.action == 'followers':
             qs = qs.filter(
                 id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('from_user_id')
@@ -33,7 +32,11 @@ class UserViewSet(mixins.CreateModelMixin,
             qs = qs.filter(
                 id__in=Follow.objects.filter(from_user_id=self.kwargs['pk']).values('to_user_id')
             ).select_related('profile')
-        return qs
+        if self.action == 'list':
+            tag = self.request.query_params.get('nickname')
+            qs = qs.filter(profile__nickname__icontains=tag).select_related('profile')
+
+        return super().filter_queryset(qs)
 
     def paginate_queryset(self, queryset):
         page = super().paginate_queryset(queryset)

@@ -73,4 +73,4 @@ class TaggedPostViewSet(mixins.ListModelMixin,
     serializer_class = PostListSerializer
 
     def get_queryset(self):
-        return Post.objects.filter(tags=self.kwargs.get('tag_pk'))
+        return Post.objects.filter(tags=self.kwargs.get('tag_pk')).distinct()
