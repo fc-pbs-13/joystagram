@@ -90,7 +90,6 @@ class UserViewSet(mixins.CreateModelMixin,
     @action(detail=True)
     def followers(self, request, *args, **kwargs):
         """
-        TODO nested url ViewSet 으로 분리 /api/users/{user_id}/followers
         유저를 팔로우하는 유저 리스트
         followers -> user
         """
@@ -99,7 +98,6 @@ class UserViewSet(mixins.CreateModelMixin,
     @action(detail=True)
     def followings(self, request, *args, **kwargs):
         """
-        TODO nested url ViewSet 으로 분리 /api/users/{user_id}/followings
         유저가 팔로잉하는 유저 리스트
         user -> followings
         """
