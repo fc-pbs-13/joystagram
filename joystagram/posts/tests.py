@@ -10,6 +10,8 @@ from likes.models import PostLike
 from posts.models import Post
 from relationships.models import Follow
 
+INVALID_ID = -1
+
 
 class PostCreateTestCase(APITestCase):
     """게시글 생성 테스트"""
@@ -185,6 +187,16 @@ class PostListTestCase(APITestCase):
         """태그를 가진 포스트 검색"""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(f'/api/tags/{self.tag.id}/posts')
+        res = response.data['results']
+        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+
+        for post in res:
+            self.assertTrue(self.tag.name in post['tags'])
+
+    def test_tagged_post_list_invalid_tag_id(self):
+        """포스트 검색-유효하지 않은 태그id"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(f'/api/tags/{INVALID_ID}/posts')
         res = response.data['results']
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 

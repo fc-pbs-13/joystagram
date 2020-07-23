@@ -42,6 +42,19 @@ class StoryTestCase(APITestCase):
         }
         self.yesterday = timezone.now() - timedelta(days=1)
 
+    def list_setUp(self):
+        self.valid_story_count = 2
+        valid_created = timezone.now() - timedelta(hours=23, minutes=59)
+        invalid_created1 = timezone.now() - timedelta(days=1, seconds=1)
+        invalid_created2 = timezone.now() + timedelta(seconds=1)
+        # valid 2 stories
+        self.story = baker.make('story.Story', owner=self.owner, created=valid_created)
+        baker.make('story.Story', owner=self.user, created=valid_created)
+        # invalid 4 stories
+        baker.make('story.Story', owner=self.owner, created=invalid_created1)
+        baker.make('story.Story', owner=self.owner, created=invalid_created2)
+        baker.make('story.Story', owner=self.users[2], _quantity=2, created=valid_created)
+
     def test_should_create(self):
         """생성-성공"""
         self.client.force_authenticate(user=self.user)
@@ -52,26 +65,6 @@ class StoryTestCase(APITestCase):
         """생성-인증 필요"""
         response = self.client.post(self.url, data=self.data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
-
-    def test_should_update(self):
-        """수정"""
-        story = baker.make('story.Story', owner=self.user)
-        data = {
-            'content': 'updated_content'
-        }
-        self.client.force_authenticate(user=self.user)
-        response = self.client.patch(f'{self.url}/{story.id}', data=data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['content'], data['content'])
-        self.assertEqual(Story.objects.get(id=story.id).content, data['content'])
-
-    def test_should_destroy(self):
-        """삭제"""
-        story = baker.make('story.Story', owner=self.user)
-        self.client.force_authenticate(user=self.user)
-        response = self.client.delete(f'{self.url}/{story.id}')
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
-        self.assertFalse(Story.objects.filter(id=story.id).exists())
 
     def test_should_retrieve(self):
         """스토리 조회"""
@@ -95,16 +88,7 @@ class StoryTestCase(APITestCase):
         스토리 리스트
         내가 팔로우하는 유저의 스토리 중 등록 후 24시간이 지나지 않은 것만
         """
-        valid_story_count = 2
-        valid_created = timezone.now() - timedelta(hours=23, minutes=59)
-        invalid_created = timezone.now() - timedelta(days=1, seconds=1)
-        # valid 2 stories
-        baker.make('story.Story', owner=self.owner, created=valid_created)
-        baker.make('story.Story', owner=self.user, created=valid_created)
-        # invalid 3 stories
-        baker.make('story.Story', owner=self.owner, created=invalid_created)
-        baker.make('story.Story', owner=self.users[2], _quantity=2, created=valid_created)
-
+        self.list_setUp()  # setUp
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         res = response.data
@@ -116,7 +100,7 @@ class StoryTestCase(APITestCase):
         ).filter(created__gte=timezone.now() - timedelta(days=1),
                  created__lte=timezone.now()).order_by('-id')
 
-        self.assertEqual(len(res['results']), valid_story_count)
+        self.assertEqual(len(res['results']), self.valid_story_count)
         self.assertEqual(len(res['results']), len(story_list))
 
         for story_res, story_obj in zip(res['results'], story_list):
@@ -128,6 +112,25 @@ class StoryTestCase(APITestCase):
                 Follow.objects.filter(from_user=self.user, to_user_id=owner['id']).exists()
                 or self.user.id == owner['id']
             )
+            # watched 검사
+            self.assertFalse(story_res['watched'])
+
+    def test_should_list_watched(self):
+        """내가 본 스토리인지 체크"""
+        self.list_setUp()  # setUp
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(f'{self.url}/{self.story.id}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        response = self.client.get(self.url)
+        res = response.data
+        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+
+        for story_res in res['results']:
+            watched = story_res['watched']
+            if story_res['id'] == self.story.id:
+                self.assertTrue(watched)
+            else:
+                self.assertFalse(watched)
 
     def story_test(self, story_res, story_obj):
         """스토리 필드 검사"""
@@ -141,3 +144,23 @@ class StoryTestCase(APITestCase):
         # 등록시간 24시간 검사
         created_res = pytz.utc.localize(datetime.strptime(story_res['created'], '%Y-%m-%dT%H:%M:%S.%fZ'))
         self.assertTrue(self.yesterday < created_res < timezone.now())
+
+    def test_should_update(self):
+        """수정"""
+        story = baker.make('story.Story', owner=self.user)
+        data = {
+            'content': 'updated_content'
+        }
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(f'{self.url}/{story.id}', data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['content'], data['content'])
+        self.assertEqual(Story.objects.get(id=story.id).content, data['content'])
+
+    def test_should_destroy(self):
+        """삭제"""
+        story = baker.make('story.Story', owner=self.user)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(f'{self.url}/{story.id}')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertFalse(Story.objects.filter(id=story.id).exists())

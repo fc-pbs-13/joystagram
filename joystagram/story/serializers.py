@@ -16,14 +16,14 @@ class StorySerializer(serializers.ModelSerializer):
 
 class StoryListSerializer(serializers.ModelSerializer):
     _duration = serializers.IntegerField(source='duration.seconds')
-    is_watched = serializers.SerializerMethodField()
+    watched = serializers.SerializerMethodField()
     owner = SimpleProfileSerializer()
 
     class Meta:
         model = Story
-        fields = ('id', 'content', 'img', '_duration', 'is_watched', 'owner', 'created')
+        fields = ('id', 'content', 'img', '_duration', 'watched', 'owner', 'created')
 
-    def get_is_watched(self, obj):
-        """id 가 있으면 True"""
+    def get_watched(self, obj):
+        """이미 본 스토리인지: id 가 있으면 True"""
         story_check_dict = getattr(self.context['view'], 'story_check_dict', {})
         return story_check_dict.get(obj.id) is not None

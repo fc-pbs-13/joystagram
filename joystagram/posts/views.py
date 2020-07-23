@@ -53,9 +53,8 @@ class PostViewSet(mixins.CreateModelMixin,
         return page
 
 
-class TagViewSet(mixins.ListModelMixin,
-                 GenericViewSet):
-    """query parameter 이름으로 태그 검색"""
+class TagViewSet(mixins.ListModelMixin, GenericViewSet):
+    """query parameter 검색어로 태그 검색"""
     queryset = Tag.objects.all()
     serializer_class = TagListSerializer
 
@@ -66,9 +65,8 @@ class TagViewSet(mixins.ListModelMixin,
         return super().get_queryset().filter(name__icontains=name)
 
 
-class TaggedPostViewSet(mixins.ListModelMixin,
-                        GenericViewSet):
-    """태그(name)을 가진 포스트 검색"""
+class TaggedPostViewSet(mixins.ListModelMixin, GenericViewSet):
+    """태그id를 가진 포스트 검색"""
     queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
     serializer_class = PostListSerializer
 
