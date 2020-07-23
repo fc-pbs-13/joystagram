@@ -3,7 +3,7 @@ from rest_framework_nested import routers
 from comments.views import CommentViewSet, ReCommentViewSet, CommentCreateListViewSet, ReCommentCreateListViewSet
 from likes.views import PostLikeViewSet, UserLikeViewSet
 from posts.views import PostViewSet, TagViewSet, TaggedPostViewSet
-from relationships.views import FollowViewSet
+from relationships.views import FollowViewSet, FollowNestedViewSet
 from story.views import StoryViewSet
 from users.views import UserViewSet
 
@@ -24,7 +24,7 @@ comments_nested_router = routers.NestedSimpleRouter(router, r'comments', trailin
 comments_nested_router.register(r'recomments', ReCommentCreateListViewSet)
 
 users_nested_router = routers.NestedSimpleRouter(router, r'users', trailing_slash=False, lookup='user')
-users_nested_router.register(r'follows', FollowViewSet)
+users_nested_router.register(r'follows', FollowNestedViewSet)
 users_nested_router.register(r'likes', UserLikeViewSet)
 
 tags_nested_router = routers.NestedSimpleRouter(router, r'tags', trailing_slash=False, lookup='tag')

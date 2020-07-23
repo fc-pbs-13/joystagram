@@ -102,6 +102,7 @@ class PostLikedUsersListTestCase(APITestCase):
     def test_user_liked_post_list(self):
         """유저가 좋아요한 게시글 리스트"""
         url = f'/api/users/{self.user.id}/likes'
+        self.client.force_authenticate(user=self.user)
         response = self.client.get(url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
