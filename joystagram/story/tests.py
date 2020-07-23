@@ -72,8 +72,11 @@ class StoryTestCase(APITestCase, TempFileMixin):
 
         # 다시 조회: StoryCheck 갯수 하나인지 체크
         response = self.client.get(f'{self.url}/{story.id}')
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(StoryCheck.objects.filter(user=self.user, story_id=response.data['id']).count(), 1)
+        res = response.data
+        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
+        self.assertEqual(StoryCheck.objects.filter(user=self.user, story_id=res['id']).count(), 1)
+        self.assertEqual(StoryCheck.objects.filter(user_id=res['read_users'][0]['id']).count(), 1)
+        self.fail()
 
     def test_should_list(self):
         """
