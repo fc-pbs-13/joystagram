@@ -64,7 +64,6 @@ class LikedPostSerializer(serializers.ModelSerializer):
 
 
 class TagListSerializer(serializers.ModelSerializer):
-    # TODO 태그를 가진 Post 갯수?
     class Meta:
         model = Tag
         fields = ('id', 'name')
