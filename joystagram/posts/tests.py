@@ -1,11 +1,10 @@
-import io
-from PIL import Image
 from django.db.models import Q
 from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 from taggit.models import Tag
+from core.tests import TempFileMixin
 from likes.models import PostLike
 from posts.models import Post
 from relationships.models import Follow
@@ -13,32 +12,21 @@ from relationships.models import Follow
 INVALID_ID = -1
 
 
-class PostCreateTestCase(APITestCase):
+class PostCreateTestCase(APITestCase, TempFileMixin):
     """게시글 생성 테스트"""
     url = '/api/posts'
 
-    @staticmethod
-    def generate_photo_file():
-        """업로드 테스트용 사진 파일 생성"""
-        file = io.BytesIO()
-        image = Image.new('RGBA', size=(1, 1), color=(0, 0, 0))
-        image.save(file, 'png')
-        file.name = 'test.png'
-        file.seek(0)
-        return file
-
     def setUp(self) -> None:
-        tags = ['ttt', 'ggg']
+        self.tags = ['ttt', 'ggg']
         self.data = {
             'photos': self.generate_photo_file(),
             'content': 'hello joystagram!',
-            'tags': str(tags).replace("'", '"')  # '["ttt", "ggg", "ggg"]'
+            'tags': str(self.tags).replace("'", '"')  # '["ttt", "ggg", "ggg"]'
         }
-
         self.multiple_data = {
             'photos': [self.generate_photo_file(), self.generate_photo_file()],
             'content': 'hello joystagram!',
-            'tags': str(tags).replace("'", '"')
+            'tags': str(self.tags).replace("'", '"')
         }
         self.user = baker.make('users.User')
         self.profile = baker.make('users.Profile', user=self.user, nickname='test_user')
@@ -69,6 +57,7 @@ class PostCreateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, res)
         self.assertEqual(res['content'], self.multiple_data['content'])
         self.assertEqual(len(res['_photos']), len(self.multiple_data['photos']))
+        self.assertEqual(res['tags'], self.tags)
 
     def test_should_denied401(self):
         """생성-인증 필요"""

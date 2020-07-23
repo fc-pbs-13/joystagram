@@ -5,6 +5,7 @@ from users.serializers import SimpleProfileSerializer
 
 class StorySerializer(serializers.ModelSerializer):
     _duration = serializers.IntegerField(read_only=True, source='duration.seconds')
+    # read_users = serializers.ListField(read_only=True, child=SimpleProfileSerializer, source='')  # TODO 스토리를 본 유저들
 
     class Meta:
         model = Story

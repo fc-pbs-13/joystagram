@@ -8,22 +8,14 @@ from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 from PIL import Image
+
+from core.tests import TempFileMixin
 from relationships.models import Follow
 from story.models import StoryCheck, Story
 
 
-class StoryTestCase(APITestCase):
+class StoryTestCase(APITestCase, TempFileMixin):
     """스토리 생성, 삭제 테스트"""
-
-    @staticmethod
-    def generate_photo_file():
-        """업로드 테스트용 사진 파일 생성"""
-        file = io.BytesIO()
-        image = Image.new('RGBA', size=(1, 1), color=(0, 0, 0))
-        image.save(file, 'png')
-        file.name = 'test.png'
-        file.seek(0)
-        return file
 
     def setUp(self) -> None:
         self.users = baker.make('users.User', _quantity=3)
@@ -67,7 +59,7 @@ class StoryTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
     def test_should_retrieve(self):
-        """스토리 조회"""
+        """스토리 조회 TODO 내 스토리를 읽은 유저 리스트(nested)"""
         story = baker.make('story.Story', owner=self.owner, duration=timedelta(seconds=self.duration_sec))
         self.client.force_authenticate(user=self.user)
 
