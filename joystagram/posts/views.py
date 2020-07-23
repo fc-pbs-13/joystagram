@@ -48,8 +48,8 @@ class PostViewSet(mixins.CreateModelMixin,
 
         # like_id 주입
         if self.request.user.is_authenticated:
-            like_list = PostLike.objects.filter(owner=self.request.user, post__in=page)
-            self.like_id_dict = {like.post_id: like.id for like in like_list}
+            like_qs = PostLike.objects.filter(owner=self.request.user, post__in=page)
+            self.like_id_dict = {like.post_id: like.id for like in like_qs}
         return page
 
 

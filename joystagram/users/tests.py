@@ -137,7 +137,7 @@ class UserListTestCase(APITestCase):
     def setUp(self) -> None:
         users = baker.make('users.User', _quantity=5)
         for i in range(len(users)):
-            baker.make('users.profile', user=users[0], nickname=f'user{i}')
+            baker.make('users.profile', user=users[i], nickname=f'user{i}')
         self.user = users[0]
 
     def test_should_list_user(self):

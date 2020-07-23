@@ -15,9 +15,12 @@ class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.story_check_dict = {}
+    def retrieve(self, request, *args, **kwargs):
+        """스토리 조회 성공 시 StoryCheck get_or_create"""
+        response = super().retrieve(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            StoryCheck.objects.get_or_create(user=request.user, story_id=response.data.get('id'))
+        return response
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -25,12 +28,11 @@ class StoryViewSet(viewsets.ModelViewSet):
         return super().get_serializer_class()
 
     def paginate_queryset(self, queryset):
+        # is_watched 주입
         page = super().paginate_queryset(queryset)
         if self.request.user.is_authenticated:
-            # is_watched 주입
-            user = self.request.user
-            story_check_list = StoryCheck.objects.filter(user=user, story__in=page)
-            self.story_check_dict = {story_check.story_id: story_check.id for story_check in story_check_list}
+            story_check_qs = StoryCheck.objects.filter(user=self.request.user, story__in=page)
+            self.story_check_dict = {story_check.story_id: story_check.id for story_check in story_check_qs}
         return page
 
     def filter_queryset(self, queryset):
@@ -50,10 +52,3 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
-
-    def retrieve(self, request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
-        # 스토리 조회 성공 시 StoryCheck get_or_create
-        if response.status_code == status.HTTP_200_OK:
-            StoryCheck.objects.get_or_create(user=request.user, story_id=response.data.get('id'))
-        return response
