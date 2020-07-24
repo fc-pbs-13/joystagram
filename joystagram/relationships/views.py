@@ -5,15 +5,21 @@ from relationships.models import Follow
 from relationships.serializers import FollowSerializer
 
 
-class FollowViewSet(mixins.CreateModelMixin,
-                    mixins.DestroyModelMixin,
-                    mixins.ListModelMixin,
-                    GenericViewSet):
+class FollowViewSet(mixins.DestroyModelMixin, GenericViewSet):
+    """
+    팔로우 삭제
+    DELETE /api/follows/{follows_id}
+    """
+    queryset = Follow.objects.all()
+    serializer_class = FollowSerializer
+    permission_classes = [IsFromUserOrReadOnly]
+
+
+class FollowNestedViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
     """
     팔로우
-    생성, 삭제
+    생성, 리스트
     POST, GET /api/users/{user_id}/follows
-    DELETE /api/users/{user_id}/follows/{follows_id}
     """
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer

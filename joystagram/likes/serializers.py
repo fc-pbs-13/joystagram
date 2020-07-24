@@ -21,8 +21,7 @@ class LikeSerializer(serializers.ModelSerializer):
 
         # UniqueTogether 검증
         if PostLike.objects.filter(owner=self.context['request'].user, post=post_pk).exists():
-            raise serializers.ValidationError('The fields `user`, `post` must make a unique set.',
-                                              code='unique')
+            raise serializers.ValidationError('The fields `user`, `post` must make a unique set.', code='unique')
         return attrs
 
 

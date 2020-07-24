@@ -76,7 +76,6 @@ class StoryTestCase(APITestCase, TempFileMixin):
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.assertEqual(StoryCheck.objects.filter(user=self.user, story_id=res['id']).count(), 1)
         self.assertEqual(StoryCheck.objects.filter(user_id=res['read_users'][0]['id']).count(), 1)
-        self.fail()
 
     def test_should_list(self):
         """

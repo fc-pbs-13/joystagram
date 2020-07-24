@@ -1,3 +1,8 @@
 from django.contrib import admin
+from likes.models import PostLike
 
-# Register your models here.
+
+@admin.register(PostLike)
+class LikeAdmin(admin.ModelAdmin):
+    list_display = ['owner', 'post']
+    # fields = ['']
