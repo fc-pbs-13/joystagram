@@ -1,3 +1,4 @@
+from django.urls import path, include
 from rest_framework_nested import routers
 
 from comments.views import CommentViewSet, ReCommentViewSet, CommentCreateListViewSet, ReCommentCreateListViewSet
@@ -32,3 +33,5 @@ tags_nested_router.register(r'posts', TaggedPostViewSet)
 
 urlpatterns = router.urls + posts_nested_router.urls + comments_nested_router.urls + \
               users_nested_router.urls + tags_nested_router.urls
+
+urlpatterns += [path('api-auth/', include('rest_framework.urls'))]

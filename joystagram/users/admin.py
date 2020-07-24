@@ -24,6 +24,15 @@ class UserAdmin(DjangoUserAdmin):
             'fields': ('email', 'password1', 'password2'),
         }),
     )
-    list_display = ('email', 'first_name', 'last_name', 'is_staff')
-    search_fields = ('email', 'first_name', 'last_name')
+    list_display = ('email', 'posts_count', 'comments_count', 'recomments_count')
+    search_fields = ('email',)
     ordering = ('email',)
+
+    def posts_count(self, user):
+        return user.posts.count()
+
+    def comments_count(self, user):
+        return user.comments.count()
+
+    def recomments_count(self, user):
+        return user.recomments.count()

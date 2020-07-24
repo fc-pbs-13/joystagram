@@ -10,6 +10,7 @@ class Post(TimeStampedModel):
     likes_count = models.PositiveIntegerField(default=0)
     comments_count = models.PositiveIntegerField(default=0)
     tags = TaggableManager(blank=True)
+    reported = models.BooleanField(default=False)
 
 
 def post_img_path(instance, filename):

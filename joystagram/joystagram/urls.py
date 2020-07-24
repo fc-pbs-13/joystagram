@@ -16,6 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth.models import Group
 from django.urls import path, include
 
 urlpatterns = [
@@ -31,3 +32,4 @@ if settings.DEBUG:
 admin.site.site_header = "Joystagram Admin"
 admin.site.site_title = "Joystagram Admin Portal"
 admin.site.index_title = "Welcome to Joystagram Admin"
+admin.site.unregister(Group)
