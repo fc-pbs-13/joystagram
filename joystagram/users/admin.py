@@ -31,7 +31,7 @@ class UserAdmin(DjangoUserAdmin):
     list_display = (
         'email', 'nickname', 'posts_count', 'comments_count', 'recomments_count', 'followers_count',
         'followings_count')
-    search_fields = ('email', 'nickname')
+    search_fields = ('email', 'profile__nickname')
     ordering = ('email',)
     inlines = [ProfileInline]
 
