@@ -30,11 +30,15 @@ class UserSerializer(ModelSerializer):
     introduce = serializers.CharField(default='', source='profile.introduce')
     img = serializers.ImageField(read_only=True, source='profile.img')
     follow_id = serializers.SerializerMethodField(read_only=True)
+    posts_count = serializers.IntegerField(read_only=True, source='posts.count')
+    followers_count = serializers.IntegerField(read_only=True, source='followers.count')
+    followings_count = serializers.IntegerField(read_only=True, source='followings.count')
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'nickname', 'introduce', 'img', 'follow_id')
-        read_only_fields = ('id',)
+        fields = (
+            'id', 'email', 'password', 'nickname', 'introduce', 'img', 'follow_id', 'posts_count', 'followers_count',
+            'followings_count')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
