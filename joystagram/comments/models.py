@@ -13,8 +13,8 @@ class Comment(TimeStampedModel):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         """Post의 댓글 갯수 + 1"""
-        Post.objects.filter(id=self.post.id).update(comments_count=F('comments_count') + 1)
         super().save(force_insert, force_update, using, update_fields)
+        Post.objects.filter(id=self.post.id).update(comments_count=F('comments_count') + 1)
 
     def delete(self, using=None, keep_parents=False):
         """Post의 댓글 갯수 - 1"""
@@ -30,9 +30,9 @@ class ReComment(TimeStampedModel):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         """Post, Comment 의 댓글 갯수 + 1"""
+        super().save(force_insert, force_update, using, update_fields)
         Post.objects.filter(id=self.comment.post.id).update(comments_count=F('comments_count') + 1)
         Comment.objects.filter(id=self.comment.id).update(recomments_count=F('recomments_count') + 1)
-        super().save(force_insert, force_update, using, update_fields)
 
     def delete(self, using=None, keep_parents=False):
         """Post, Comment 의 댓글 갯수 - 1"""

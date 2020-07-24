@@ -16,7 +16,7 @@ class Post(TimeStampedModel):
 
 
 def post_img_path(instance, filename):
-    return f'post_img/{instance.post.owner.id}/{filename}'
+    return f'post_img/{instance.post.owner_id}/{filename}'
 
 
 class Photo(models.Model):

@@ -3,7 +3,7 @@ from model_utils.models import TimeStampedModel
 
 
 def story_img_path(instance, filename):
-    return f'story_img/{instance.owner.id}/{filename}'
+    return f'story_img/{instance.owner_id}/{filename}'
 
 
 class Story(TimeStampedModel):
