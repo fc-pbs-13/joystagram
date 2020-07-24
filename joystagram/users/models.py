@@ -51,28 +51,9 @@ class User(AbstractUser):
         self.set_password(self.password)
         super().save(*args, **kwargs)
 
-    # @property
-    # def followings(self):
-    #     # 내가 팔로우를 건 유저
-    #     user_qs = User.objects.filter(
-    #         # to_users_relation__from_user=self,
-    #         to_users_relation__from_user=self,
-    #         # to_users_relation__related_type='f'
-    #     )
-    #     return user_qs
-    #
-    # @property
-    # def followers(self):
-    #     # 나를 팔로우를 건 유저
-    #     user_qs = User.objects.filter(
-    #         from_users_relation__to_user=self,
-    #         from_users_relation__related_type='f'
-    #     )
-    #     return user_qs
-
 
 def profile_img_path(instance, filename):
-    return f'profile_img/{instance.user.id}/{filename}'
+    return f'profile_img/{instance.user_id}/{filename}'
 
 
 class Profile(TimeStampedModel):
