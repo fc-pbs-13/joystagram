@@ -150,9 +150,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'core.paginations.IDPagination',
     'PAGE_SIZE': 15,
-    # 'DEFAULT_FILTER_BACKENDS': (
-    #     'django_filters.rest_framework.DjangoFilterBackend',
-    # ),
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 }
 
 AUTH_USER_MODEL = 'users.User'
