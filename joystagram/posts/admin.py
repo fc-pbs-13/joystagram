@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.safestring import mark_safe
+
 from posts.models import Post, Photo
 
 
@@ -10,11 +12,13 @@ def report(modeladmin, request, queryset):
 class PostAdmin(admin.ModelAdmin):
     list_display = ['id', 'owner', 'content', 'reported', 'likes_count', 'comments_count']
     list_filter = ['created', 'likes_count', 'comments_count']
-    # fields = ['content', 'owner', 'likes_count', 'comments_count', 'tags']
     actions = [report]
 
 
 @admin.register(Photo)
 class PhotoAdmin(admin.ModelAdmin):
     list_display = ['id', 'post']
-    # fields = ['content', 'owner', 'likes_count', 'comments_count', 'tags']
+    readonly_fields = ['image']
+
+    def image(self, obj):
+        return mark_safe(f'<img src="{obj.img.url}" width="{obj.img.width}" height={obj.img.width} />')
