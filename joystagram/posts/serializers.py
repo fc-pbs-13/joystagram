@@ -17,7 +17,7 @@ class PostSerializer(TaggitSerializer, serializers.ModelSerializer):
     photos = ListField(child=ImageField(), write_only=True)
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     owner = SimpleProfileSerializer(read_only=True)
-    tags = TagListSerializerField()
+    tags = TagListSerializerField(required=False)  # todo required=False?
 
     class Meta:
         model = Post
@@ -64,6 +64,11 @@ class LikedPostSerializer(serializers.ModelSerializer):
 
 
 class TagListSerializer(serializers.ModelSerializer):
+    posts_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Tag
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'posts_count')
+
+    def get_posts_count(self, obj):
+        return obj.taggit_taggeditem_items.count()

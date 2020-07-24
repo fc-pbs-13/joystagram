@@ -34,4 +34,4 @@ tags_nested_router.register(r'posts', TaggedPostViewSet)
 urlpatterns = router.urls + posts_nested_router.urls + comments_nested_router.urls + \
               users_nested_router.urls + tags_nested_router.urls
 
-urlpatterns += [path('api-auth/', include('rest_framework.urls'))]
+urlpatterns += [path('', include('rest_framework.urls'))]
