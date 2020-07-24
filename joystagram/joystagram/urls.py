@@ -26,6 +26,8 @@ urlpatterns = [
 if settings.DEBUG:
     import debug_toolbar
 
-    urlpatterns = [
-                      path('__debug__/', include(debug_toolbar.urls)),
-                  ] + urlpatterns
+    urlpatterns = [path('__debug__/', include(debug_toolbar.urls))] + urlpatterns
+
+admin.site.site_header = "Joystagram Admin"
+admin.site.site_title = "Joystagram Admin Portal"
+admin.site.index_title = "Welcome to Joystagram Admin"
