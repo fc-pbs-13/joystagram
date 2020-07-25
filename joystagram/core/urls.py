@@ -5,7 +5,7 @@ from comments.views import CommentViewSet, ReCommentViewSet, CommentCreateListVi
 from likes.views import PostLikeViewSet, UserLikeViewSet
 from posts.views import PostViewSet, TagViewSet, TaggedPostViewSet
 from relationships.views import FollowViewSet, FollowNestedViewSet
-from story.views import StoryViewSet
+from story.views import StoryViewSet, StoryReadUserViewSet
 from users.views import UserViewSet
 
 router = routers.SimpleRouter(trailing_slash=False)
@@ -31,7 +31,10 @@ users_nested_router.register(r'likes', UserLikeViewSet)
 tags_nested_router = routers.NestedSimpleRouter(router, r'tags', trailing_slash=False, lookup='tag')
 tags_nested_router.register(r'posts', TaggedPostViewSet)
 
+story_nested_router = routers.NestedSimpleRouter(router, r'story', trailing_slash=False, lookup='story')
+story_nested_router.register(r'users', StoryReadUserViewSet)
+
 urlpatterns = router.urls + posts_nested_router.urls + comments_nested_router.urls + \
-              users_nested_router.urls + tags_nested_router.urls
+              users_nested_router.urls + tags_nested_router.urls + story_nested_router.urls
 
 urlpatterns += [path('', include('rest_framework.urls'))]

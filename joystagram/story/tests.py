@@ -59,8 +59,8 @@ class StoryTestCase(APITestCase, TempFileMixin):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
     def test_should_retrieve(self):
-        """스토리 조회 TODO 내 스토리를 읽은 유저 리스트(nested)"""
-        story = baker.make('story.Story', owner=self.owner, duration=timedelta(seconds=self.duration_sec))
+        """스토리 조회"""
+        story = baker.make('story.Story', owner=self.owner)
         self.client.force_authenticate(user=self.user)
 
         self.assertEqual(StoryCheck.objects.filter(user=self.owner, story_id=story.id).count(), 0)
@@ -76,6 +76,19 @@ class StoryTestCase(APITestCase, TempFileMixin):
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.assertEqual(StoryCheck.objects.filter(user=self.user, story_id=res['id']).count(), 1)
         self.assertEqual(StoryCheck.objects.filter(user_id=res['read_users'][0]['id']).count(), 1)
+
+    def test_should_list_read_users(self):
+        """내 스토리를 읽은 유저 리스트"""
+        self.client.force_authenticate(user=self.user)
+        story = baker.make('story.Story', owner=self.owner)
+        baker.make('story.StoryCheck', story=story, user=self.users[2])
+
+        response = self.client.get(f'{self.url}/{story.id}/users')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.assertFalse(StoryCheck.objects.filter(user_id=self.users[2].id).exists())  # 봄
+        self.assertFalse(StoryCheck.objects.filter(user_id=self.users[1].id).exists())  # 안봄
 
     def test_should_list(self):
         """

@@ -5,20 +5,13 @@ from users.serializers import SimpleProfileSerializer
 
 
 class StorySerializer(serializers.ModelSerializer):
+    # TODO 읽은 유저 수
     _duration = serializers.IntegerField(read_only=True, source='duration.seconds')
-    read_users = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Story
-        fields = ('id', 'content', 'img', 'duration', '_duration', 'created', 'read_users')
-        extra_kwargs = {
-            'duration': {'write_only': True}
-        }
-
-    def get_read_users(self, obj):
-        """TODO 자신의 스토리를 본 유저들 api 분리"""
-        qs = User.objects.filter(storycheck__story__in=[obj])
-        return SimpleProfileSerializer(qs, many=True).data
+        fields = ('id', 'content', 'img', 'duration', '_duration', 'created')
+        extra_kwargs = {'duration': {'write_only': True}}
 
 
 class StoryListSerializer(serializers.ModelSerializer):

@@ -3,7 +3,6 @@ from datetime import timedelta
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import viewsets, status, mixins
-from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
@@ -59,12 +58,15 @@ class StoryViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
 
-class StoryReadUserViewSet(mixins.ListModelMixin,
-                           GenericViewSet):
-    """자신의 스토리를 본 유저 리스트"""
+class StoryReadUserViewSet(mixins.ListModelMixin, GenericViewSet):
+    """
+    자신의 스토리를 본 유저 리스트
+    /api/story/{story_id}/users
+    """
     queryset = User.objects.all()
     serializer_class = SimpleProfileSerializer
-    permission_classes = [IsOwnerOrAuthenticatedReadOnly]
+    permission_classes = [IsOwnerOrAuthenticatedReadOnly]  # TODO 내 스토리인지 검사
 
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+    def get_queryset(self):
+        return User.objects.filter(storycheck__story=self.kwargs.get('story_pk'))
+        # return super().get_queryset().filter()
