@@ -88,8 +88,6 @@ class StoryTestCase(APITestCase, TempFileMixin):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(StoryCheck.objects.filter(story_id=story.id).count(), 1)
 
-        self.fail()
-
     def test_should_list_read_users(self):
         """내 스토리를 읽은 유저 리스트"""
         self.client.force_authenticate(user=self.user)

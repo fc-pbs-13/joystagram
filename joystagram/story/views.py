@@ -21,9 +21,8 @@ class StoryViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         """스토리 조회 성공 시 StoryCheck get_or_create"""
         response = super().retrieve(request, *args, **kwargs)
-        print(response.data, 'data')
 
-        if response.status_code == status.HTTP_200_OK and self.kwargs['pk']:
+        if (response.status_code == status.HTTP_200_OK) and (request.user.id != response.data['owner']):
             StoryCheck.objects.get_or_create(user=request.user, story_id=response.data.get('id'))
         return response
 
