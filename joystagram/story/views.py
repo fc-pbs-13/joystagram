@@ -32,7 +32,8 @@ class StoryViewSet(viewsets.ModelViewSet):
         page = super().paginate_queryset(queryset)
         if self.request.user.is_authenticated:
             story_check_qs = StoryCheck.objects.filter(user=self.request.user, story__in=page)
-            self.story_check_dict = {story_check.story_id: story_check.id for story_check in story_check_qs}
+            self.story_check_dict = {story_check.story_id: (story_check.id is not None)
+                                     for story_check in story_check_qs}
         return page
 
     def filter_queryset(self, queryset):
