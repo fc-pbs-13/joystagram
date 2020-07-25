@@ -22,7 +22,7 @@ class StoryViewSet(viewsets.ModelViewSet):
         """스토리 조회 성공 시 StoryCheck get_or_create"""
         response = super().retrieve(request, *args, **kwargs)
 
-        if (response.status_code == status.HTTP_200_OK) and (request.user.id != response.data['owner']):
+        if (response.status_code == status.HTTP_200_OK) and (request.user.id != response.data['owner']['id']):
             StoryCheck.objects.get_or_create(user=request.user, story_id=response.data.get('id'))
         return response
 

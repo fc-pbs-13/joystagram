@@ -7,6 +7,7 @@ from users.serializers import SimpleProfileSerializer
 class StorySerializer(serializers.ModelSerializer):
     _duration = serializers.IntegerField(read_only=True, source='duration.seconds')
     read_users_count = serializers.IntegerField(read_only=True, source='story_checks.count')  # 읽은 유저 수
+    owner = SimpleProfileSerializer(read_only=True)
 
     class Meta:
         model = Story

@@ -75,7 +75,6 @@ class StoryTestCase(APITestCase, TempFileMixin):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
         self.assertEqual(res['read_users_count'], StoryCheck.objects.filter(user=self.user, story_id=res['id']).count())
-        self.fail()
 
     def test_retrieve_own_story(self):
         user = self.user
@@ -99,7 +98,7 @@ class StoryTestCase(APITestCase, TempFileMixin):
 
         res = response.data['results']
         self.assertEqual(len(res), 1)
-        self.assertFalse(StoryCheck.objects.filter(user_id=res[0]['id']).exists())
+        self.assertEqual(StoryCheck.objects.filter(user_id=res[0]['id'], story=story).count(), 1)
 
     def test_should_list(self):
         """
