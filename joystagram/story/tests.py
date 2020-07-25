@@ -74,8 +74,21 @@ class StoryTestCase(APITestCase, TempFileMixin):
         response = self.client.get(f'{self.url}/{story.id}')
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-        self.assertEqual(StoryCheck.objects.filter(user=self.user, story_id=res['id']).count(), 1)
-        self.assertEqual(StoryCheck.objects.filter(user_id=res['read_users'][0]['id']).count(), 1)
+        self.assertEqual(res['read_users_count'], StoryCheck.objects.filter(user=self.user, story_id=res['id']).count())
+        self.fail()
+
+    def test_retrieve_own_story(self):
+        user = self.user
+        story = baker.make('story.Story', owner=user)
+        baker.make('story.StoryCheck', user=self.users[1], story=story)
+        self.client.force_authenticate(user=user)
+
+        self.assertEqual(StoryCheck.objects.filter(story_id=story.id).count(), 1)
+        response = self.client.get(f'{self.url}/{story.id}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(StoryCheck.objects.filter(story_id=story.id).count(), 1)
+
+        self.fail()
 
     def test_should_list_read_users(self):
         """내 스토리를 읽은 유저 리스트"""
@@ -84,11 +97,11 @@ class StoryTestCase(APITestCase, TempFileMixin):
         baker.make('story.StoryCheck', story=story, user=self.users[2])
 
         response = self.client.get(f'{self.url}/{story.id}/users')
-
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-        self.assertFalse(StoryCheck.objects.filter(user_id=self.users[2].id).exists())  # 봄
-        self.assertFalse(StoryCheck.objects.filter(user_id=self.users[1].id).exists())  # 안봄
+        res = response.data['results']
+        self.assertEqual(len(res), 1)
+        self.assertFalse(StoryCheck.objects.filter(user_id=res[0]['id']).exists())
 
     def test_should_list(self):
         """

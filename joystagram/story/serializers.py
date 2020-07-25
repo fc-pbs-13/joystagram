@@ -5,12 +5,12 @@ from users.serializers import SimpleProfileSerializer
 
 
 class StorySerializer(serializers.ModelSerializer):
-    # TODO 읽은 유저 수
     _duration = serializers.IntegerField(read_only=True, source='duration.seconds')
+    read_users_count = serializers.IntegerField(read_only=True, source='story_checks.count')  # 읽은 유저 수
 
     class Meta:
         model = Story
-        fields = ('id', 'content', 'img', 'duration', '_duration', 'created')
+        fields = ('id', 'content', 'img', 'duration', '_duration', 'created', 'read_users_count')
         extra_kwargs = {'duration': {'write_only': True}}
 
 
