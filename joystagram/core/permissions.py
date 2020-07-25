@@ -20,7 +20,7 @@ class IsOwnerOrAuthenticatedReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return obj.owner == request.user
+        return obj.owner__id == request.user.id
 
 
 class IsFromUserOrReadOnly(permissions.BasePermission):
@@ -35,4 +35,10 @@ class IsFromUserOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return obj.from_user == request.user
+        return obj.from_user__id == request.user.id
+
+
+# class IsStoryOwner(permissions.BasePermission):
+#     def has_object_permission(self, request, view, obj):
+#         view.kwargs.get('story_pk')
+#         return super().has_object_permission(request, view, obj)

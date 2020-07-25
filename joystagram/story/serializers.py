@@ -16,7 +16,7 @@ class StorySerializer(serializers.ModelSerializer):
         }
 
     def get_read_users(self, obj):
-        """TODO 스토리를 본 유저들"""
+        """TODO 자신의 스토리를 본 유저들 api 분리"""
         qs = User.objects.filter(storycheck__story__in=[obj])
         return SimpleProfileSerializer(qs, many=True).data
 
