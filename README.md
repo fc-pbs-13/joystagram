@@ -1,4 +1,9 @@
 # joystagram
+> 인스타그램 클론 프로젝트
+
+## Technologies
+- python 3.8.2
+- django 3.0.7
 
 ## api 기획
 ### ppt
