@@ -1,6 +1,8 @@
 from django.db.models import Q, Count
-from rest_framework import mixins
+from django.shortcuts import get_object_or_404
+from rest_framework import mixins, status
 from rest_framework.exceptions import ParseError
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from taggit.models import Tag
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
@@ -72,3 +74,10 @@ class TaggedPostViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def filter_queryset(self, queryset):
         return super().filter_queryset(queryset).filter(tags=self.kwargs.get('tag_pk')).distinct()
+
+    def list(self, request, *args, **kwargs):
+        tag_pk = self.kwargs.get('tag_pk')
+        if tag_pk is None:
+            return Response('tag_pk is required', status=status.HTTP_400_BAD_REQUEST)
+        get_object_or_404(Tag, id=tag_pk)
+        return super().list(request, *args, **kwargs)

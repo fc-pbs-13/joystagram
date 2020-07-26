@@ -186,11 +186,7 @@ class PostListTestCase(APITestCase):
         """포스트 검색-유효하지 않은 태그id"""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(f'/api/tags/{INVALID_ID}/posts')
-        res = response.data['results']
-        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-
-        for post in res:
-            self.assertTrue(self.tag.name in post['tags'])
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
 
     def test_search_tag_list(self):
         """검색어로 태그 검색"""
