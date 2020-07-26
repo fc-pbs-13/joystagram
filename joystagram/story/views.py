@@ -1,7 +1,9 @@
 from datetime import timedelta
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import viewsets, status, mixins
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from relationships.models import Follow
@@ -32,25 +34,24 @@ class StoryViewSet(viewsets.ModelViewSet):
     def filter_queryset(self, queryset):
         """자신 or 자신이 팔로우하는 유저의 스토리 중
         등록시간 24시간 이내의 것만 리스트"""
-
         # 등록시간 24시간 이내
-        yesterday = timezone.now() - timedelta(days=1)
-        queryset = Story.objects.filter(created__gte=yesterday,
-                                        created__lte=timezone.now())
+        queryset = Story.objects.filter(
+            created__gte=timezone.now() - timedelta(days=1),
+            created__lte=timezone.now())
         # owner가 자신 or 팔로잉 유저
         queryset = queryset.filter(
             Q(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')) |
-            Q(owner=self.request.user)
-        ).select_related('owner__profile')
-        return super().filter_queryset(queryset)
+            Q(owner=self.request.user))
+        return super().filter_queryset(queryset).select_related('owner__profile')
 
     def paginate_queryset(self, queryset):
-        # is_watched 주입
+        # is_watched(bool) 주입
         page = super().paginate_queryset(queryset)
         if self.request.user.is_authenticated:
             story_check_qs = StoryCheck.objects.filter(user=self.request.user, story__in=page)
-            self.story_check_dict = {story_check.story_id: (story_check.id is not None)
-                                     for story_check in story_check_qs}
+            self.story_check_dict = {
+                story_check.story_id: (story_check.id is not None) for story_check in story_check_qs
+            }
         return page
 
     def perform_create(self, serializer):
@@ -66,5 +67,12 @@ class StoryReadUserViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = SimpleProfileSerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]  # TODO 내 스토리인지 검사
 
-    def get_queryset(self):
-        return super().get_queryset().filter(storycheck__story=self.kwargs.get('story_pk'))
+    def list(self, request, *args, **kwargs):
+        story_pk = self.kwargs.get('story_pk')
+        if story_pk is None:
+            return Response('story_pk is required', status=status.HTTP_400_BAD_REQUEST)
+        get_object_or_404(Story, id=story_pk)
+        return super().list(request, *args, **kwargs)
+
+    def filter_queryset(self, queryset):
+        return super().filter_queryset(queryset).filter(storycheck__story=self.kwargs.get('story_pk'))

@@ -58,17 +58,17 @@ class TagViewSet(mixins.ListModelMixin, GenericViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagListSerializer
 
-    def get_queryset(self):
+    def filter_queryset(self, queryset):
         name = self.request.query_params.get('name')
         if not name:
             raise ParseError('query parameter required: name not supplied')
-        return super().get_queryset().filter(name__icontains=name)
+        return super().filter_queryset(queryset).filter(name__icontains=name)
 
 
 class TaggedPostViewSet(mixins.ListModelMixin, GenericViewSet):
-    """태그id를 가진 포스트 검색"""
+    """nested tag_pk로 해당 태그를 가진 포스트 검색"""
     queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
     serializer_class = PostListSerializer
 
-    def get_queryset(self):
-        return Post.objects.filter(tags=self.kwargs.get('tag_pk')).distinct()
+    def filter_queryset(self, queryset):
+        return super().filter_queryset(queryset).filter(tags=self.kwargs.get('tag_pk')).distinct()

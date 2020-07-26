@@ -1,6 +1,7 @@
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
-from core.permissions import IsOwnerOrAuthenticatedReadOnly, IsFromUserOrReadOnly
+
+from core.permissions import IsFromUserOrReadOnly
 from relationships.models import Follow
 from relationships.serializers import FollowSerializer
 

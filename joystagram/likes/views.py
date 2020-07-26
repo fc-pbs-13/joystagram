@@ -1,5 +1,5 @@
 from rest_framework import mixins
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 from likes.models import PostLike
 from likes.serializers import LikeSerializer, UserLikedPostsSerializer, PostLikedUsersSerializer
@@ -43,5 +43,5 @@ class UserLikeViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = UserLikedPostsSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return super().get_queryset().filter(owner_id=self.kwargs.get('user_pk'))
+    def filter_queryset(self, queryset):
+        return super().filter_queryset(queryset).filter(owner_id=self.kwargs.get('user_pk'))

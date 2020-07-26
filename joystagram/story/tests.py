@@ -1,5 +1,4 @@
 from datetime import timedelta, datetime
-import io
 
 import pytz
 from django.db.models import Q
@@ -7,11 +6,12 @@ from django.utils import timezone
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
-from PIL import Image
 
 from core.tests import TempFileMixin
 from relationships.models import Follow
 from story.models import StoryCheck, Story
+
+INVALID_ID = -1
 
 
 class StoryTestCase(APITestCase, TempFileMixin):
@@ -87,18 +87,27 @@ class StoryTestCase(APITestCase, TempFileMixin):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(StoryCheck.objects.filter(story_id=story.id).count(), 1)
 
+    def list_read_users_setUp(self):
+        self.client.force_authenticate(user=self.user)
+        self.story = baker.make('story.Story', owner=self.owner)
+        baker.make('story.StoryCheck', story=self.story, user=self.users[2])
+
     def test_should_list_read_users(self):
         """내 스토리를 읽은 유저 리스트"""
-        self.client.force_authenticate(user=self.user)
-        story = baker.make('story.Story', owner=self.owner)
-        baker.make('story.StoryCheck', story=story, user=self.users[2])
-
-        response = self.client.get(f'{self.url}/{story.id}/users')
+        self.list_read_users_setUp()
+        response = self.client.get(f'{self.url}/{self.story.id}/users')
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
         res = response.data['results']
         self.assertEqual(len(res), 1)
-        self.assertEqual(StoryCheck.objects.filter(user_id=res[0]['id'], story=story).count(), 1)
+        self.assertEqual(StoryCheck.objects.filter(user_id=res[0]['id'], story=self.story).count(), 1)
+
+    def test_list_read_users_invalid_id(self):
+        """내 스토리를 읽은 유저 리스트 - 유효하지 않은 story_id"""
+        self.list_read_users_setUp()
+
+        response = self.client.get(f'{self.url}/{INVALID_ID}/users')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
 
     def test_should_list(self):
         """

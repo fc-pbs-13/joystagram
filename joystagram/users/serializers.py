@@ -6,14 +6,6 @@ from relationships.models import Follow
 from .models import User, Profile
 
 
-class ProfileSerializer(ModelSerializer):
-    """프로필 시리얼라이저"""
-
-    class Meta:
-        model = Profile
-        fields = ('id', 'nickname', 'introduce', 'img')
-
-
 class SimpleProfileSerializer(ModelSerializer):
     """함축 프로필 시리얼라이저 (닉네임, 프사)"""
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
@@ -64,7 +56,6 @@ class UserSerializer(ModelSerializer):
 
 
 class UserPasswordSerializer(ModelSerializer):
-    """password 변경 시리얼라이저"""
 
     class Meta:
         model = User
@@ -78,7 +69,6 @@ class UserPasswordSerializer(ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    """유저 인증 시리얼라이저"""
 
     email = serializers.EmailField()
     password = serializers.CharField(
@@ -91,14 +81,14 @@ class LoginSerializer(serializers.Serializer):
         email = attrs.get('email')
         password = attrs.get('password')
 
-        if email and password:
-            user = authenticate(request=self.context.get('request'),
-                                email=email, password=password)
-            if user is None:
-                msg = 'Unable to log in with provided credentials.'
-                raise serializers.ValidationError(msg, code='authorization')
-        else:
+        if not (email and password):
             msg = 'Must include "username" and "password".'
+            raise serializers.ValidationError(msg, code='authorization')
+
+        user = authenticate(request=self.context.get('request'),
+                            email=email, password=password)
+        if user is None:
+            msg = 'Unable to log in with provided credentials.'
             raise serializers.ValidationError(msg, code='authorization')
 
         attrs['user'] = user
