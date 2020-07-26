@@ -2,8 +2,9 @@
 > 인스타그램 클론 프로젝트
 
 ## Technologies
-- python 3.8.2
+- python 3.8.3
 - django 3.0.7
+- django-rest-framework 3.11.0
 
 ## api 기획
 ### ppt
