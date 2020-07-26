@@ -37,10 +37,3 @@ class IsFromUserOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return obj.from_user_id == request.user.id
-
-
-# class IsStoryOwner(permissions.BasePermission):
-#     # TODO 내 스토리인지 검사
-#     def has_object_permission(self, request, view, obj):
-#         view.kwargs.get('story_pk')
-#         return super().has_object_permission(request, view, obj)

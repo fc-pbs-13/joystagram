@@ -89,7 +89,7 @@ class StoryTestCase(APITestCase, TempFileMixin):
 
     def list_read_users_setUp(self):
         self.client.force_authenticate(user=self.user)
-        self.story = baker.make('story.Story', owner=self.owner)
+        self.story = baker.make('story.Story', owner=self.user)
         baker.make('story.StoryCheck', story=self.story, user=self.users[2])
 
     def test_should_list_read_users(self):
@@ -114,7 +114,7 @@ class StoryTestCase(APITestCase, TempFileMixin):
         스토리 리스트
         내가 팔로우하는 유저의 스토리 중 등록 후 24시간이 지나지 않은 것만
         """
-        self.list_setUp()  # setUp
+        self.list_setUp()
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         res = response.data

@@ -1,7 +1,7 @@
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status
-from rest_framework.exceptions import ParseError
+from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from taggit.models import Tag
@@ -78,6 +78,6 @@ class TaggedPostViewSet(mixins.ListModelMixin, GenericViewSet):
     def list(self, request, *args, **kwargs):
         tag_pk = self.kwargs.get('tag_pk')
         if tag_pk is None:
-            return Response('tag_pk is required', status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError('tag_pk is required')
         get_object_or_404(Tag, id=tag_pk)
         return super().list(request, *args, **kwargs)

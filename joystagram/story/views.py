@@ -1,11 +1,12 @@
 from datetime import timedelta
+
 from django.db.models import Q
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import viewsets, status, mixins
-from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.viewsets import GenericViewSet
+
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from relationships.models import Follow
 from story.models import Story, StoryCheck
@@ -66,13 +67,15 @@ class StoryReadUserViewSet(mixins.ListModelMixin, GenericViewSet):
     """
     queryset = User.objects.all()
     serializer_class = SimpleProfileSerializer
-    permission_classes = [IsOwnerOrAuthenticatedReadOnly]  # TODO 내 스토리인지 검사
+    permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
     def list(self, request, *args, **kwargs):
         story_pk = self.kwargs.get('story_pk')
         if story_pk is None:
-            return Response('story_pk is required', status=status.HTTP_400_BAD_REQUEST)
-        get_object_or_404(Story, id=story_pk)
+            raise ValidationError('story_pk is required')
+        story = get_object_or_404(Story, id=story_pk)
+        if story.owner_id != request.user.id:
+            raise PermissionDenied()
         return super().list(request, *args, **kwargs)
 
     def filter_queryset(self, queryset):
