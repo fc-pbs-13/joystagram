@@ -17,12 +17,12 @@ class PostLikeViewSet(mixins.CreateModelMixin,
     게시글에 좋아요한 유저 리스트
     GET /api/posts/{post_id}/likes
     """
-    queryset = PostLike.objects.all().select_related('owner__profile').select_related('post__owner__profile')
+    queryset = PostLike.objects.all().select_related('owner__profile', 'post__owner__profile')
     serializer_class = LikeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get_queryset(self):
-        return super().get_queryset().filter(post_id=self.kwargs['post_pk'])
+    def filter_queryset(self, queryset):
+        return super().filter_queryset(queryset).filter(post_id=self.kwargs['post_pk'])
 
     def get_serializer_class(self):
         if self.action == 'list':
