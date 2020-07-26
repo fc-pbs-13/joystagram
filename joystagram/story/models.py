@@ -15,7 +15,7 @@ class Story(TimeStampedModel):
 
 class StoryCheck(TimeStampedModel):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
-    story = models.ForeignKey('story.Story', on_delete=models.CASCADE)
+    story = models.ForeignKey('story.Story', on_delete=models.CASCADE, related_name='story_checks')
 
     class Meta:
         unique_together = ['user', 'story']
