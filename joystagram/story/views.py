@@ -36,12 +36,10 @@ class StoryViewSet(viewsets.ModelViewSet):
     def filter_queryset(self, queryset):
         """자신 or 자신이 팔로우하는 유저의 스토리 중
         등록시간 24시간 이내의 것만 리스트"""
-        # 등록시간 24시간 이내
-        queryset = Story.objects.filter(
-            created__gte=timezone.now() - timedelta(days=1),
-            created__lte=timezone.now())
-        # owner가 자신 or 팔로잉 유저
         queryset = queryset.filter(
+            created__gte=timezone.now() - timedelta(days=1),
+            created__lte=timezone.now()
+        ).filter(
             Q(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')) |
             Q(owner=self.request.user))
         return super().filter_queryset(queryset).select_related('owner__profile')
