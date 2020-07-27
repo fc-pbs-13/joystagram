@@ -48,10 +48,9 @@ class UserSerializer(ModelSerializer):
     def get_follow_id(self, obj):
         user = self.context['request'].user
         if user.is_authenticated:
-            try:
-                return Follow.objects.get(owner=user, to_user=obj).id
-            except ObjectDoesNotExist:
-                pass
+            follow_qs = Follow.objects.filter(owner=user, to_user=obj)
+            if follow_qs.exists():
+                return follow_qs.first().id
         return None
 
 
