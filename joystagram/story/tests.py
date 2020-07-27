@@ -120,16 +120,18 @@ class StoryTestCase(APITestCase, TempFileMixin):
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 
-        story_list = Story.objects.filter(
+        story_qs = Story.objects.filter(
             Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
             Q(owner=self.user)
-        ).filter(created__gte=timezone.now() - timedelta(days=1),
-                 created__lte=timezone.now()).order_by('-id')
+        ).filter(
+            created__gte=timezone.now() - timedelta(days=1),
+            created__lte=timezone.now()
+        ).order_by('-id')
 
         self.assertEqual(len(res['results']), self.valid_story_count)
-        self.assertEqual(len(res['results']), len(story_list))
+        self.assertEqual(len(res['results']), len(story_qs))
 
-        for story_res, story_obj in zip(res['results'], story_list):
+        for story_res, story_obj in zip(res['results'], story_qs):
             self.story_test(story_res, story_obj)
 
             # 자신 혹은 팔로우 하는 사용자의 스토리
