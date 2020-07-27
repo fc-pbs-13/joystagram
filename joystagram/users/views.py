@@ -22,11 +22,11 @@ class UserViewSet(ModelViewSet):
     def filter_queryset(self, qs):
         if self.action == 'followers':
             qs = qs.filter(
-                id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('from_user_id')
+                id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('owner_id')
             ).select_related('profile')
         if self.action == 'followings':
             qs = qs.filter(
-                id__in=Follow.objects.filter(from_user_id=self.kwargs['pk']).values('to_user_id')
+                id__in=Follow.objects.filter(owner_id=self.kwargs['pk']).values('to_user_id')
             ).select_related('profile')
         if self.action == 'list':
             nickname = self.request.query_params.get('nickname')
@@ -42,7 +42,7 @@ class UserViewSet(ModelViewSet):
         # like_id 주입
         if self.request.user.is_authenticated:
             if self.action in ('list', 'followers', 'followings'):
-                follow_list = Follow.objects.filter(from_user=self.request.user)
+                follow_list = Follow.objects.filter(owner=self.request.user)
                 self.follow_id_dict = {follow.to_user_id: follow.id for follow in follow_list}
         return page
 

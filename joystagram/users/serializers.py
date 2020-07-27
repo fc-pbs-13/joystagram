@@ -49,7 +49,7 @@ class UserSerializer(ModelSerializer):
         user = self.context['request'].user
         if user.is_authenticated:
             try:
-                return Follow.objects.get(from_user=user, to_user=obj).id
+                return Follow.objects.get(owner=user, to_user=obj).id
             except ObjectDoesNotExist:
                 pass
         return None

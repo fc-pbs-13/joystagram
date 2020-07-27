@@ -40,7 +40,7 @@ class StoryViewSet(viewsets.ModelViewSet):
             created__gte=timezone.now() - timedelta(days=1),
             created__lte=timezone.now()
         ).filter(
-            Q(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')) |
+            Q(owner_id__in=Follow.objects.filter(owner=self.request.user).values('to_user_id')) |
             Q(owner=self.request.user))
         return super().filter_queryset(queryset).select_related('owner__profile')
 

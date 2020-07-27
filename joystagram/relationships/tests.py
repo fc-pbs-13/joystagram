@@ -24,7 +24,7 @@ class FollowTestCase(APITestCase):
 
     def test_should_denied_duplicate_likes(self):
         """생성-중복 차단"""
-        baker.make('relationships.Follow', from_user=self.user, to_user=self.to_user)
+        baker.make('relationships.Follow', owner=self.user, to_user=self.to_user)
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
@@ -42,14 +42,14 @@ class FollowTestCase(APITestCase):
 
     def test_should_delete(self):
         """삭제-성공"""
-        follow = baker.make('relationships.Follow', from_user=self.user, to_user=self.to_user)
+        follow = baker.make('relationships.Follow', owner=self.user, to_user=self.to_user)
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(f'/api/follows/{follow.id}')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
 
     def test_should_denied_delete401(self):
         """삭제-인증 필요"""
-        follow = baker.make('relationships.Follow', from_user=self.user, to_user=self.to_user)
+        follow = baker.make('relationships.Follow', owner=self.user, to_user=self.to_user)
         response = self.client.delete(f'/api/follows/{follow.id}')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
@@ -63,14 +63,14 @@ class FollowListTestCase(APITestCase):
             baker.make('users.Profile', user=user)
 
         self.user = users[0]
-        baker.make('relationships.Follow', from_user=self.user, to_user=users[1])
-        baker.make('relationships.Follow', from_user=self.user, to_user=users[2])
+        baker.make('relationships.Follow', owner=self.user, to_user=users[1])
+        baker.make('relationships.Follow', owner=self.user, to_user=users[2])
 
-        baker.make('relationships.Follow', from_user=users[1], to_user=self.user)
-        baker.make('relationships.Follow', from_user=users[2], to_user=self.user)
-        baker.make('relationships.Follow', from_user=users[3], to_user=self.user)
+        baker.make('relationships.Follow', owner=users[1], to_user=self.user)
+        baker.make('relationships.Follow', owner=users[2], to_user=self.user)
+        baker.make('relationships.Follow', owner=users[3], to_user=self.user)
 
-        baker.make('relationships.Follow', from_user=users[1], to_user=users[2])
+        baker.make('relationships.Follow', owner=users[1], to_user=users[2])
         self.client.force_authenticate(user=self.user)
 
     def test_should_list_follower(self):
@@ -80,7 +80,7 @@ class FollowListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 
         user_list = User.objects.filter(
-            id__in=Follow.objects.filter(to_user_id=self.user).values('from_user_id')
+            id__in=Follow.objects.filter(to_user_id=self.user).values('owner_id')
         ).select_related('profile').order_by('-id')
         self.assertEqual(len(user_list), len(Follow.objects.filter(to_user_id=self.user)))
 
@@ -95,9 +95,9 @@ class FollowListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 
         user_list = User.objects.filter(
-            id__in=Follow.objects.filter(from_user_id=self.user).values('to_user_id')
+            id__in=Follow.objects.filter(owner_id=self.user).values('to_user_id')
         ).select_related('profile').order_by('-id')
-        self.assertEqual(len(user_list), len(Follow.objects.filter(from_user_id=self.user)))
+        self.assertEqual(len(user_list), len(Follow.objects.filter(owner_id=self.user)))
 
         self.assertEqual(len(res['results']), user_list.count())
         for user_res, user_obj in zip(res['results'], user_list):
@@ -111,7 +111,7 @@ class FollowListTestCase(APITestCase):
 
         if user_res['follow_id']:
             self.assertTrue(Follow.objects.filter(id=user_res['follow_id'],
-                                                  from_user=self.user,
+                                                  owner=self.user,
                                                   to_user_id=user_res['id']).exists())
         if is_follower:
-            self.assertTrue(Follow.objects.filter(from_user=user_res['id'], to_user_id=self.user).exists())
+            self.assertTrue(Follow.objects.filter(owner=user_res['id'], to_user_id=self.user).exists())

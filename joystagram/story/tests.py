@@ -24,7 +24,7 @@ class StoryTestCase(APITestCase, TempFileMixin):
         self.url = '/api/story'
         self.user = self.users[0]
         self.owner = self.users[1]
-        baker.make('relationships.Follow', from_user=self.user, to_user=self.owner)
+        baker.make('relationships.Follow', owner=self.user, to_user=self.owner)
 
         self.duration_sec = 5.0
         self.data = {
@@ -121,7 +121,7 @@ class StoryTestCase(APITestCase, TempFileMixin):
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 
         story_qs = Story.objects.filter(
-            Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
+            Q(owner_id__in=Follow.objects.filter(owner=self.user).values('to_user_id')) |
             Q(owner=self.user)
         ).filter(
             created__gte=timezone.now() - timedelta(days=1),
@@ -137,7 +137,7 @@ class StoryTestCase(APITestCase, TempFileMixin):
             # 자신 혹은 팔로우 하는 사용자의 스토리
             owner = story_res['owner']
             self.assertTrue(
-                Follow.objects.filter(from_user=self.user, to_user_id=owner['id']).exists()
+                Follow.objects.filter(owner=self.user, to_user_id=owner['id']).exists()
                 or self.user.id == owner['id']
             )
             # watched 검사

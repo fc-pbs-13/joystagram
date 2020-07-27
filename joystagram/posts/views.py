@@ -37,7 +37,7 @@ class PostViewSet(mixins.CreateModelMixin,
         """자신과 자신이 팔로우하는 유저들의 스토리(등록시간 24시간 이내)"""
         if self.action == 'list':
             queryset = queryset.filter(
-                Q(owner_id__in=Follow.objects.filter(from_user=self.request.user).values('to_user_id')) |
+                Q(owner_id__in=Follow.objects.filter(owner=self.request.user).values('to_user_id')) |
                 Q(owner=self.request.user)
             )
         return super().filter_queryset(queryset)
