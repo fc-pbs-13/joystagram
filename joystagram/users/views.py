@@ -2,9 +2,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, mixins
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
+from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from core.permissions import IsUserSelf
 from relationships.models import Follow
@@ -13,12 +14,7 @@ from users.models import User
 from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
 
 
-class UserViewSet(mixins.CreateModelMixin,
-                  mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  mixins.ListModelMixin,
-                  mixins.DestroyModelMixin,
-                  GenericViewSet):
+class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsUserSelf]
@@ -26,15 +22,17 @@ class UserViewSet(mixins.CreateModelMixin,
     def filter_queryset(self, qs):
         if self.action == 'followers':
             qs = qs.filter(
-                id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('from_user_id')
+                id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('owner_id')
             ).select_related('profile')
         if self.action == 'followings':
             qs = qs.filter(
-                id__in=Follow.objects.filter(from_user_id=self.kwargs['pk']).values('to_user_id')
+                id__in=Follow.objects.filter(owner_id=self.kwargs['pk']).values('to_user_id')
             ).select_related('profile')
         if self.action == 'list':
-            tag = self.request.query_params.get('nickname')
-            qs = qs.filter(profile__nickname__icontains=tag).select_related('profile')
+            nickname = self.request.query_params.get('nickname')
+            if not nickname:
+                raise ParseError('query parameter required: nickname not supplied')
+            qs = qs.filter(profile__nickname__icontains=nickname).select_related('profile')
 
         return super().filter_queryset(qs)
 
@@ -44,7 +42,7 @@ class UserViewSet(mixins.CreateModelMixin,
         # like_id 주입
         if self.request.user.is_authenticated:
             if self.action in ('list', 'followers', 'followings'):
-                follow_list = Follow.objects.filter(from_user=self.request.user)
+                follow_list = Follow.objects.filter(owner=self.request.user)
                 self.follow_id_dict = {follow.to_user_id: follow.id for follow in follow_list}
         return page
 

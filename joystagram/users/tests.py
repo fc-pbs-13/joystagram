@@ -90,7 +90,7 @@ class UserLogoutTestCase(APITestCase):
 
     def test_should_denied_delete_token(self):
         response = self.client.delete(self.url)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertTrue(Token.objects.filter(user_id=self.user.id).exists())
 
 
@@ -148,8 +148,7 @@ class UserListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         for user_res in response.data['results']:
             self.assertTrue('img' in user_res)
-            nick = user_res['nickname']
-            self.assertTrue(search_nick in nick or search_nick.capitalize() in nick)
+            self.assertTrue(search_nick in user_res['nickname'])
 
 
 class UserUpdateTestCase(APITestCase):

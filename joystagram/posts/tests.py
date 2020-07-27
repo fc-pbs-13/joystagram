@@ -134,9 +134,9 @@ class PostListTestCase(APITestCase):
 
         for post in posts:
             baker.make('comments.Comment', post=post, _quantity=2)
-        baker.make('relationships.Follow', from_user=users[0], to_user=users[1])
-        baker.make('relationships.Follow', from_user=users[0], to_user=users[2])
-        baker.make('relationships.Follow', from_user=users[1], to_user=users[0])
+        baker.make('relationships.Follow', owner=users[0], to_user=users[1])
+        baker.make('relationships.Follow', owner=users[0], to_user=users[2])
+        baker.make('relationships.Follow', owner=users[1], to_user=users[0])
 
         self.tags = ['django', 'django rest framework', 'python', 'python programming', 'java']
         posts[0].tags.add(self.tags[0])
@@ -156,7 +156,7 @@ class PostListTestCase(APITestCase):
         res = response.data
 
         post_list = Post.objects.filter(
-            Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
+            Q(owner_id__in=Follow.objects.filter(owner=self.user).values('to_user_id')) |
             Q(owner=self.user)
         ).order_by('-id')
         self.assertEqual(len(res['results']), len(post_list))
@@ -186,11 +186,7 @@ class PostListTestCase(APITestCase):
         """포스트 검색-유효하지 않은 태그id"""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(f'/api/tags/{INVALID_ID}/posts')
-        res = response.data['results']
-        self.assertEqual(response.status_code, status.HTTP_200_OK, res)
-
-        for post in res:
-            self.assertTrue(self.tag.name in post['tags'])
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
 
     def test_search_tag_list(self):
         """검색어로 태그 검색"""

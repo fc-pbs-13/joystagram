@@ -1,5 +1,4 @@
 from datetime import timedelta, datetime
-import io
 
 import pytz
 from django.db.models import Q
@@ -7,11 +6,12 @@ from django.utils import timezone
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
-from PIL import Image
 
 from core.tests import TempFileMixin
 from relationships.models import Follow
 from story.models import StoryCheck, Story
+
+INVALID_ID = -1
 
 
 class StoryTestCase(APITestCase, TempFileMixin):
@@ -24,7 +24,7 @@ class StoryTestCase(APITestCase, TempFileMixin):
         self.url = '/api/story'
         self.user = self.users[0]
         self.owner = self.users[1]
-        baker.make('relationships.Follow', from_user=self.user, to_user=self.owner)
+        baker.make('relationships.Follow', owner=self.user, to_user=self.owner)
 
         self.duration_sec = 5.0
         self.data = {
@@ -87,46 +87,57 @@ class StoryTestCase(APITestCase, TempFileMixin):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(StoryCheck.objects.filter(story_id=story.id).count(), 1)
 
+    def list_read_users_setUp(self):
+        self.client.force_authenticate(user=self.user)
+        self.story = baker.make('story.Story', owner=self.user)
+        baker.make('story.StoryCheck', story=self.story, user=self.users[2])
+
     def test_should_list_read_users(self):
         """내 스토리를 읽은 유저 리스트"""
-        self.client.force_authenticate(user=self.user)
-        story = baker.make('story.Story', owner=self.owner)
-        baker.make('story.StoryCheck', story=story, user=self.users[2])
-
-        response = self.client.get(f'{self.url}/{story.id}/users')
+        self.list_read_users_setUp()
+        response = self.client.get(f'{self.url}/{self.story.id}/users')
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
         res = response.data['results']
         self.assertEqual(len(res), 1)
-        self.assertEqual(StoryCheck.objects.filter(user_id=res[0]['id'], story=story).count(), 1)
+        self.assertEqual(StoryCheck.objects.filter(user_id=res[0]['id'], story=self.story).count(), 1)
+
+    def test_list_read_users_invalid_id(self):
+        """내 스토리를 읽은 유저 리스트 - 유효하지 않은 story_id"""
+        self.list_read_users_setUp()
+
+        response = self.client.get(f'{self.url}/{INVALID_ID}/users')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
 
     def test_should_list(self):
         """
         스토리 리스트
         내가 팔로우하는 유저의 스토리 중 등록 후 24시간이 지나지 않은 것만
         """
-        self.list_setUp()  # setUp
+        self.list_setUp()
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         res = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK, res)
 
-        story_list = Story.objects.filter(
-            Q(owner_id__in=Follow.objects.filter(from_user=self.user).values('to_user_id')) |
+        story_qs = Story.objects.filter(
+            Q(owner_id__in=Follow.objects.filter(owner=self.user).values('to_user_id')) |
             Q(owner=self.user)
-        ).filter(created__gte=timezone.now() - timedelta(days=1),
-                 created__lte=timezone.now()).order_by('-id')
+        ).filter(
+            created__gte=timezone.now() - timedelta(days=1),
+            created__lte=timezone.now()
+        ).order_by('-id')
 
         self.assertEqual(len(res['results']), self.valid_story_count)
-        self.assertEqual(len(res['results']), len(story_list))
+        self.assertEqual(len(res['results']), len(story_qs))
 
-        for story_res, story_obj in zip(res['results'], story_list):
+        for story_res, story_obj in zip(res['results'], story_qs):
             self.story_test(story_res, story_obj)
 
             # 자신 혹은 팔로우 하는 사용자의 스토리
             owner = story_res['owner']
             self.assertTrue(
-                Follow.objects.filter(from_user=self.user, to_user_id=owner['id']).exists()
+                Follow.objects.filter(owner=self.user, to_user_id=owner['id']).exists()
                 or self.user.id == owner['id']
             )
             # watched 검사

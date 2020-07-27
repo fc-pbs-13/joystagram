@@ -37,7 +37,7 @@ class ReCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReComment
         fields = ('id', 'content', 'comment_id', 'owner')
-        read_only_fields = ('post_id',  'owner')
+        read_only_fields = ('post_id', 'owner')
 
     def validate(self, attrs):
         """comment_pk 검증(nested url 일 때만 옴)"""

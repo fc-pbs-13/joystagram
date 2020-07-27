@@ -21,8 +21,8 @@ class FollowSerializer(serializers.ModelSerializer):
             raise NotFound('User is not valid')
 
         # UniqueTogether 검증
-        if Follow.objects.filter(from_user=self.context['request'].user, to_user=to_user_pk).exists():
-            raise serializers.ValidationError('The fields `from_user`, `to_user` must make a unique set.',
+        if Follow.objects.filter(owner=self.context['request'].user, to_user=to_user_pk).exists():
+            raise serializers.ValidationError('The fields `owner`, `to_user` must make a unique set.',
                                               code='unique')
         return attrs
 

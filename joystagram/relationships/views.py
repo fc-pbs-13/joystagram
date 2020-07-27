@@ -1,6 +1,7 @@
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
-from core.permissions import IsOwnerOrAuthenticatedReadOnly, IsFromUserOrReadOnly
+
+from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from relationships.models import Follow
 from relationships.serializers import FollowSerializer
 
@@ -12,7 +13,7 @@ class FollowViewSet(mixins.DestroyModelMixin, GenericViewSet):
     """
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
-    permission_classes = [IsFromUserOrReadOnly]
+    permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
 
 class FollowNestedViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
@@ -23,13 +24,13 @@ class FollowNestedViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, Generi
     """
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
-    permission_classes = [IsFromUserOrReadOnly]
+    permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(from_user_id=self.request.user.id,
+        serializer.save(owner_id=self.request.user.id,
                         to_user_id=self.kwargs['user_pk'])
 
     def filter_queryset(self, queryset):
         if self.request.user.is_authenticated:
-            queryset = queryset.filter(from_user=self.request.user)
+            queryset = queryset.filter(owner=self.request.user)
         return super().filter_queryset(queryset)
