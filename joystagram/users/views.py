@@ -22,7 +22,7 @@ class UserViewSet(ModelViewSet):
     def filter_queryset(self, qs):
         User.objects.prefetch_related('to')
         if self.action == 'retrieve':
-            qs = qs.select_related('profile').prefetch_related('posts', 'followers__to_user', 'followings')
+            qs = qs.select_related('profile').prefetch_related('posts', 'followers__owner', 'followings__to_user_id')
         if self.action == 'followers':
             qs = qs.filter(
                 id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('owner_id')
