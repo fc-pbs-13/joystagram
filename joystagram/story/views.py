@@ -20,6 +20,9 @@ class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
+    def get_object(self):
+        return super().get_object()
+
     def retrieve(self, request, *args, **kwargs):
         """스토리 조회 성공 시 StoryCheck get_or_create"""
         response = super().retrieve(request, *args, **kwargs)
@@ -35,7 +38,7 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.action == 'retrieve':
-            return super().get_queryset()
+            return super().get_queryset().prefetch_related('story_checks')
         return super().get_queryset()
 
     def filter_queryset(self, queryset):
