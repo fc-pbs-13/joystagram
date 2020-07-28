@@ -39,8 +39,10 @@ class StoryViewSet(viewsets.ModelViewSet):
         return super().get_queryset()
 
     def filter_queryset(self, queryset):
-        """자신 or 자신이 팔로우하는 유저의 스토리 중
-        등록시간 24시간 이내의 것만 리스트"""
+        """
+        자신 or 자신이 팔로우하는 유저의 스토리 중
+        등록시간 24시간 이내의 것만 리스트
+        """
         queryset = queryset.filter(
             created__gte=timezone.now() - timedelta(days=1),
             created__lte=timezone.now()
@@ -83,4 +85,6 @@ class StoryReadUserViewSet(mixins.ListModelMixin, GenericViewSet):
         return super().list(request, *args, **kwargs)
 
     def filter_queryset(self, queryset):
-        return super().filter_queryset(queryset).filter(storycheck__story=self.kwargs.get('story_pk'))
+        return super().filter_queryset(queryset). \
+            filter(storycheck__story=self.kwargs.get('story_pk')). \
+            select_related('profile')
