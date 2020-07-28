@@ -33,6 +33,11 @@ class StoryViewSet(viewsets.ModelViewSet):
             return StoryListSerializer
         return super().get_serializer_class()
 
+    def get_queryset(self):
+        if self.action == 'retrieve':
+            return super().get_queryset()
+        return super().get_queryset()
+
     def filter_queryset(self, queryset):
         """자신 or 자신이 팔로우하는 유저의 스토리 중
         등록시간 24시간 이내의 것만 리스트"""
@@ -41,7 +46,8 @@ class StoryViewSet(viewsets.ModelViewSet):
             created__lte=timezone.now()
         ).filter(
             Q(owner_id__in=Follow.objects.filter(owner=self.request.user).values('to_user_id')) |
-            Q(owner=self.request.user))
+            Q(owner=self.request.user)
+        )
         return super().filter_queryset(queryset).select_related('owner__profile')
 
     def paginate_queryset(self, queryset):

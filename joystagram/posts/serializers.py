@@ -40,7 +40,7 @@ class PostListSerializer(serializers.ModelSerializer):
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     like_id = serializers.SerializerMethodField(read_only=True)
     owner = SimpleProfileSerializer(read_only=True)
-    tags = TagListSerializerField()
+    tags = TagListSerializerField()  # prefetch 'tags'
 
     class Meta:
         model = Post

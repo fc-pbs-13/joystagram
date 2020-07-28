@@ -1,10 +1,10 @@
-from django.db.models import Q, Count
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, status
+from rest_framework import mixins
 from rest_framework.exceptions import ParseError, ValidationError
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from taggit.models import Tag
+
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from likes.models import PostLike
 from posts.models import Post
@@ -24,7 +24,7 @@ class PostViewSet(mixins.CreateModelMixin,
     UPDATE, DELETE
     /api/posts/{post_id}
     """
-    queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
+    queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos', 'tags')
     serializer_class = PostSerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 

@@ -14,7 +14,7 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
     POST, GET
     /api/posts/{post_id}/comments
     """
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.all().select_related('owner__profile').prefetch_related('recomments')
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 

@@ -1,8 +1,6 @@
 from django.contrib.auth import authenticate
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from relationships.models import Follow
 from .models import User, Profile
 
 
@@ -21,15 +19,17 @@ class UserSerializer(ModelSerializer):
     nickname = serializers.CharField(max_length=20, source='profile.nickname')
     introduce = serializers.CharField(default='', source='profile.introduce')
     img = serializers.ImageField(read_only=True, source='profile.img')
-    follow_id = serializers.SerializerMethodField(read_only=True)
+
+    # 쿼리 4개씩??
+    follow_id = serializers.SerializerMethodField(read_only=True)  # todo 이건 진짜 모르겠다
     posts_count = serializers.IntegerField(read_only=True, source='posts.count')
-    followers_count = serializers.IntegerField(read_only=True, source='followers.count')
     followings_count = serializers.IntegerField(read_only=True, source='followings.count')
+    followers_count = serializers.IntegerField(read_only=True, source='followers.count')
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'nickname', 'introduce', 'img', 'follow_id', 'posts_count',
-                  'followers_count', 'followings_count')
+        fields = ('id', 'email', 'password', 'nickname', 'introduce', 'img', 'follow_id',
+                  'posts_count', 'followings_count', 'followers_count')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -45,17 +45,17 @@ class UserSerializer(ModelSerializer):
         Profile.objects.filter(user=instance).update(**profile)
         return instance
 
-    def get_follow_id(self, obj):
+    def get_follow_id(self, to_user):
         user = self.context['request'].user
         if user.is_authenticated:
-            follow_qs = Follow.objects.filter(owner=user, to_user=obj)
-            if follow_qs.exists():
-                return follow_qs.first().id
+            try:
+                return to_user.followers.get(owner=user).id
+            except:
+                pass
         return None
 
 
 class UserPasswordSerializer(ModelSerializer):
-
     class Meta:
         model = User
         fields = ('password',)
@@ -68,7 +68,6 @@ class UserPasswordSerializer(ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-
     email = serializers.EmailField()
     password = serializers.CharField(
         label='Password',

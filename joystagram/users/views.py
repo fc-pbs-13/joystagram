@@ -1,11 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import status, mixins
+from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet
 
 from core.permissions import IsUserSelf
 from relationships.models import Follow
@@ -20,6 +20,9 @@ class UserViewSet(ModelViewSet):
     permission_classes = [IsUserSelf]
 
     def filter_queryset(self, qs):
+        User.objects.prefetch_related('to')
+        if self.action == 'retrieve':
+            qs = qs.select_related('profile').prefetch_related('posts', 'followers__to_user', 'followings')
         if self.action == 'followers':
             qs = qs.filter(
                 id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('owner_id')
@@ -56,7 +59,7 @@ class UserViewSet(ModelViewSet):
             return LoginSerializer
         elif self.action == 'update_password':
             return UserPasswordSerializer
-        if self.action == ('list', 'followers', 'followings'):
+        if self.action in ('list', 'followers', 'followings'):
             return UserListSerializer
         return super().get_serializer_class()
 
@@ -71,12 +74,11 @@ class UserViewSet(ModelViewSet):
 
     @action(detail=False, methods=['delete'])
     def logout(self, request):
-        """토큰 삭제, 토큰 없다면 400 리턴"""
+        """토큰 삭제"""
         try:
             request.user.auth_token.delete()
         except (AttributeError, ObjectDoesNotExist):
-            return Response({"detail": "Not authorized User."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            pass
         return Response({"detail": "Successfully logged out."},
                         status=status.HTTP_200_OK)
 
