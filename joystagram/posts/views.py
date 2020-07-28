@@ -1,5 +1,7 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import mixins
 from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.viewsets import GenericViewSet
@@ -59,6 +61,10 @@ class TagViewSet(mixins.ListModelMixin, GenericViewSet):
     """query parameter 검색어로 태그 검색"""
     queryset = Tag.objects.all().prefetch_related('taggit_taggeditem_items')
     serializer_class = TagListSerializer
+
+    @method_decorator(cache_page(60))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     def filter_queryset(self, queryset):
         name = self.request.query_params.get('name')

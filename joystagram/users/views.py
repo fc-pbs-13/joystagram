@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
@@ -10,6 +11,7 @@ from rest_framework.viewsets import ModelViewSet
 from core.permissions import IsUserSelf
 from relationships.models import Follow
 from relationships.serializers import UserListSerializer
+from story.models import StoryCheck, Story
 from users.models import User
 from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
 
@@ -22,7 +24,9 @@ class UserViewSet(ModelViewSet):
     def filter_queryset(self, qs):
         User.objects.prefetch_related('to')
         if self.action == 'retrieve':
-            qs = qs.select_related('profile').prefetch_related('posts', 'followers__owner', 'followings__to_user_id')
+            return qs.select_related('profile').prefetch_related('posts', 'followers__owner', 'followings__to_user')
+            # return super().filter_queryset(qs).\
+            #     select_related('profile').prefetch_related('posts', 'followers__owner', 'followings__to_user_id')
         if self.action == 'followers':
             qs = qs.filter(
                 id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('owner_id')
@@ -101,4 +105,21 @@ class UserViewSet(ModelViewSet):
         유저가 팔로잉하는 유저 리스트
         user -> followings
         """
+        # qs.filter(
+        #
+        # ).select_related('profile')
+
+        # users_qs = User.objects. \
+        #     filter(story__created__gte=yesterday, story__created__lte=now). \
+        #     filter(
+        #     Q(id__in=Follow.objects.filter(owner_id=self.kwargs['pk']).values('to_user_id')) |
+        #     Q(id=request.user.id)
+        # ).prefetch_related('storycheck_set')
+
+        # Story.objects.values('owner_id').\
+        #     filter(owner__in=Follow.objects.filter(owner_id=self.kwargs['pk']).values('to_user_id')).\
+        #     filter(created__gte=yesterday, created__lte=now)
+
+        # StoryCheck.objects.filter(story__owner__in=users_qs)
+
         return super().list(request, *args, **kwargs)
