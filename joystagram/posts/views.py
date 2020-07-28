@@ -57,7 +57,7 @@ class PostViewSet(mixins.CreateModelMixin,
 
 class TagViewSet(mixins.ListModelMixin, GenericViewSet):
     """query parameter 검색어로 태그 검색"""
-    queryset = Tag.objects.all()
+    queryset = Tag.objects.all().prefetch_related('taggit_taggeditem_items')
     serializer_class = TagListSerializer
 
     def filter_queryset(self, queryset):
@@ -69,11 +69,12 @@ class TagViewSet(mixins.ListModelMixin, GenericViewSet):
 
 class TaggedPostViewSet(mixins.ListModelMixin, GenericViewSet):
     """nested tag_pk로 해당 태그를 가진 포스트 검색"""
-    queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
+    queryset = Post.objects.all()
     serializer_class = PostListSerializer
 
     def filter_queryset(self, queryset):
-        return super().filter_queryset(queryset).filter(tags=self.kwargs.get('tag_pk')).distinct()
+        return super().filter_queryset(queryset).filter(tags=self.kwargs.get('tag_pk')).\
+            select_related('owner__profile').prefetch_related('photos', 'tags').distinct()
 
     def list(self, request, *args, **kwargs):
         tag_pk = self.kwargs.get('tag_pk')
