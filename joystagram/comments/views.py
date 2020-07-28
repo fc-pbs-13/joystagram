@@ -46,7 +46,7 @@ class ReCommentCreateListViewSet(mixins.CreateModelMixin,
     POST, GET
     /api/comments/{comments_id}/recomments
     """
-    queryset = ReComment.objects.all()
+    queryset = ReComment.objects.all().select_related('owner__profile')
     serializer_class = ReCommentSerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 

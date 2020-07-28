@@ -17,7 +17,7 @@ class PostSerializer(TaggitSerializer, serializers.ModelSerializer):
     photos = ListField(child=ImageField(), write_only=True)
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     owner = SimpleProfileSerializer(read_only=True)
-    tags = TagListSerializerField(required=False)  # todo required=False?
+    tags = TagListSerializerField(required=False)
 
     class Meta:
         model = Post
