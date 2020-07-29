@@ -31,7 +31,6 @@ class StoryViewSet(viewsets.ModelViewSet):
         key = f'{kwargs["pk"]}story'
         instance = cache.get(key)
         if not instance:
-            sleep(2)
             instance = self.get_object()
             cache.set(key, instance, 10)
 
