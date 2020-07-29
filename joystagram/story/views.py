@@ -27,17 +27,18 @@ class StoryViewSet(viewsets.ModelViewSet):
         return super().get_object()
 
     def retrieve(self, request, *args, **kwargs):
-        """스토리 조회 성공 시 StoryCheck get_or_create"""
+
+        # 캐시 get_or_set
         key = f'{kwargs["pk"]}story'
-        instance = cache.get(key)
+        instance = cache.get_or_set(key, 'my new value', 20)
         if not instance:
             instance = self.get_object()
-            cache.set(key, instance, 10)
 
         self.check_object_permissions(request, instance)
         serializer = self.get_serializer(instance)
         response = Response(serializer.data)
 
+        # 조회 성공 시 StoryCheck get_or_create
         if (response.status_code == status.HTTP_200_OK) and (request.user.id != response.data['owner']['id']):
             StoryCheck.objects.get_or_create(user=request.user, story_id=response.data.get('id'))
         return response
