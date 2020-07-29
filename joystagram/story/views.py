@@ -1,10 +1,13 @@
 from datetime import timedelta
+from time import sleep
 
+from django.core.cache import cache
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import viewsets, status, mixins
 from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
@@ -25,7 +28,16 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         """스토리 조회 성공 시 StoryCheck get_or_create"""
-        response = super().retrieve(request, *args, **kwargs)
+        key = f'{kwargs["pk"]}story'
+        instance = cache.get(key)
+        if not instance:
+            sleep(2)
+            instance = self.get_object()
+            cache.set(key, instance, 10)
+
+        self.check_object_permissions(request, instance)
+        serializer = self.get_serializer(instance)
+        response = Response(serializer.data)
 
         if (response.status_code == status.HTTP_200_OK) and (request.user.id != response.data['owner']['id']):
             StoryCheck.objects.get_or_create(user=request.user, story_id=response.data.get('id'))

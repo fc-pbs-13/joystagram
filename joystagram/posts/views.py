@@ -37,6 +37,7 @@ class PostViewSet(mixins.CreateModelMixin,
 
     def filter_queryset(self, queryset):
         """자신과 자신이 팔로우하는 유저들의 스토리(등록시간 24시간 이내)"""
+
         if self.action == 'list':
             queryset = queryset.filter(
                 Q(owner_id__in=Follow.objects.filter(owner=self.request.user).values('to_user_id')) |
@@ -79,7 +80,7 @@ class TaggedPostViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = PostListSerializer
 
     def filter_queryset(self, queryset):
-        return super().filter_queryset(queryset).filter(tags=self.kwargs.get('tag_pk')).\
+        return super().filter_queryset(queryset).filter(tags=self.kwargs.get('tag_pk')). \
             select_related('owner__profile').prefetch_related('photos', 'tags').distinct()
 
     def list(self, request, *args, **kwargs):

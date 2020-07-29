@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from rest_framework import status
@@ -105,6 +106,7 @@ class UserViewSet(ModelViewSet):
         유저가 팔로잉하는 유저 리스트
         user -> followings
         """
+        return super().list(request, *args, **kwargs)
         # qs.filter(
         #
         # ).select_related('profile')
@@ -121,5 +123,3 @@ class UserViewSet(ModelViewSet):
         #     filter(created__gte=yesterday, created__lte=now)
 
         # StoryCheck.objects.filter(story__owner__in=users_qs)
-
-        return super().list(request, *args, **kwargs)
