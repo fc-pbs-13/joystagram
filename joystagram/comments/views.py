@@ -18,9 +18,8 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
-    def get_queryset(self):
-        """특정 Post의 Comment만"""
-        return super().get_queryset().filter(post_id=self.kwargs.get('post_pk')).cache()
+    def filter_queryset(self, queryset):
+        return super().filter_queryset(queryset).filter(post_id=self.kwargs.get('post_pk'))
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user, post_id=self.kwargs.get('post_pk'))
