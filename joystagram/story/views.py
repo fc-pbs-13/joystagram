@@ -28,11 +28,12 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
 
-        # 캐시 get_or_set
+        # 캐시 검사
         key = f'{kwargs["pk"]}story'
-        instance = cache.get_or_set(key, 'my new value', 20)
+        instance = cache.get(key)
         if not instance:
             instance = self.get_object()
+            cache.set(key, instance, 60)
 
         self.check_object_permissions(request, instance)
         serializer = self.get_serializer(instance)
