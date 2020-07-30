@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'taggit',
     'taggit_serializer',
     'django_filters',
+    'cacheops',
 
     'core',
     'users',
@@ -188,3 +189,13 @@ DEBUG_TOOLBAR_PANELS = [
 DEBUG_TOOLBAR_CONFIG = {
     'RESULTS_STORE_SIZE': 100,
 }
+
+CACHEOPS_REDIS = "redis://127.0.0.1:6379/1"
+# CACHEOPS_LRU = True
+# CACHEOPS_DEGRADE_ON_FAILURE = True
+# CACHEOPS_DEFAULTS = {
+#     'timeout': 60 * 5,
+#     'cache_on_save': True,
+#     'local_get': False,
+# }
+CACHEOPS = {'*.*': {'ops': ('get', 'all'), 'timeout': 10}}

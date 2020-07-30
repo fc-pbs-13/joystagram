@@ -20,7 +20,9 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
 
     def get_queryset(self):
         """특정 Post의 Comment만"""
-        return super().get_queryset().filter(post_id=self.kwargs.get('post_pk'))
+        # return super().get_queryset().filter(post_id=self.kwargs.get('post_pk')).cache()
+        return Comment.objects.all()
+        # return self.queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user, post_id=self.kwargs.get('post_pk'))
