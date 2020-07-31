@@ -159,7 +159,7 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = 'users.User'
 
 INTERNAL_IPS = [
-    '127.0.0.1',
+    '127.0.0.1'
 ]
 CACHES = {
     "default": {
@@ -189,4 +189,7 @@ DEBUG_TOOLBAR_PANELS = [
 DEBUG_TOOLBAR_CONFIG = {
     'RESULTS_STORE_SIZE': 100,
 }
-CACHEOPS = {'*.*': {'ops': 'all', 'timeout': 10}}
+CACHEOPS_DEFAULTS = {'timeout': 10}
+CACHEOPS = {
+    '*.*': {'ops': 'all'},
+}

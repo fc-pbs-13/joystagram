@@ -24,7 +24,8 @@ class StoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
     def get_object(self):
-        return super().get_object()
+        return self.queryset.get().cache()
+        # return super().get_object()
 
     def retrieve(self, request, *args, **kwargs):
 
@@ -54,19 +55,23 @@ class StoryViewSet(viewsets.ModelViewSet):
             return super().get_queryset().prefetch_related('story_checks')
         return super().get_queryset()
 
-    def filter_queryset(self, queryset):
+    def filter_queryset(self, qs):
         """
         자신 or 자신이 팔로우하는 유저의 스토리 중
         등록시간 24시간 이내의 것만 리스트
         """
-        queryset = queryset.filter(
+        qs = super().filter_queryset(qs)
+        qs = qs.filter(
             created__gte=timezone.now() - timedelta(days=1),
             created__lte=timezone.now()
         ).filter(
             Q(owner_id__in=Follow.objects.filter(owner=self.request.user).values('to_user_id')) |
             Q(owner=self.request.user)
-        )
-        return super().filter_queryset(queryset).select_related('owner__profile')
+        ).select_related('owner__profile')
+
+        if self.action == 'retrieve':
+            return qs.prefetch_related('story_checks')
+        return qs
 
     def paginate_queryset(self, queryset):
         # is_watched(bool) 주입
