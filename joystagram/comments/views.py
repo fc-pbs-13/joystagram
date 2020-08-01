@@ -1,4 +1,5 @@
 from rest_framework import mixins
+from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet
 from comments.models import Comment, ReComment
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
@@ -35,6 +36,17 @@ class CommentViewSet(mixins.UpdateModelMixin,
     queryset = Comment.objects.all().prefetch_related()
     serializer_class = CommentUpdateSerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
+
+
+    def x(self):
+        aa = 100
+        bb = 'bb'
+        cc = {'a': 'aa'}
+        d = aa / bb
+
+    @action(detail=False)
+    def debug(self, request, *args, **kwargs):
+        self.x()
 
 
 class ReCommentCreateListViewSet(mixins.CreateModelMixin,

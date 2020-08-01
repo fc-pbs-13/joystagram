@@ -15,6 +15,18 @@ import os
 # Build paths inside the project likes this: os.path.join(BASE_DIR, ...)
 import environ
 
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn="https://ccc13a0f54514c0f8f4bee9439029dad@o427974.ingest.sentry.io/5372839",
+    integrations=[DjangoIntegration()],
+
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True
+)
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 env_file = os.path.dirname(BASE_DIR) + '/.env'
 environ.Env.read_env(env_file=env_file)
@@ -192,4 +204,13 @@ DEBUG_TOOLBAR_CONFIG = {
 CACHEOPS_DEFAULTS = {'timeout': 10}
 CACHEOPS = {
     '*.*': {'ops': 'all'},
+    'taggit.Tag': {'ops': 'all'},
+    'posts.Post': {'ops': 'all'},
+    'posts.Photo': {'ops': 'all'},
+    'comments.Comment': {'ops': 'all'},
+    'comments.ReComment': {'ops': 'all'},
+    'likes.PostLike': {'ops': 'all'},
+    'relationsships.Follow': {'ops': 'all'},
+    'story.Story': {'ops': 'all'},
+    'story.StoryCheck': {'ops': 'all'},
 }
