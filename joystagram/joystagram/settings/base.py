@@ -15,6 +15,18 @@ import os
 # Build paths inside the project likes this: os.path.join(BASE_DIR, ...)
 import environ
 
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn="https://ccc13a0f54514c0f8f4bee9439029dad@o427974.ingest.sentry.io/5372839",
+    integrations=[DjangoIntegration()],
+
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True
+)
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 env_file = os.path.dirname(BASE_DIR) + '/.env'
 environ.Env.read_env(env_file=env_file)
@@ -49,6 +61,7 @@ INSTALLED_APPS = [
     'taggit',
     'taggit_serializer',
     'django_filters',
+    'cacheops',
 
     'core',
     'users',
@@ -143,7 +156,8 @@ STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        # 'rest_framework.authentication.TokenAuthentication',
+        'core.authentications.MyTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -157,5 +171,46 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = 'users.User'
 
 INTERNAL_IPS = [
-    '127.0.0.1',
+    '127.0.0.1'
 ]
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+DEBUG_TOOLBAR_PANELS = [
+    'ddt_request_history.panels.request_history.RequestHistoryPanel',  # Here it is
+    'debug_toolbar.panels.versions.VersionsPanel',
+    'debug_toolbar.panels.timer.TimerPanel',
+    'debug_toolbar.panels.settings.SettingsPanel',
+    'debug_toolbar.panels.headers.HeadersPanel',
+    'debug_toolbar.panels.request.RequestPanel',
+    'debug_toolbar.panels.sql.SQLPanel',
+    'debug_toolbar.panels.templates.TemplatesPanel',
+    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+    'debug_toolbar.panels.cache.CachePanel',
+    'debug_toolbar.panels.signals.SignalsPanel',
+    'debug_toolbar.panels.logging.LoggingPanel',
+    'debug_toolbar.panels.redirects.RedirectsPanel',
+    'debug_toolbar.panels.profiling.ProfilingPanel',
+]
+DEBUG_TOOLBAR_CONFIG = {
+    'RESULTS_STORE_SIZE': 100,
+}
+CACHEOPS_DEFAULTS = {'timeout': 10}
+CACHEOPS = {
+    '*.*': {'ops': 'all'},
+    'taggit.Tag': {'ops': 'all'},
+    'posts.Post': {'ops': 'all'},
+    'posts.Photo': {'ops': 'all'},
+    'comments.Comment': {'ops': 'all'},
+    'comments.ReComment': {'ops': 'all'},
+    'likes.PostLike': {'ops': 'all'},
+    'relationsships.Follow': {'ops': 'all'},
+    'story.Story': {'ops': 'all'},
+    'story.StoryCheck': {'ops': 'all'},
+}

@@ -1,10 +1,12 @@
-from django.db.models import Q, Count
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, status
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from rest_framework import mixins
 from rest_framework.exceptions import ParseError, ValidationError
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from taggit.models import Tag
+
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
 from likes.models import PostLike
 from posts.models import Post
@@ -24,7 +26,7 @@ class PostViewSet(mixins.CreateModelMixin,
     UPDATE, DELETE
     /api/posts/{post_id}
     """
-    queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
+    queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos', 'tags')
     serializer_class = PostSerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
@@ -35,6 +37,7 @@ class PostViewSet(mixins.CreateModelMixin,
 
     def filter_queryset(self, queryset):
         """자신과 자신이 팔로우하는 유저들의 스토리(등록시간 24시간 이내)"""
+
         if self.action == 'list':
             queryset = queryset.filter(
                 Q(owner_id__in=Follow.objects.filter(owner=self.request.user).values('to_user_id')) |
@@ -57,8 +60,12 @@ class PostViewSet(mixins.CreateModelMixin,
 
 class TagViewSet(mixins.ListModelMixin, GenericViewSet):
     """query parameter 검색어로 태그 검색"""
-    queryset = Tag.objects.all()
+    queryset = Tag.objects.all().prefetch_related('taggit_taggeditem_items')
     serializer_class = TagListSerializer
+
+    @method_decorator(cache_page(60))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     def filter_queryset(self, queryset):
         name = self.request.query_params.get('name')
@@ -69,11 +76,12 @@ class TagViewSet(mixins.ListModelMixin, GenericViewSet):
 
 class TaggedPostViewSet(mixins.ListModelMixin, GenericViewSet):
     """nested tag_pk로 해당 태그를 가진 포스트 검색"""
-    queryset = Post.objects.all().select_related('owner__profile').prefetch_related('photos')
+    queryset = Post.objects.all()
     serializer_class = PostListSerializer
 
     def filter_queryset(self, queryset):
-        return super().filter_queryset(queryset).filter(tags=self.kwargs.get('tag_pk')).distinct()
+        return super().filter_queryset(queryset).filter(tags=self.kwargs.get('tag_pk')). \
+            select_related('owner__profile').prefetch_related('photos', 'tags').distinct()
 
     def list(self, request, *args, **kwargs):
         tag_pk = self.kwargs.get('tag_pk')

@@ -1,15 +1,18 @@
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import status, mixins
+from django.db.models import Q
+from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet
 
 from core.permissions import IsUserSelf
 from relationships.models import Follow
 from relationships.serializers import UserListSerializer
+from story.models import StoryCheck, Story
 from users.models import User
 from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
 
@@ -20,6 +23,11 @@ class UserViewSet(ModelViewSet):
     permission_classes = [IsUserSelf]
 
     def filter_queryset(self, qs):
+        User.objects.prefetch_related('to')
+        if self.action == 'retrieve':
+            return qs.select_related('profile').prefetch_related('posts', 'followers__owner', 'followings__to_user')
+            # return super().filter_queryset(qs).\
+            #     select_related('profile').prefetch_related('posts', 'followers__owner', 'followings__to_user_id')
         if self.action == 'followers':
             qs = qs.filter(
                 id__in=Follow.objects.filter(to_user_id=self.kwargs['pk']).values('owner_id')
@@ -56,7 +64,7 @@ class UserViewSet(ModelViewSet):
             return LoginSerializer
         elif self.action == 'update_password':
             return UserPasswordSerializer
-        if self.action == ('list', 'followers', 'followings'):
+        if self.action in ('list', 'followers', 'followings'):
             return UserListSerializer
         return super().get_serializer_class()
 
@@ -71,12 +79,11 @@ class UserViewSet(ModelViewSet):
 
     @action(detail=False, methods=['delete'])
     def logout(self, request):
-        """토큰 삭제, 토큰 없다면 400 리턴"""
+        """토큰 삭제"""
         try:
             request.user.auth_token.delete()
         except (AttributeError, ObjectDoesNotExist):
-            return Response({"detail": "Not authorized User."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            pass
         return Response({"detail": "Successfully logged out."},
                         status=status.HTTP_200_OK)
 
@@ -100,3 +107,19 @@ class UserViewSet(ModelViewSet):
         user -> followings
         """
         return super().list(request, *args, **kwargs)
+        # qs.filter(
+        #
+        # ).select_related('profile')
+
+        # users_qs = User.objects. \
+        #     filter(story__created__gte=yesterday, story__created__lte=now). \
+        #     filter(
+        #     Q(id__in=Follow.objects.filter(owner_id=self.kwargs['pk']).values('to_user_id')) |
+        #     Q(id=request.user.id)
+        # ).prefetch_related('storycheck_set')
+
+        # Story.objects.values('owner_id').\
+        #     filter(owner__in=Follow.objects.filter(owner_id=self.kwargs['pk']).values('to_user_id')).\
+        #     filter(created__gte=yesterday, created__lte=now)
+
+        # StoryCheck.objects.filter(story__owner__in=users_qs)

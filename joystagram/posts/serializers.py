@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from rest_framework import serializers
 from rest_framework.fields import ListField, ImageField
 from taggit.models import Tag
@@ -17,7 +18,7 @@ class PostSerializer(TaggitSerializer, serializers.ModelSerializer):
     photos = ListField(child=ImageField(), write_only=True)
     _photos = PhotoSerializer(many=True, read_only=True, source='photos')
     owner = SimpleProfileSerializer(read_only=True)
-    tags = TagListSerializerField(required=False)  # todo required=False?
+    tags = TagListSerializerField(required=False)
 
     class Meta:
         model = Post
@@ -42,10 +43,29 @@ class PostListSerializer(serializers.ModelSerializer):
     owner = SimpleProfileSerializer(read_only=True)
     tags = TagListSerializerField()
 
+    comments_count = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Post
         fields = ('id', 'content', 'owner', '_photos', 'comments_count', 'likes_count', 'like_id', 'tags')
         read_only_fields = ('owner', 'likes_count', 'comments_count')
+
+    def get_comments_count(self, obj):
+        com_count_key = f'{obj.id}comments_count'
+        count = cache.get(com_count_key)
+        if count is None:
+            count = obj.comments_count
+            cache.set(com_count_key, count, 60)
+        return count
+
+    def get_likes_count(self, obj):
+        like_count_key = f'{obj.id}likes_count'
+        count = cache.get(like_count_key)
+        if count is None:
+            count = obj.likes_count
+            cache.set(like_count_key, count, 60)
+        return count
 
     def get_like_id(self, obj):
         like_id_dict = getattr(self.context['view'], 'like_id_dict', {})

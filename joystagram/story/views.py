@@ -1,10 +1,13 @@
 from datetime import timedelta
+from time import sleep
 
+from django.core.cache import cache
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import viewsets, status, mixins
 from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
@@ -20,10 +23,24 @@ class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
-    def retrieve(self, request, *args, **kwargs):
-        """스토리 조회 성공 시 StoryCheck get_or_create"""
-        response = super().retrieve(request, *args, **kwargs)
+    def get_object(self):
+        return self.queryset.get().cache()
+        # return super().get_object()
 
+    def retrieve(self, request, *args, **kwargs):
+
+        # 캐시 검사
+        key = f'{kwargs["pk"]}story'
+        instance = cache.get(key)
+        if not instance:
+            instance = self.get_object()
+            cache.set(key, instance, 60)
+
+        self.check_object_permissions(request, instance)
+        serializer = self.get_serializer(instance)
+        response = Response(serializer.data)
+
+        # 조회 성공 시 StoryCheck get_or_create
         if (response.status_code == status.HTTP_200_OK) and (request.user.id != response.data['owner']['id']):
             StoryCheck.objects.get_or_create(user=request.user, story_id=response.data.get('id'))
         return response
@@ -33,16 +50,28 @@ class StoryViewSet(viewsets.ModelViewSet):
             return StoryListSerializer
         return super().get_serializer_class()
 
-    def filter_queryset(self, queryset):
-        """자신 or 자신이 팔로우하는 유저의 스토리 중
-        등록시간 24시간 이내의 것만 리스트"""
-        queryset = queryset.filter(
+    def get_queryset(self):
+        if self.action == 'retrieve':
+            return super().get_queryset().prefetch_related('story_checks')
+        return super().get_queryset()
+
+    def filter_queryset(self, qs):
+        """
+        자신 or 자신이 팔로우하는 유저의 스토리 중
+        등록시간 24시간 이내의 것만 리스트
+        """
+        qs = super().filter_queryset(qs)
+        qs = qs.filter(
             created__gte=timezone.now() - timedelta(days=1),
             created__lte=timezone.now()
         ).filter(
             Q(owner_id__in=Follow.objects.filter(owner=self.request.user).values('to_user_id')) |
-            Q(owner=self.request.user))
-        return super().filter_queryset(queryset).select_related('owner__profile')
+            Q(owner=self.request.user)
+        ).select_related('owner__profile')
+
+        if self.action == 'retrieve':
+            return qs.prefetch_related('story_checks')
+        return qs
 
     def paginate_queryset(self, queryset):
         # is_watched(bool) 주입
@@ -77,4 +106,6 @@ class StoryReadUserViewSet(mixins.ListModelMixin, GenericViewSet):
         return super().list(request, *args, **kwargs)
 
     def filter_queryset(self, queryset):
-        return super().filter_queryset(queryset).filter(storycheck__story=self.kwargs.get('story_pk'))
+        return super().filter_queryset(queryset). \
+            filter(storycheck__story=self.kwargs.get('story_pk')). \
+            select_related('profile')

@@ -1,4 +1,5 @@
 from rest_framework import mixins
+from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet
 from comments.models import Comment, ReComment
 from core.permissions import IsOwnerOrAuthenticatedReadOnly
@@ -14,13 +15,12 @@ class CommentCreateListViewSet(mixins.CreateModelMixin,
     POST, GET
     /api/posts/{post_id}/comments
     """
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.all().select_related('owner__profile').prefetch_related('recomments')
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
-    def get_queryset(self):
-        """특정 Post의 Comment만"""
-        return super().get_queryset().filter(post_id=self.kwargs.get('post_pk'))
+    def filter_queryset(self, queryset):
+        return super().filter_queryset(queryset).filter(post_id=self.kwargs.get('post_pk'))
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user, post_id=self.kwargs.get('post_pk'))
@@ -38,6 +38,17 @@ class CommentViewSet(mixins.UpdateModelMixin,
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
 
+    def x(self):
+        aa = 100
+        bb = 'bb'
+        cc = {'a': 'aa'}
+        d = aa / bb
+
+    @action(detail=False)
+    def debug(self, request, *args, **kwargs):
+        self.x()
+
+
 class ReCommentCreateListViewSet(mixins.CreateModelMixin,
                                  mixins.ListModelMixin,
                                  GenericViewSet):
@@ -46,7 +57,7 @@ class ReCommentCreateListViewSet(mixins.CreateModelMixin,
     POST, GET
     /api/comments/{comments_id}/recomments
     """
-    queryset = ReComment.objects.all()
+    queryset = ReComment.objects.all().select_related('owner__profile')
     serializer_class = ReCommentSerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
