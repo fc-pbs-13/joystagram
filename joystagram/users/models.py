@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
+from django_lifecycle import hook, BEFORE_UPDATE, BEFORE_SAVE
 from model_utils.models import TimeStampedModel
 
 
@@ -48,10 +49,6 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
-
-    # @hook(BEFORE_UPDATE, when='contents', has_changed=True)
-    # def on_content_change(self):
-    #     self.updated_at = timezone.now()
 
     def save(self, *args, **kwargs):
         self.set_password(self.password)

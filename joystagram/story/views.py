@@ -23,9 +23,6 @@ class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
-    def get_object(self):
-        return self.queryset.get().cache()
-        # return super().get_object()
 
     def retrieve(self, request, *args, **kwargs):
 
