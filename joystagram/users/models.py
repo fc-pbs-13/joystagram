@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 from model_utils.models import TimeStampedModel
 
@@ -47,6 +49,10 @@ class User(AbstractUser):
 
     objects = UserManager()
 
+    # @hook(BEFORE_UPDATE, when='contents', has_changed=True)
+    # def on_content_change(self):
+    #     self.updated_at = timezone.now()
+
     def save(self, *args, **kwargs):
         self.set_password(self.password)
         super().save(*args, **kwargs)
@@ -62,3 +68,5 @@ class Profile(TimeStampedModel):
     nickname = models.CharField(max_length=20)
     introduce = models.CharField(max_length=255)
     img = models.ImageField(upload_to=profile_img_path)
+    followers_count = models.PositiveIntegerField(default=0)
+    followings_count = models.PositiveIntegerField(default=0)
