@@ -203,7 +203,6 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 CACHEOPS_DEFAULTS = {'timeout': 10}
 CACHEOPS = {
-    '*.*': {'ops': 'all'},
     'taggit.Tag': {'ops': 'all'},
     'posts.Post': {'ops': 'all'},
     'posts.Photo': {'ops': 'all'},

@@ -38,17 +38,6 @@ class CommentViewSet(mixins.UpdateModelMixin,
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
 
-    def x(self):
-        aa = 100
-        bb = 'bb'
-        cc = {'a': 'aa'}
-        d = aa / bb
-
-    @action(detail=False)
-    def debug(self, request, *args, **kwargs):
-        self.x()
-
-
 class ReCommentCreateListViewSet(mixins.CreateModelMixin,
                                  mixins.ListModelMixin,
                                  GenericViewSet):
