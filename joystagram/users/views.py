@@ -1,3 +1,5 @@
+import logging
+
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
@@ -17,10 +19,13 @@ from users.models import User
 from users.serializers import UserSerializer, LoginSerializer, UserPasswordSerializer
 
 
+
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsUserSelf]
+    # permission_classes = [IsUserSelf]
+    permission_classes = []
+    authentication_classes = []  # todo
 
     def filter_queryset(self, qs):
         User.objects.prefetch_related('to')
@@ -107,6 +112,16 @@ class UserViewSet(ModelViewSet):
         user -> followings
         """
         return super().list(request, *args, **kwargs)
+
+    @action(detail=False)
+    def locust_test(self, request, *args, **kwargs):
+        logger = logging.getLogger(__name__)
+        logger.info('인포메이셔언')
+        logger.warning('경고경고경고')
+        logger.error('에러...')
+        logger.debug('디버깅!')
+        return Response()
+
         # qs.filter(
         #
         # ).select_related('profile')

@@ -23,7 +23,6 @@ class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
     permission_classes = [IsOwnerOrAuthenticatedReadOnly]
 
-
     def retrieve(self, request, *args, **kwargs):
 
         # 캐시 검사
