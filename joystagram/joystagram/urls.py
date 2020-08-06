@@ -18,11 +18,18 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.urls import path, include
+from chat.views import index, room
 
 urlpatterns = [
                   path('admin/', admin.site.urls),
                   path('api/', include('core.urls')),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# chat
+urlpatterns += [
+    path(r'chat', index, name='index'),
+    path(r'chat/<str:room_name>/', room, name='room'),
+]
 
 if settings.DEBUG:
     import debug_toolbar
