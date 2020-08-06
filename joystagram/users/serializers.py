@@ -34,6 +34,7 @@ class UserSerializer(ModelSerializer):
 
     def create(self, validated_data):
         """유저 생성 시 프로필도 같이 생성"""
+        # todo 트랜잭션?
         profile = validated_data.pop('profile')
         user = User.objects.create(**validated_data)
         Profile.objects.create(user=user, **profile)

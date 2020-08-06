@@ -15,6 +15,9 @@ import os
 # Build paths inside the project likes this: os.path.join(BASE_DIR, ...)
 import environ
 
+import logging
+from logdna import LogDNAHandler
+
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -41,13 +44,15 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 SECRET_KEY = '$6a&adj$xrw!2++nu-$=2p^7j7-nikmd0kvqtzmi8n_yk^_a#g'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG = True
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -203,7 +208,6 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 CACHEOPS_DEFAULTS = {'timeout': 10}
 CACHEOPS = {
-    '*.*': {'ops': 'all'},
     'taggit.Tag': {'ops': 'all'},
     'posts.Post': {'ops': 'all'},
     'posts.Photo': {'ops': 'all'},
@@ -213,4 +217,57 @@ CACHEOPS = {
     'relationsships.Follow': {'ops': 'all'},
     'story.Story': {'ops': 'all'},
     'story.StoryCheck': {'ops': 'all'},
+}
+
+LOGGING = {
+    'version': 1,
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'logdna': {
+            'level': logging.DEBUG,
+            'class': 'logging.handlers.LogDNAHandler',
+            'key': '918c44ac330fc956a813ed49609f715c',
+            'options': {
+                'app': 'users',
+                'env': os.environ.get('ENVIRONMENT'),
+                'index_meta': False,
+            }
+        },
+        'console': {
+            'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        'django.server': {
+            'handlers': ['logdna', 'console', 'file'],
+            'level': logging.INFO,
+        },
+        'users': {
+            'handlers': ['logdna', 'console', 'file'],
+            'level': logging.INFO,
+        },
+        # 'gunicorn.access': {
+        #     'level': logging.DEBUG,
+        #     'handlers': ['logdna', 'console', 'file'],
+        #     'propagate': False
+        # }
+    }
 }
