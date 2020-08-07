@@ -68,6 +68,9 @@ INSTALLED_APPS = [
     'django_filters',
     'cacheops',
 
+    'django_elasticsearch_dsl',
+    'django_elasticsearch_dsl_drf',
+
     'core',
     'users',
     'posts',
@@ -76,6 +79,7 @@ INSTALLED_APPS = [
     'relationships',
     'story',
     'chat',
+    'elastic',
 ]
 
 MIDDLEWARE = [
@@ -220,58 +224,58 @@ CACHEOPS = {
     'story.StoryCheck': {'ops': 'all'},
 }
 
-LOGGING = {
-    'version': 1,
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
-    },
-    'formatters': {
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'logdna': {
-            'level': logging.DEBUG,
-            'class': 'logging.handlers.LogDNAHandler',
-            'key': '918c44ac330fc956a813ed49609f715c',
-            'options': {
-                'app': 'users',
-                'env': os.environ.get('ENVIRONMENT'),
-                'index_meta': False,
-            }
-        },
-        'console': {
-            'level': 'INFO',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log',
-        },
-    },
-    'loggers': {
-        'django.server': {
-            'handlers': ['logdna', 'console', 'file'],
-            'level': logging.INFO,
-        },
-        'users': {
-            'handlers': ['logdna', 'console', 'file'],
-            'level': logging.INFO,
-        },
-        # 'gunicorn.access': {
-        #     'level': logging.DEBUG,
-        #     'handlers': ['logdna', 'console', 'file'],
-        #     'propagate': False
-        # }
-    }
-}
+# LOGGING = {
+#     'version': 1,
+#     'filters': {
+#         'require_debug_true': {
+#             '()': 'django.utils.log.RequireDebugTrue',
+#         },
+#     },
+#     'formatters': {
+#         'simple': {
+#             'format': '{levelname} {message}',
+#             'style': '{',
+#         },
+#     },
+#     'handlers': {
+#         'logdna': {
+#             'level': logging.DEBUG,
+#             'class': 'logging.handlers.LogDNAHandler',
+#             'key': '918c44ac330fc956a813ed49609f715c',
+#             'options': {
+#                 'app': 'users',
+#                 'env': os.environ.get('ENVIRONMENT'),
+#                 'index_meta': False,
+#             }
+#         },
+#         'console': {
+#             'level': 'DEBUG',
+#             'filters': ['require_debug_true'],
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'simple',
+#         },
+#         'file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': 'debug.log',
+#         },
+#     },
+#     'loggers': {
+#         'django.server': {
+#             'handlers': ['logdna', 'console', 'file'],
+#             'level': logging.DEBUG,
+#         },
+#         'users': {
+#             'handlers': ['logdna', 'console', 'file'],
+#             'level': logging.INFO,
+#         },
+#         # 'gunicorn.access': {
+#         #     'level': logging.DEBUG,
+#         #     'handlers': ['logdna', 'console', 'file'],
+#         #     'propagate': False
+#         # }
+#     }
+# }
 
 ASGI_APPLICATION = "joystagram.routing.application"
 CHANNEL_LAYERS = {
@@ -280,5 +284,11 @@ CHANNEL_LAYERS = {
         'CONFIG': {
             "hosts": [('127.0.0.1', 6379)],
         },
+    },
+}
+
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'localhost:9200'
     },
 }
